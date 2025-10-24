@@ -1,0 +1,11 @@
+bin/
+*.exe
+*.log
+*.tmp
+vendor/
+coverage.out
+*.cache
+/.vscode
+dist/
+.env*
+!.env.example

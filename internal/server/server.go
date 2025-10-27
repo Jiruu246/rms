@@ -8,20 +8,21 @@ import (
 
 	"github.com/Jiruu246/rms/internal/config"
 	"github.com/Jiruu246/rms/internal/handler"
+	"github.com/Jiruu246/rms/internal/middlewares"
+	"github.com/Jiruu246/rms/internal/repos"
+	"github.com/Jiruu246/rms/internal/services"
 	"github.com/gin-gonic/gin"
 	"github.com/jmoiron/sqlx"
-	"go.uber.org/zap"
 )
 
 type Server struct {
 	cfg    *config.Config
-	logger *zap.Logger
 	db     *sqlx.DB
 	engine *gin.Engine
 	srv    *http.Server
 }
 
-func New(cfg *config.Config, log *zap.Logger, db *sqlx.DB) *Server {
+func New(cfg *config.Config, db *sqlx.DB) *Server {
 	if cfg.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -29,9 +30,17 @@ func New(cfg *config.Config, log *zap.Logger, db *sqlx.DB) *Server {
 	engine := gin.New()
 	engine.Use(gin.Recovery())
 
+	// Add CORS middleware at the top level
+	if cfg.Env == "production" {
+		// Use restrictive CORS for production with configured origins
+		engine.Use(middlewares.RestrictiveCORS(cfg.AllowedOrigins))
+	} else {
+		// Use permissive CORS for development
+		engine.Use(middlewares.CORS())
+	}
+
 	s := &Server{
 		cfg:    cfg,
-		logger: log,
 		db:     db,
 		engine: engine,
 	}
@@ -48,19 +57,30 @@ func New(cfg *config.Config, log *zap.Logger, db *sqlx.DB) *Server {
 }
 
 func (s *Server) routes() {
-	// health
-	s.engine.GET("/health", handler.Health)
+	// initialize repositories
+	categoryRepo := repos.NewCategoryRepository(s.db)
 
-	// versioned API group placeholder
-	v1 := s.engine.Group("/v1")
+	// initialize services
+	categoryService := services.NewCategoryService(categoryRepo)
+
+	// initialize handlers
+	categoryHandler := handler.NewCategoryHandler(categoryService)
+
+	// API routes
+	api := s.engine.Group("/api")
 	{
-		v1.GET("/health", handler.Health)
+		categories := api.Group("/categories")
+		{
+			categories.GET("/:id", categoryHandler.GetCategory)
+			categories.PATCH("/:id", categoryHandler.UpdateCategory)
+			categories.DELETE("/:id", categoryHandler.DeleteCategory)
+		}
 	}
 }
 
 // Start runs the HTTP server.
 func (s *Server) Start() error {
-	s.logger.Sugar().Infof("listening on %s", s.srv.Addr)
+	fmt.Printf("listening on %s\n", s.srv.Addr)
 	return s.srv.ListenAndServe()
 }
 

@@ -16,6 +16,7 @@ type Config struct {
 	ReadTimeout     time.Duration
 	WriteTimeout    time.Duration
 	ShutdownTimeout int
+	AllowedOrigins  []string
 }
 
 // Load reads configuration from environment variables and optional file.
@@ -31,6 +32,7 @@ func Load() (*Config, error) {
 	v.SetDefault("READ_TIMEOUT", 15)
 	v.SetDefault("WRITE_TIMEOUT", 15)
 	v.SetDefault("SHUTDOWN_TIMEOUT", 15)
+	v.SetDefault("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"})
 
 	cfg := &Config{
 		Env:             v.GetString("ENV"),
@@ -40,6 +42,7 @@ func Load() (*Config, error) {
 		ReadTimeout:     time.Duration(v.GetInt("READ_TIMEOUT")) * time.Second,
 		WriteTimeout:    time.Duration(v.GetInt("WRITE_TIMEOUT")) * time.Second,
 		ShutdownTimeout: v.GetInt("SHUTDOWN_TIMEOUT"),
+		AllowedOrigins:  v.GetStringSlice("ALLOWED_ORIGINS"),
 	}
 
 	if cfg.Port <= 0 {

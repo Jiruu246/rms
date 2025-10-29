@@ -7,22 +7,22 @@ import (
 	"time"
 
 	"github.com/Jiruu246/rms/internal/config"
+	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/handler"
 	"github.com/Jiruu246/rms/internal/middlewares"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/gin-gonic/gin"
-	"github.com/jmoiron/sqlx"
 )
 
 type Server struct {
 	cfg    *config.Config
-	db     *sqlx.DB
+	client *ent.Client
 	engine *gin.Engine
 	srv    *http.Server
 }
 
-func New(cfg *config.Config, db *sqlx.DB) *Server {
+func New(cfg *config.Config, client *ent.Client) *Server {
 	if cfg.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -41,7 +41,7 @@ func New(cfg *config.Config, db *sqlx.DB) *Server {
 
 	s := &Server{
 		cfg:    cfg,
-		db:     db,
+		client: client,
 		engine: engine,
 	}
 
@@ -58,7 +58,7 @@ func New(cfg *config.Config, db *sqlx.DB) *Server {
 
 func (s *Server) routes() {
 	// initialize repositories
-	categoryRepo := repos.NewCategoryRepository(s.db)
+	categoryRepo := repos.NewEntCategoryRepository(s.client)
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)

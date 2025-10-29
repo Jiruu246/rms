@@ -3,24 +3,16 @@ package database
 import (
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/ent"
 	_ "github.com/jackc/pgx/v5/stdlib"
-	"github.com/jmoiron/sqlx"
 )
 
-// New returns an initialized sqlx.DB. The caller should Close() it.
-func New(dsn string) (*sqlx.DB, error) {
-	if dsn == "" {
-		return nil, fmt.Errorf("empty database dsn")
+// NewEntClient creates a new Ent client with the given DSN
+func NewEntClient(dsn string) (*ent.Client, error) {
+	client, err := ent.Open("postgres", dsn)
+	if err != nil {
+		return nil, fmt.Errorf("failed to connect to database: %w", err)
 	}
 
-	db, err := sqlx.Open("pgx", dsn)
-	if err != nil {
-		return nil, err
-	}
-	if err := db.Ping(); err != nil {
-		db.Close()
-		return nil, err
-	}
-	// production tuning could be added here (SetMaxOpenConns, SetConnMaxLifetime, etc.)
-	return db, nil
+	return client, nil
 }

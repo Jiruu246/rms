@@ -29,7 +29,7 @@ func main() {
 	}
 
 	// init database
-	db, err := database.New(cfg.DatabaseURL)
+	db, err := database.NewEntClient(cfg.DatabaseURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to init database: %v\n", err)
 	}

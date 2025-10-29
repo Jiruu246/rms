@@ -1,11 +1,14 @@
 package services
 
 import (
+	"context"
 	"errors"
 	"testing"
 	"time"
 
-	"github.com/Jiruu246/rms/internal/models"
+	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/ent"
+	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -15,73 +18,79 @@ type MockCategoryRepository struct {
 	mock.Mock
 }
 
-func (m *MockCategoryRepository) Create(category *models.Category) (*models.Category, error) {
-	args := m.Called(category)
+func (m *MockCategoryRepository) Create(ctx context.Context, category *ent.Category) (*ent.Category, error) {
+	args := m.Called(ctx, category)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.Category), args.Error(1)
+	return args.Get(0).(*ent.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) GetByID(id uint) (*models.Category, error) {
-	args := m.Called(id)
+func (m *MockCategoryRepository) GetByID(ctx context.Context, id uuid.UUID) (*ent.Category, error) {
+	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.Category), args.Error(1)
+	return args.Get(0).(*ent.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) Update(category *models.Category) (*models.Category, error) {
-	args := m.Called(category)
+func (m *MockCategoryRepository) Update(ctx context.Context, category *ent.Category) (*ent.Category, error) {
+	args := m.Called(ctx, category)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*models.Category), args.Error(1)
+	return args.Get(0).(*ent.Category), args.Error(1)
 }
 
-func (m *MockCategoryRepository) Delete(id uint) error {
-	args := m.Called(id)
+func (m *MockCategoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
+	args := m.Called(ctx, id)
 	return args.Error(0)
+}
+
+func (m *MockCategoryRepository) GetAll(ctx context.Context) ([]*ent.Category, error) {
+	args := m.Called(ctx)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).([]*ent.Category), args.Error(1)
 }
 
 func TestCategoryService_Create(t *testing.T) {
 	testCases := []struct {
 		name          string
-		request       *models.CreateCategoryRequest
+		request       *dto.CreateCategoryRequest
 		mockSetup     func(*MockCategoryRepository)
 		expectedError string
 	}{
 		{
 			name: "successful creation",
-			request: &models.CreateCategoryRequest{
+			request: &dto.CreateCategoryRequest{
 				Name:         "Test Category",
 				Description:  "Test Description",
 				DisplayOrder: 1,
 				IsActive:     true,
 			},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				expectedCategory := &models.Category{
-					ID:           1,
+				expectedCategory := &ent.Category{
 					Name:         "Test Category",
 					Description:  "Test Description",
 					DisplayOrder: 1,
 					IsActive:     true,
-					CreatedAt:    time.Now(),
 				}
-				mockRepo.On("Create", mock.AnythingOfType("*models.Category")).Return(expectedCategory, nil)
+				mockRepo.On("Create", mock.Anything, expectedCategory).Return(expectedCategory, nil)
 			},
 			expectedError: "",
 		},
 		{
 			name: "repository error",
-			request: &models.CreateCategoryRequest{
+			request: &dto.CreateCategoryRequest{
 				Name:         "Test Category",
 				Description:  "Test Description",
 				DisplayOrder: 1,
 				IsActive:     true,
 			},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("Create", mock.AnythingOfType("*models.Category")).Return(nil, errors.New("database error"))
+				mockRepo.On("Create", mock.Anything, mock.Anything).Return(nil, errors.New("database error"))
 			},
 			expectedError: "database error",
 		},
@@ -93,7 +102,7 @@ func TestCategoryService_Create(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewCategoryService(mockRepo)
-			result, err := service.Create(testCase.request)
+			result, err := service.Create(t.Context(), testCase.request)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -114,41 +123,32 @@ func TestCategoryService_Create(t *testing.T) {
 }
 
 func TestCategoryService_GetByID(t *testing.T) {
+	testId := uuid.New()
+
 	testCases := []struct {
 		name          string
-		id            uint
+		id            uuid.UUID
 		mockSetup     func(*MockCategoryRepository)
 		expectedError string
 	}{
 		{
 			name: "successful retrieval",
-			id:   1,
+			id:   testId,
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				expectedCategory := &models.Category{
-					ID:           1,
-					Name:         "Test Category",
-					Description:  "Test Description",
-					DisplayOrder: 1,
-					IsActive:     true,
-					CreatedAt:    time.Now(),
+				expectedCategory := &ent.Category{
+					ID: testId,
 				}
-				mockRepo.On("GetByID", uint(1)).Return(expectedCategory, nil)
+				mockRepo.On("GetByID", mock.Anything, testId).Return(expectedCategory, nil)
 			},
 			expectedError: "",
 		},
 		{
-			name:          "invalid id zero",
-			id:            0,
-			mockSetup:     func(mockRepo *MockCategoryRepository) {},
-			expectedError: "invalid category id",
-		},
-		{
 			name: "repository error",
-			id:   1,
+			id:   testId,
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("GetByID", uint(1)).Return(nil, errors.New("database error"))
+				mockRepo.On("GetByID", mock.Anything, testId).Return(nil, errors.New("category not found"))
 			},
-			expectedError: "database error",
+			expectedError: "category not found",
 		},
 	}
 
@@ -158,7 +158,7 @@ func TestCategoryService_GetByID(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewCategoryService(mockRepo)
-			result, err := service.GetByID(testCase.id)
+			result, err := service.GetByID(t.Context(), testCase.id)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -176,124 +176,113 @@ func TestCategoryService_GetByID(t *testing.T) {
 }
 
 func TestCategoryService_Update(t *testing.T) {
-	name := "Updated Category"
-	description := "Updated Description"
-	displayOrder := 2
-	isActive := false
+	id := uuid.New()
+	name_new := "Updated Category"
+	description_new := "Updated Description"
+	displayOrder_new := 2
+	isActive_new := false
 
 	testCases := []struct {
 		name          string
-		id            uint
-		request       *models.UpdateCategoryRequest
+		id            uuid.UUID
+		request       *dto.UpdateCategoryRequest
 		mockSetup     func(*MockCategoryRepository)
 		expectedError string
 	}{
 		{
 			name: "successful update with all fields",
-			id:   1,
-			request: &models.UpdateCategoryRequest{
-				Name:         &name,
-				Description:  &description,
-				DisplayOrder: &displayOrder,
-				IsActive:     &isActive,
+			id:   id,
+			request: &dto.UpdateCategoryRequest{
+				Name:         &name_new,
+				Description:  &description_new,
+				DisplayOrder: &displayOrder_new,
+				IsActive:     &isActive_new,
 			},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				existingCategory := &models.Category{
-					ID:           1,
+				existingCategory := &ent.Category{
+					ID:           id,
 					Name:         "Old Category",
 					Description:  "Old Description",
 					DisplayOrder: 1,
 					IsActive:     true,
-					CreatedAt:    time.Now(),
 				}
-				updatedCategory := &models.Category{
-					ID:           1,
-					Name:         name,
-					Description:  description,
-					DisplayOrder: displayOrder,
-					IsActive:     isActive,
-					CreatedAt:    time.Now(),
+				updatedCategory := &ent.Category{
+					ID:           id,
+					Name:         name_new,
+					Description:  description_new,
+					DisplayOrder: displayOrder_new,
+					IsActive:     isActive_new,
 				}
-				mockRepo.On("GetByID", uint(1)).Return(existingCategory, nil)
-				mockRepo.On("Update", mock.AnythingOfType("*models.Category")).Return(updatedCategory, nil)
+				mockRepo.On("GetByID", mock.Anything, id).Return(existingCategory, nil)
+				mockRepo.On("Update", mock.Anything, updatedCategory).Return(updatedCategory, nil)
 			},
 			expectedError: "",
 		},
 		{
 			name: "successful update with partial fields",
-			id:   1,
-			request: &models.UpdateCategoryRequest{
-				Name: &name,
+			id:   id,
+			request: &dto.UpdateCategoryRequest{
+				Name: &name_new,
 			},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				existingCategory := &models.Category{
-					ID:           1,
+				existingCategory := &ent.Category{
+					ID:           id,
 					Name:         "Old Category",
 					Description:  "Old Description",
 					DisplayOrder: 1,
 					IsActive:     true,
-					CreatedAt:    time.Now(),
 				}
-				updatedCategory := &models.Category{
-					ID:           1,
-					Name:         name,
+				updatedCategory := &ent.Category{
+					ID:           id,
+					Name:         name_new,
 					Description:  "Old Description",
 					DisplayOrder: 1,
 					IsActive:     true,
-					CreatedAt:    time.Now(),
 				}
-				mockRepo.On("GetByID", uint(1)).Return(existingCategory, nil)
-				mockRepo.On("Update", mock.AnythingOfType("*models.Category")).Return(updatedCategory, nil)
+				mockRepo.On("GetByID", mock.Anything, id).Return(existingCategory, nil)
+				mockRepo.On("Update", mock.Anything, updatedCategory).Return(updatedCategory, nil)
 			},
 			expectedError: "",
 		},
 		{
-			name:          "invalid id zero",
-			id:            0,
-			request:       &models.UpdateCategoryRequest{Name: &name},
-			mockSetup:     func(mockRepo *MockCategoryRepository) {},
-			expectedError: "invalid category id",
-		},
-		{
 			name:    "empty name validation",
-			id:      1,
-			request: &models.UpdateCategoryRequest{Name: func() *string { s := ""; return &s }()},
+			id:      id,
+			request: &dto.UpdateCategoryRequest{Name: func() *string { s := ""; return &s }()},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				existingCategory := &models.Category{
-					ID:           1,
+				existingCategory := &ent.Category{
+					ID:           id,
 					Name:         "Old Category",
 					Description:  "Old Description",
 					DisplayOrder: 1,
 					IsActive:     true,
 					CreatedAt:    time.Now(),
 				}
-				mockRepo.On("GetByID", uint(1)).Return(existingCategory, nil)
+				mockRepo.On("GetByID", mock.Anything, id).Return(existingCategory, nil)
 			},
 			expectedError: "name cannot be empty",
 		},
 		{
 			name:    "no fields provided",
-			id:      1,
-			request: &models.UpdateCategoryRequest{},
+			id:      id,
+			request: &dto.UpdateCategoryRequest{},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				existingCategory := &models.Category{
-					ID:           1,
+				existingCategory := &ent.Category{
+					ID:           id,
 					Name:         "Old Category",
 					Description:  "Old Description",
 					DisplayOrder: 1,
 					IsActive:     true,
-					CreatedAt:    time.Now(),
 				}
-				mockRepo.On("GetByID", uint(1)).Return(existingCategory, nil)
+				mockRepo.On("GetByID", mock.Anything, id).Return(existingCategory, nil)
 			},
 			expectedError: "no valid fields provided for update",
 		},
 		{
 			name:    "category not found",
-			id:      999,
-			request: &models.UpdateCategoryRequest{Name: &name},
+			id:      id,
+			request: &dto.UpdateCategoryRequest{Name: &name_new},
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("GetByID", uint(999)).Return(nil, errors.New("not found"))
+				mockRepo.On("GetByID", mock.Anything, id).Return(nil, errors.New("not found"))
 			},
 			expectedError: "category not found",
 		},
@@ -305,7 +294,7 @@ func TestCategoryService_Update(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewCategoryService(mockRepo)
-			result, err := service.Update(testCase.id, testCase.request)
+			result, err := service.Update(t.Context(), testCase.id, testCase.request)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -323,31 +312,27 @@ func TestCategoryService_Update(t *testing.T) {
 }
 
 func TestCategoryService_Delete(t *testing.T) {
+	id := uuid.New()
+
 	testCases := []struct {
 		name          string
-		id            uint
+		id            uuid.UUID
 		mockSetup     func(*MockCategoryRepository)
 		expectedError string
 	}{
 		{
 			name: "successful deletion",
-			id:   1,
+			id:   id,
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("Delete", uint(1)).Return(nil)
+				mockRepo.On("Delete", mock.Anything, id).Return(nil)
 			},
 			expectedError: "",
 		},
 		{
-			name:          "invalid id zero",
-			id:            0,
-			mockSetup:     func(mockRepo *MockCategoryRepository) {},
-			expectedError: "invalid category id",
-		},
-		{
 			name: "repository error",
-			id:   1,
+			id:   id,
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("Delete", uint(1)).Return(errors.New("database error"))
+				mockRepo.On("Delete", mock.Anything, id).Return(errors.New("database error"))
 			},
 			expectedError: "database error",
 		},
@@ -359,13 +344,83 @@ func TestCategoryService_Delete(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewCategoryService(mockRepo)
-			err := service.Delete(testCase.id)
+			err := service.Delete(t.Context(), testCase.id)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
 				assert.Contains(t, err.Error(), testCase.expectedError)
 			} else {
 				assert.NoError(t, err)
+			}
+
+			mockRepo.AssertExpectations(t)
+		})
+	}
+}
+
+func TestCategoryService_GetAll(t *testing.T) {
+	testCases := []struct {
+		name          string
+		mockSetup     func(*MockCategoryRepository)
+		expectedError string
+		expectedCount int
+	}{
+		{
+			name: "successful retrieval with categories",
+			mockSetup: func(mockRepo *MockCategoryRepository) {
+				categories := []*ent.Category{
+					{
+						Name:         "Category 1",
+						Description:  "Description 1",
+						DisplayOrder: 1,
+						IsActive:     true,
+					},
+					{
+						Name:         "Category 2",
+						Description:  "Description 2",
+						DisplayOrder: 2,
+						IsActive:     true,
+					},
+				}
+				mockRepo.On("GetAll", mock.Anything).Return(categories, nil)
+			},
+			expectedError: "",
+			expectedCount: 2,
+		},
+		{
+			name: "successful retrieval with empty result",
+			mockSetup: func(mockRepo *MockCategoryRepository) {
+				mockRepo.On("GetAll", mock.Anything).Return([]*ent.Category{}, nil)
+			},
+			expectedError: "",
+			expectedCount: 0,
+		},
+		{
+			name: "repository error",
+			mockSetup: func(mockRepo *MockCategoryRepository) {
+				mockRepo.On("GetAll", mock.Anything).Return(nil, errors.New("database error"))
+			},
+			expectedError: "database error",
+			expectedCount: 0,
+		},
+	}
+
+	for _, testCase := range testCases {
+		t.Run(testCase.name, func(t *testing.T) {
+			mockRepo := new(MockCategoryRepository)
+			testCase.mockSetup(mockRepo)
+
+			service := NewCategoryService(mockRepo)
+			result, err := service.GetAll(context.Background())
+
+			if testCase.expectedError != "" {
+				assert.Error(t, err)
+				assert.Contains(t, err.Error(), testCase.expectedError)
+				assert.Nil(t, result)
+			} else {
+				assert.NoError(t, err)
+				assert.NotNil(t, result)
+				assert.Len(t, result, testCase.expectedCount)
 			}
 
 			mockRepo.AssertExpectations(t)

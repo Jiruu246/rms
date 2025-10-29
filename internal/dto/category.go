@@ -1,15 +1,4 @@
-package models
-
-import "time"
-
-type Category struct {
-	ID           uint      `json:"id" gorm:"primaryKey"`
-	Name         string    `json:"name" validate:"required"`
-	Description  string    `json:"description"`
-	DisplayOrder int       `json:"display_order"`
-	IsActive     bool      `json:"is_active"`
-	CreatedAt    time.Time `json:"created_at"`
-}
+package dto
 
 // CreateCategoryRequest represents the request body for creating a category
 type CreateCategoryRequest struct {

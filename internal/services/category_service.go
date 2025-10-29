@@ -1,18 +1,22 @@
 package services
 
 import (
+	"context"
 	"fmt"
 	"strings"
 
-	"github.com/Jiruu246/rms/internal/models"
+	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/repos"
+	"github.com/google/uuid"
 )
 
 type CategoryService interface {
-	Create(req *models.CreateCategoryRequest) (*models.Category, error)
-	GetByID(id uint) (*models.Category, error)
-	Update(id uint, req *models.UpdateCategoryRequest) (*models.Category, error)
-	Delete(id uint) error
+	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*ent.Category, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*ent.Category, error)
+	GetAll(ctx context.Context) ([]*ent.Category, error)
+	Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCategoryRequest) (*ent.Category, error)
+	Delete(ctx context.Context, id uuid.UUID) error
 }
 
 type categoryService struct {
@@ -25,32 +29,32 @@ func NewCategoryService(repo repos.CategoryRepository) CategoryService {
 	}
 }
 
-func (s *categoryService) Create(req *models.CreateCategoryRequest) (*models.Category, error) {
+func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryRequest) (*ent.Category, error) {
 	// Create Category from request
-	category := &models.Category{
+	category := &ent.Category{
 		Name:         req.Name,
 		Description:  req.Description,
 		DisplayOrder: req.DisplayOrder,
 		IsActive:     req.IsActive,
 	}
 
-	return s.repo.Create(category)
+	return s.repo.Create(ctx, category)
 }
 
-func (s *categoryService) GetByID(id uint) (*models.Category, error) {
-	if id == 0 {
+func (s *categoryService) GetByID(ctx context.Context, id uuid.UUID) (*ent.Category, error) {
+	if id == uuid.Nil {
 		return nil, fmt.Errorf("invalid category id")
 	}
 
-	return s.repo.GetByID(id)
+	return s.repo.GetByID(ctx, id)
 }
 
-func (s *categoryService) Update(id uint, req *models.UpdateCategoryRequest) (*models.Category, error) {
-	if id == 0 {
+func (s *categoryService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCategoryRequest) (*ent.Category, error) {
+	if id == uuid.Nil {
 		return nil, fmt.Errorf("invalid category id")
 	}
 
-	category, err := s.repo.GetByID(id)
+	category, err := s.repo.GetByID(ctx, id)
 	if err != nil {
 		return nil, fmt.Errorf("category not found")
 	}
@@ -87,13 +91,17 @@ func (s *categoryService) Update(id uint, req *models.UpdateCategoryRequest) (*m
 		return nil, fmt.Errorf("no valid fields provided for update")
 	}
 
-	return s.repo.Update(category)
+	return s.repo.Update(ctx, category)
 }
 
-func (s *categoryService) Delete(id uint) error {
-	if id == 0 {
+func (s *categoryService) Delete(ctx context.Context, id uuid.UUID) error {
+	if id == uuid.Nil {
 		return fmt.Errorf("invalid category id")
 	}
 
-	return s.repo.Delete(id)
+	return s.repo.Delete(ctx, id)
+}
+
+func (s *categoryService) GetAll(ctx context.Context) ([]*ent.Category, error) {
+	return s.repo.GetAll(ctx)
 }

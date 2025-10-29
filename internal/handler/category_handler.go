@@ -2,13 +2,13 @@ package handler
 
 import (
 	"net/http"
-	"strconv"
 	"strings"
 
-	"github.com/Jiruu246/rms/internal/models"
+	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 )
 
 type CategoryHandler struct {
@@ -23,14 +23,14 @@ func NewCategoryHandler(service services.CategoryService) *CategoryHandler {
 
 // CreateCategory handles POST /api/categories
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
-	var req models.CreateCategoryRequest
+	var req dto.CreateCategoryRequest
 
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
 		utils.WriteBadRequest(c.Writer, err.Error())
 		return
 	}
 
-	created, err := h.service.Create(&req)
+	created, err := h.service.Create(c.Request.Context(), &req)
 	if err != nil {
 		utils.WriteInternalError(c.Writer, "Failed to create category")
 		return
@@ -42,13 +42,13 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 // GetCategory handles GET /api/categories/{id}
 func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		utils.WriteBadRequest(c.Writer, "Invalid category ID format")
 		return
 	}
 
-	category, err := h.service.GetByID(uint(id))
+	category, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			utils.WriteNotFound(c.Writer, "Category not found")
@@ -64,19 +64,19 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 // UpdateCategory handles PATCH /api/categories/{id}
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		utils.WriteBadRequest(c.Writer, "Invalid category ID format")
 		return
 	}
 
-	var req models.UpdateCategoryRequest
+	var req dto.UpdateCategoryRequest
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
 		utils.WriteBadRequest(c.Writer, err.Error())
 		return
 	}
 
-	updated, err := h.service.Update(uint(id), &req)
+	updated, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			utils.WriteNotFound(c.Writer, "Category not found")
@@ -92,13 +92,13 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 // DeleteCategory handles DELETE /api/categories/{id}
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	idStr := c.Param("id")
-	id, err := strconv.ParseUint(idStr, 10, 32)
+	id, err := uuid.Parse(idStr)
 	if err != nil {
 		utils.WriteBadRequest(c.Writer, "Invalid category ID format")
 		return
 	}
 
-	err = h.service.Delete(uint(id))
+	err = h.service.Delete(c.Request.Context(), id)
 	if err != nil {
 		if strings.Contains(err.Error(), "not found") {
 			utils.WriteNotFound(c.Writer, "Category not found")
@@ -110,4 +110,15 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 
 	// Return success with no data for DELETE operations
 	utils.WriteResponse(c.Writer, http.StatusNoContent, nil)
+}
+
+// GetCategories handles GET /api/categories
+func (h *CategoryHandler) GetCategories(c *gin.Context) {
+	categories, err := h.service.GetAll(c.Request.Context())
+	if err != nil {
+		utils.WriteInternalError(c.Writer, "Failed to retrieve categories")
+		return
+	}
+
+	utils.WriteSuccess(c.Writer, categories)
 }

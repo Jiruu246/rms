@@ -15,6 +15,14 @@ tidy:
 test:
 	go test ./... -v
 
+test-unit:
+	go test ./internal/... -v
+
+test-integration:
+	go test ./integration_tests/... -v
+
+test-all: test-unit test-integration
+
 docker: build
 	docker build -t github.com/Jiruu246/rms:latest .
 

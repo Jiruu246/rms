@@ -71,8 +71,10 @@ func (s *Server) routes() {
 	{
 		categories := api.Group("/categories")
 		{
+			categories.POST("", categoryHandler.CreateCategory)
+			categories.GET("", categoryHandler.GetCategories)
 			categories.GET("/:id", categoryHandler.GetCategory)
-			categories.PATCH("/:id", categoryHandler.UpdateCategory)
+			categories.PUT("/:id", categoryHandler.UpdateCategory)
 			categories.DELETE("/:id", categoryHandler.DeleteCategory)
 		}
 	}
@@ -90,4 +92,9 @@ func (s *Server) Shutdown(ctx context.Context) error {
 	ctxTimeout, cancel := context.WithTimeout(ctx, 10*time.Second)
 	defer cancel()
 	return s.srv.Shutdown(ctxTimeout)
+}
+
+// Engine returns the gin engine for testing purposes
+func (s *Server) Engine() *gin.Engine {
+	return s.engine
 }

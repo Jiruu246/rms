@@ -15,7 +15,7 @@ func init() {
 }
 
 // ParseAndValidateRequest parses JSON request body and validates it
-func ParseAndValidateRequest(c *gin.Context, req interface{}) error {
+func ParseAndValidateRequest(c *gin.Context, req any) error {
 	// Bind JSON to struct
 	if err := c.ShouldBindJSON(req); err != nil {
 		return fmt.Errorf("invalid JSON format: %v", err)

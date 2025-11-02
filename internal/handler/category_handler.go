@@ -109,7 +109,7 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	}
 
 	// Return success with no data for DELETE operations
-	utils.WriteResponse(c.Writer, http.StatusNoContent, nil)
+	utils.WriteResponse[any](c.Writer, http.StatusNoContent, nil)
 }
 
 // GetCategories handles GET /api/categories

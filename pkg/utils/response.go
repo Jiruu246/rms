@@ -6,11 +6,11 @@ import (
 	"time"
 )
 
-type APIResponse struct {
-	Success   bool        `json:"success"`
-	Data      interface{} `json:"data,omitempty"`
-	Error     *APIError   `json:"error,omitempty"`
-	Timestamp time.Time   `json:"timestamp"`
+type APIResponse[T any] struct {
+	Success   bool      `json:"success"`
+	Data      T         `json:"data,omitempty"`
+	Error     *APIError `json:"error,omitempty"`
+	Timestamp time.Time `json:"timestamp"`
 }
 
 type APIError struct {
@@ -19,8 +19,8 @@ type APIError struct {
 	Details map[string]any `json:"details,omitempty"`
 }
 
-func WriteResponse(w http.ResponseWriter, status int, data any) {
-	response := APIResponse{
+func WriteResponse[T any](w http.ResponseWriter, status int, data T) {
+	response := APIResponse[T]{
 		Success:   status >= 200 && status < 300,
 		Data:      data,
 		Timestamp: time.Now(),
@@ -32,7 +32,7 @@ func WriteResponse(w http.ResponseWriter, status int, data any) {
 }
 
 func WriteError(w http.ResponseWriter, status int, code, message string, details map[string]any) {
-	response := APIResponse{
+	response := APIResponse[any]{
 		Success: false,
 		Error: &APIError{
 			Code:    code,

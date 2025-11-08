@@ -19,6 +19,7 @@ type Config struct {
 	WriteTimeout     time.Duration
 	ShutdownTimeout  int
 	AllowedOrigins   []string
+	JWTSecret        string
 }
 
 // Load reads configuration from environment variables and optional file.
@@ -47,6 +48,7 @@ func Load() (*Config, error) {
 		WriteTimeout:     time.Duration(v.GetInt("WRITE_TIMEOUT")) * time.Second,
 		ShutdownTimeout:  v.GetInt("SHUTDOWN_TIMEOUT"),
 		AllowedOrigins:   v.GetStringSlice("ALLOWED_ORIGINS"),
+		JWTSecret:        v.GetString("JWT_SECRET"),
 	}
 
 	if cfg.Port <= 0 {

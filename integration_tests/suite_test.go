@@ -13,6 +13,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/server"
 	"github.com/Jiruu246/rms/pkg/database"
+	"github.com/gin-gonic/gin"
 	"github.com/jackc/pgx/v5"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"github.com/joho/godotenv"
@@ -49,8 +50,24 @@ func (s *IntegrationTestSuite) SetupSuite() {
 	err = s.runMigrations(ctx)
 	s.Require().NoError(err, "Failed to run migrations")
 
-	// Create server instance
-	s.server = server.New(s.cfg, s.client)
+	// Create server instance with mock middlewares
+	s.server = server.New(s.cfg, s.client, server.Middlewares{
+		RestrictiveCORS: func(origins []string) gin.HandlerFunc {
+			return func(c *gin.Context) {
+				c.Next()
+			}
+		},
+		CORS: func() gin.HandlerFunc {
+			return func(c *gin.Context) {
+				c.Next()
+			}
+		},
+		JWTMiddleware: func(secretKey []byte) gin.HandlerFunc {
+			return func(c *gin.Context) {
+				c.Next()
+			}
+		},
+	})
 
 	log.Printf("Integration test suite setup completed with database: %s", s.testDBName)
 }

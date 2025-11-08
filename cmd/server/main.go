@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/Jiruu246/rms/internal/config"
+	"github.com/Jiruu246/rms/internal/middlewares"
 	"github.com/Jiruu246/rms/internal/server"
 	"github.com/Jiruu246/rms/pkg/database"
 	"github.com/joho/godotenv"
@@ -35,8 +36,14 @@ func main() {
 	}
 	defer db.Close()
 
+	// initialize custom middlewares
+
 	// create server
-	srv := server.New(cfg, db)
+	srv := server.New(cfg, db, server.Middlewares{
+		RestrictiveCORS: middlewares.RestrictiveCORS,
+		CORS:            middlewares.CORS,
+		JWTMiddleware:   middlewares.JWTMiddleware,
+	})
 
 	// run server with graceful shutdown
 	go func() {

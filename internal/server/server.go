@@ -9,20 +9,25 @@ import (
 	"github.com/Jiruu246/rms/internal/config"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/handler"
-	"github.com/Jiruu246/rms/internal/middlewares"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/gin-gonic/gin"
 )
 
+type Middlewares struct {
+	RestrictiveCORS func(origins []string) gin.HandlerFunc
+	CORS            func() gin.HandlerFunc
+	JWTMiddleware   func(secretKey []byte) gin.HandlerFunc
+}
 type Server struct {
-	cfg    *config.Config
-	client *ent.Client
-	engine *gin.Engine
-	srv    *http.Server
+	cfg         *config.Config
+	client      *ent.Client
+	engine      *gin.Engine
+	srv         *http.Server
+	middlewares Middlewares
 }
 
-func New(cfg *config.Config, client *ent.Client) *Server {
+func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Server {
 	if cfg.Env == "production" {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -40,9 +45,10 @@ func New(cfg *config.Config, client *ent.Client) *Server {
 	}
 
 	s := &Server{
-		cfg:    cfg,
-		client: client,
-		engine: engine,
+		cfg:         cfg,
+		client:      client,
+		engine:      engine,
+		middlewares: middlewares,
 	}
 
 	s.routes()
@@ -71,6 +77,9 @@ func (s *Server) routes() {
 	{
 		categories := api.Group("/categories")
 		{
+			// Apply JWT middleware to all category routes
+			categories.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+
 			categories.POST("", categoryHandler.CreateCategory)
 			categories.GET("", categoryHandler.GetCategories)
 			categories.GET("/:id", categoryHandler.GetCategory)

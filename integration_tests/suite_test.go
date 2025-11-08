@@ -4,9 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
-	"testing"
 	"time"
 
 	"github.com/Jiruu246/rms/internal/config"
@@ -23,35 +20,14 @@ import (
 // IntegrationTestSuite defines the test suite structure
 type IntegrationTestSuite struct {
 	suite.Suite
-	// TODO: Is this needed?
 	cfg        *config.Config
 	client     *ent.Client
 	adminConn  *pgx.Conn
-	server     *server.Server
 	testDBName string
 }
 
-// SetupSuite runs once before the entire test suite
-func (s *IntegrationTestSuite) SetupSuite() {
-	ctx := context.Background()
-	root, _ := os.Getwd()
-	log.Printf("Current working directory: %s", root)
-	s.Require().NoError(godotenv.Load(filepath.Join(root, ".env.test")), "Failed to load .env file")
-	cfg, err := config.Load()
-	s.Require().NoError(err, "Failed to load config")
-	s.cfg = cfg
-
-	// Create test database
-	client, err := s.createTestDatabase(ctx, cfg)
-	s.Require().NoError(err, "Failed to create test database")
-	s.client = client
-
-	// Run migrations on test database
-	err = s.runMigrations(ctx)
-	s.Require().NoError(err, "Failed to run migrations")
-
-	// Create server instance with mock middlewares
-	s.server = server.New(s.cfg, s.client, server.Middlewares{
+func DefaultMiddleware() server.Middlewares {
+	return server.Middlewares{
 		RestrictiveCORS: func(origins []string) gin.HandlerFunc {
 			return func(c *gin.Context) {
 				c.Next()
@@ -67,7 +43,25 @@ func (s *IntegrationTestSuite) SetupSuite() {
 				c.Next()
 			}
 		},
-	})
+	}
+}
+
+// SetupSuite runs once before the entire test suite
+func (s *IntegrationTestSuite) SetupSuite() {
+	ctx := context.Background()
+	s.Require().NoError(godotenv.Load(".env.test"), "Failed to load .env file")
+	cfg, err := config.Load()
+	s.Require().NoError(err, "Failed to load config")
+	s.cfg = cfg
+
+	// Create test database
+	client, err := s.createTestDatabase(ctx, cfg)
+	s.Require().NoError(err, "Failed to create test database")
+	s.client = client
+
+	// Run migrations on test database
+	err = s.runMigrations(ctx)
+	s.Require().NoError(err, "Failed to run migrations")
 
 	log.Printf("Integration test suite setup completed with database: %s", s.testDBName)
 }
@@ -101,9 +95,15 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 	log.Printf("Integration test suite cleanup completed")
 }
 
-// SetupTest runs before each individual test
-func (s *IntegrationTestSuite) SetupTest() {
-	// Clean up data between tests while keeping schema
+func (s *IntegrationTestSuite) CreateServerWithMiddleware(middlewares server.Middlewares) *server.Server {
+	return server.New(s.cfg, s.client, middlewares)
+}
+
+func (s *IntegrationTestSuite) CreateServer() *server.Server {
+	return s.CreateServerWithMiddleware(DefaultMiddleware())
+}
+
+func (s *IntegrationTestSuite) TearDownTest() {
 	s.cleanupTestData()
 }
 
@@ -190,8 +190,3 @@ func (s *IntegrationTestSuite) cleanupTestData() {
 // 	code := m.Run()
 // 	os.Exit(code)
 // }
-
-// TestIntegrationSuite runs the integration test suite
-func TestIntegrationSuite(t *testing.T) {
-	suite.Run(t, new(IntegrationTestSuite))
-}

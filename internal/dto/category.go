@@ -4,6 +4,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type Category struct {
+	ID           uuid.UUID `json:"id"`
+	Name         string    `json:"name"`
+	Description  string    `json:"description"`
+	DisplayOrder int       `json:"display_order"`
+	IsActive     bool      `json:"is_active"`
+}
+
 // CreateCategoryRequest represents the request body for creating a category
 type CreateCategoryRequest struct {
 	Name         string `json:"name" validate:"required,min=1,max=255" binding:"required"`
@@ -19,13 +27,4 @@ type UpdateCategoryRequest struct {
 	Description  *string `json:"description" validate:"omitempty,max=1000"`
 	DisplayOrder *int    `json:"display_order" validate:"omitempty,min=0"`
 	IsActive     *bool   `json:"is_active" validate:"omitempty"`
-}
-
-// CategoryResponse represents the response structure for category data
-type CategoryResponse struct {
-	ID           uuid.UUID `json:"id"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description"`
-	DisplayOrder int       `json:"display_order"`
-	IsActive     bool      `json:"is_active"`
 }

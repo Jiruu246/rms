@@ -3,19 +3,37 @@ package integration_tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/suite"
 )
 
 const categoryAPIBase = "/api/categories"
 
+type CategoryTestSuite struct {
+	IntegrationTestSuite
+}
+
+func (s *CategoryTestSuite) SetupTest() {
+	// s.IntegrationTestSuite.SetupTest()
+	count := 0
+	fmt.Printf("%d", count)
+}
+
+// TestCategoryTestSuite runs the category test suite
+func TestCategoryTestSuite(t *testing.T) {
+	suite.Run(t, new(CategoryTestSuite))
+}
+
 // TestCategoryAPI tests the category API endpoints
-func (s *IntegrationTestSuite) TestCreateCategory() {
+func (s *CategoryTestSuite) TestCreateCategory() {
 	tests := []struct {
 		testName string
 		body     any
@@ -30,7 +48,7 @@ func (s *IntegrationTestSuite) TestCreateCategory() {
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.CategoryResponse]
+				var response utils.APIResponse[dto.Category]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal("Test Category", response.Data.Name)
@@ -53,7 +71,8 @@ func (s *IntegrationTestSuite) TestCreateCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
 			tt.validate(w)
@@ -61,7 +80,7 @@ func (s *IntegrationTestSuite) TestCreateCategory() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetCategory() {
+func (s *CategoryTestSuite) TestGetCategory() {
 	initialCategory1, err := s.client.Category.Create().
 		SetName("Initial Category 1").
 		SetDescription("Initial Description 1").
@@ -97,7 +116,7 @@ func (s *IntegrationTestSuite) TestGetCategory() {
 			url:      path.Join(categoryAPIBase, initialCategory1.ID.String()),
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.CategoryResponse]
+				var response utils.APIResponse[dto.Category]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal(initialCategory1.ID, response.Data.ID)
@@ -112,7 +131,7 @@ func (s *IntegrationTestSuite) TestGetCategory() {
 			url:      categoryAPIBase,
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[[]dto.CategoryResponse]
+				var response utils.APIResponse[[]dto.Category]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.True(response.Success)
@@ -127,7 +146,8 @@ func (s *IntegrationTestSuite) TestGetCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
 			tt.validate(w)
@@ -135,7 +155,7 @@ func (s *IntegrationTestSuite) TestGetCategory() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestUpdateCategory() {
+func (s *CategoryTestSuite) TestUpdateCategory() {
 	initialCategory1, err := s.client.Category.Create().
 		SetName("Initial Category 1").
 		SetDescription("Initial Description 1").
@@ -164,7 +184,7 @@ func (s *IntegrationTestSuite) TestUpdateCategory() {
 			},
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var updatedCategory utils.APIResponse[dto.CategoryResponse]
+				var updatedCategory utils.APIResponse[dto.Category]
 				err := json.Unmarshal(w.Body.Bytes(), &updatedCategory)
 				s.Require().NoError(err)
 				s.Equal(initialCategory1.ID, updatedCategory.Data.ID)
@@ -189,7 +209,8 @@ func (s *IntegrationTestSuite) TestUpdateCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
 			tt.validate(w)
@@ -197,7 +218,7 @@ func (s *IntegrationTestSuite) TestUpdateCategory() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestDeleteCategory() {
+func (s *CategoryTestSuite) TestDeleteCategory() {
 	initialCategory, err := s.client.Category.Create().
 		SetName("Category To Delete").
 		SetDescription("This category will be deleted").
@@ -222,14 +243,15 @@ func (s *IntegrationTestSuite) TestDeleteCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})
 	}
 }
 
 // TestCategoryValidation tests input validation
-func (s *IntegrationTestSuite) TestCategoryValidation() {
+func (s *CategoryTestSuite) TestCategoryValidation() {
 	tests := []struct {
 		testName string
 		method   string
@@ -259,7 +281,8 @@ func (s *IntegrationTestSuite) TestCategoryValidation() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})
 	}

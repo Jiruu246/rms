@@ -5,21 +5,22 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
+	"github.com/google/uuid"
 )
 
 type JWTClaims struct {
-	UserID string `json:"user_id"`
-	Role   string `json:"role"`
+	UserID uuid.UUID `json:"user_id"`
+	Role   string    `json:"role"`
 	jwt.RegisteredClaims
 }
 
-func GenerateJWT(JWTKey []byte, userID string, role string, exp time.Time) (string, error) {
+func GenerateJWT(JWTKey []byte, userID uuid.UUID, role string, exp time.Time) (string, error) {
 	// Define token claims
 	claims := JWTClaims{
 		UserID: userID,
 		Role:   role,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   userID,
+			Subject:   userID.String(),
 			ExpiresAt: jwt.NewNumericDate(exp),
 		},
 	}

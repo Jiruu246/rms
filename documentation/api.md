@@ -1,6 +1,7 @@
 # Restaurant Management System (RMS) API Documentation
 
 ## Table of Contents
+- [Customer API]()
 - [Menu Items API](#menu-items-api)
 - [Categories API](#categories-api)
 - [Addons API](#addons-api)
@@ -8,6 +9,18 @@
 - [Status Codes](#status-codes)
 
 ---
+
+## Customer API
+### Endpoints
+
+| Method   | Endpoint              | Description                                            |
+| -------- | --------------------- | ------------------------------------------------------ |
+| `POST`   | `/api/users/register` | Register a new user                                    |
+| `POST`   | `/api/users/login`    | Log in a user and return a JWT token                   |
+| `GET`    | `/api/users/profile`  | Get the current user's profile (requires auth)         |
+| `PUT`    | `/api/users/profile`  | Update the current user's profile (support partial update)        |
+| `DELETE` | `/api/users/profile`  | Delete user account                                    |
+
 
 ## Menu Items API
 
@@ -26,7 +39,7 @@
 
 | Parameter | Type | Description | Example |
 |-----------|------|-------------|---------|
-| `category_id` | integer | Filter by category | `?category_id=123` |
+| `category_id` | uuid | Filter by category | `?category_id=123` |
 | `is_available` | boolean | Filter by availability | `?is_available=true` |
 | `search` | string | Search by name/description | `?search=pizza` |
 | `sort_by` | string | Sort field | `?sort_by=price` |

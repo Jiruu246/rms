@@ -8,3 +8,6 @@ import (
 
 // Category is the predicate function for category builders.
 type Category func(*sql.Selector)
+
+// Customer is the predicate function for customer builders.
+type Customer func(*sql.Selector)

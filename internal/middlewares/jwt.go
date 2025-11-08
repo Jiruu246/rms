@@ -16,14 +16,12 @@ func JWTMiddleware(secretKey []byte) gin.HandlerFunc {
 			return
 		}
 
-		// Validate the token
 		claims, err := utils.ValidateJWT(secretKey, tokenString)
 		if err != nil {
 			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
 			return
 		}
 
-		// Set claims to context
 		c.Set("claims", claims)
 		c.Next()
 	}

@@ -15,7 +15,7 @@ This project uses [Go Ent](https://entgo.io/) for ORM and database schema manage
 
 ### Scenario 1: Creating New Schema Changes
 
-1. if you create a new table, then run the following to generate the schema file 
+1. if you create a new table, then run the following to generate the schema file. or create a new file in the schema folder directly.
     ```go
     go run -mod=mod entgo.io/ent/cmd/ent new User
     ```
@@ -42,6 +42,8 @@ This project uses [Go Ent](https://entgo.io/) for ORM and database schema manage
 3. **Apply Changes**:
    ```bash
    make migrate-up
+   # or
+   go run ./cmd/migraete apply
    ```
 
 ### Scenario 2: Branch Switching (different Schema)

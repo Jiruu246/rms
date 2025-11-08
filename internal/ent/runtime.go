@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/customer"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/google/uuid"
 )
@@ -58,4 +59,48 @@ func init() {
 	categoryDescID := categoryFields[0].Descriptor()
 	// category.DefaultID holds the default value on creation for the id field.
 	category.DefaultID = categoryDescID.Default.(func() uuid.UUID)
+	customerFields := schema.Customer{}.Fields()
+	_ = customerFields
+	// customerDescName is the schema descriptor for name field.
+	customerDescName := customerFields[1].Descriptor()
+	// customer.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	customer.NameValidator = func() func(string) error {
+		validators := customerDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// customerDescEmail is the schema descriptor for email field.
+	customerDescEmail := customerFields[2].Descriptor()
+	// customer.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	customer.EmailValidator = customerDescEmail.Validators[0].(func(string) error)
+	// customerDescPhoneNumber is the schema descriptor for phone_number field.
+	customerDescPhoneNumber := customerFields[3].Descriptor()
+	// customer.DefaultPhoneNumber holds the default value on creation for the phone_number field.
+	customer.DefaultPhoneNumber = customerDescPhoneNumber.Default.(string)
+	// customerDescIsActive is the schema descriptor for is_active field.
+	customerDescIsActive := customerFields[4].Descriptor()
+	// customer.DefaultIsActive holds the default value on creation for the is_active field.
+	customer.DefaultIsActive = customerDescIsActive.Default.(bool)
+	// customerDescCreatedAt is the schema descriptor for created_at field.
+	customerDescCreatedAt := customerFields[5].Descriptor()
+	// customer.DefaultCreatedAt holds the default value on creation for the created_at field.
+	customer.DefaultCreatedAt = customerDescCreatedAt.Default.(time.Time)
+	// customerDescPasswordHash is the schema descriptor for password_hash field.
+	customerDescPasswordHash := customerFields[6].Descriptor()
+	// customer.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
+	customer.PasswordHashValidator = customerDescPasswordHash.Validators[0].(func(string) error)
+	// customerDescID is the schema descriptor for id field.
+	customerDescID := customerFields[0].Descriptor()
+	// customer.DefaultID holds the default value on creation for the id field.
+	customer.DefaultID = customerDescID.Default.(func() uuid.UUID)
 }

@@ -25,6 +25,7 @@ func (Customer) Fields() []ent.Field {
 			Comment("Customer name"),
 		field.String("email").
 			NotEmpty().
+			Unique().
 			Comment("Customer email"),
 		field.String("phone_number").
 			Default("").

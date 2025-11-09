@@ -65,12 +65,15 @@ func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Serve
 func (s *Server) routes() {
 	// initialize repositories
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
+	userRepo := repos.NewEntUserRepository(s.client)
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
+	userService := services.NewUserService(userRepo)
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+	userHandler := handler.NewUserHandler(userService)
 
 	// API routes
 	api := s.engine.Group("/api")
@@ -85,6 +88,20 @@ func (s *Server) routes() {
 			categories.GET("/:id", categoryHandler.GetCategory)
 			categories.PUT("/:id", categoryHandler.UpdateCategory)
 			categories.DELETE("/:id", categoryHandler.DeleteCategory)
+		}
+
+		users := api.Group("/users")
+		{
+			users.POST("/register", userHandler.Register)
+			users.POST("/login", userHandler.Login)
+
+			profile := users.Group("/profile")
+			profile.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+			{
+				profile.GET("", userHandler.GetProfile)
+				profile.PUT("", userHandler.UpdateProfile)
+				profile.DELETE("", userHandler.DeleteAccount)
+			}
 		}
 	}
 }

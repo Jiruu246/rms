@@ -18,8 +18,7 @@
 | `POST`   | `/api/users/register` | Register a new user                                    |
 | `POST`   | `/api/users/login`    | Log in a user and return a JWT token                   |
 | `GET`    | `/api/users/profile`  | Get the current user's profile (requires auth)         |
-| `PUT`    | `/api/users/profile`  | Update the current user's profile (full update)        |
-| `PATCH`  | `/api/users/profile`  | Partially update user profile (e.g., change name only) |
+| `PUT`    | `/api/users/profile`  | Update the current user's profile (support partial update)        |
 | `DELETE` | `/api/users/profile`  | Delete user account                                    |
 
 

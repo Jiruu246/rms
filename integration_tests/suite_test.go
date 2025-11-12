@@ -4,8 +4,6 @@ import (
 	"context"
 	"fmt"
 	"log"
-	"os"
-	"path/filepath"
 	"testing"
 	"time"
 
@@ -34,9 +32,8 @@ type IntegrationTestSuite struct {
 // SetupSuite runs once before the entire test suite
 func (s *IntegrationTestSuite) SetupSuite() {
 	ctx := context.Background()
-	root, _ := os.Getwd()
-	log.Printf("Current working directory: %s", root)
-	s.Require().NoError(godotenv.Load(filepath.Join(root, ".env.test")), "Failed to load .env file")
+	// root, _ := os.Getwd()
+	s.Require().NoError(godotenv.Load(".env.test"), "Failed to load .env file")
 	cfg, err := config.Load()
 	s.Require().NoError(err, "Failed to load config")
 	s.cfg = cfg

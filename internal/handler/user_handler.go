@@ -53,7 +53,11 @@ func (h *UserHandler) Login(c *gin.Context) {
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	userID := c.MustGet("userID").(uuid.UUID)
+	userID, err := uuid.Parse(c.MustGet("userID").(string))
+	if err != nil {
+		utils.WriteBadRequest(c.Writer, "invalid userID")
+		return
+	}
 
 	user, err := h.service.GetProfile(c.Request.Context(), userID)
 	if err != nil {

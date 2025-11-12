@@ -50,7 +50,7 @@ func (s *IntegrationTestSuite) TestCreateUser() {
 				s.Require().NoError(err)
 			}
 
-			req := httptest.NewRequest(http.MethodPost, userAPIBase, bytes.NewBuffer(body))
+			req := httptest.NewRequest(http.MethodPost, path.Join(userAPIBase, "register"), bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 

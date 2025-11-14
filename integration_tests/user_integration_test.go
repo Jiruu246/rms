@@ -9,6 +9,7 @@ import (
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/pkg/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 )
 
@@ -71,26 +72,45 @@ func (s *IntegrationTestSuite) TestGetUser() {
 	s.Require().NoError(err)
 
 	tests := []struct {
-		testName string
-		url      string
-		expected int
-		validate func(*httptest.ResponseRecorder)
+		testName   string
+		url        string
+		addContext func(req *http.Request) *http.Request
+		expected   int
+		validate   func(*httptest.ResponseRecorder)
 	}{
 		{
 			testName: "GetUserByID_NotFound",
-			url:      path.Join(userAPIBase, uuid.New().String()),
+			url:      path.Join(userAPIBase, "profile"),
+			addContext: func(req *http.Request) *http.Request {
+				c, _ := gin.CreateTestContext(httptest.NewRecorder())
+				c.Request = req
+				c.Set("userID", uuid.New().String())
+				return c.Request
+			},
 			expected: http.StatusNotFound,
 			validate: func(w *httptest.ResponseRecorder) {},
 		},
 		{
 			testName: "GetUserByID_InvalidUUID",
-			url:      path.Join(userAPIBase, "invalid-uuid"),
+			url:      path.Join(userAPIBase, "profile"),
+			addContext: func(req *http.Request) *http.Request {
+				c, _ := gin.CreateTestContext(httptest.NewRecorder())
+				c.Request = req
+				c.Set("userID", "invalid-uuid")
+				return c.Request
+			},
 			expected: http.StatusBadRequest,
 			validate: func(w *httptest.ResponseRecorder) {},
 		},
 		{
 			testName: "GetUserByID_Success",
-			url:      path.Join(userAPIBase, initialUser.ID.String()),
+			url:      path.Join(userAPIBase, "profile"),
+			addContext: func(req *http.Request) *http.Request {
+				c, _ := gin.CreateTestContext(httptest.NewRecorder())
+				c.Request = req
+				c.Set("userID", initialUser.ID.String())
+				return c.Request
+			},
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
 				var response utils.APIResponse[dto.UserProfileResponse]
@@ -108,6 +128,8 @@ func (s *IntegrationTestSuite) TestGetUser() {
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
+
+			req = tt.addContext(req)
 
 			s.server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)

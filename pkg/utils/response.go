@@ -70,3 +70,7 @@ func WriteInternalError(w http.ResponseWriter, message string) {
 func WriteForbidden(w http.ResponseWriter, message string) {
 	WriteError(w, http.StatusForbidden, "FORBIDDEN", message, nil)
 }
+
+func WriteUnauthorized(w http.ResponseWriter, message string) {
+	WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", message, nil)
+}

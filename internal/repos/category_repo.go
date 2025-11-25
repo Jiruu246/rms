@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"strings"
-	"time"
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
@@ -39,7 +38,6 @@ func (r *categoryRepository) Create(ctx context.Context, cat *dto.CreateCategory
 		SetDescription(cat.Description).
 		SetDisplayOrder(cat.DisplayOrder).
 		SetIsActive(cat.IsActive).
-		SetCreatedAt(time.Now()).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create category: %w", err)

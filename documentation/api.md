@@ -1,26 +1,65 @@
 # Restaurant Management System (RMS) API Documentation
 
 ## Table of Contents
-- [Customer API]()
+- [Auth API](#auth-api)
+- [User & Staff Management API](#user--staff-management)
+- [Restaurant Management API](#restaurant-management)
 - [Menu Items API](#menu-items-api)
 - [Categories API](#categories-api)
 - [Addons API](#addons-api)
-- [Example Payloads](#example-payloads)
+- [Table API](#table-api)
+- [Order API](#order-api)
+- [Payment API](#payment-api)
+- [Reservation API](#reservation-api)
+- [Customer API](#customer-api)
 - [Status Codes](#status-codes)
 
 ---
 
-## Customer API
-### Endpoints
+## Auth API
+This endpoint is public
 
-| Method   | Endpoint              | Description                                            |
-| -------- | --------------------- | ------------------------------------------------------ |
-| `POST`   | `/api/users/register` | Register a new user                                    |
-| `POST`   | `/api/users/login`    | Log in a user and return a JWT token                   |
-| `GET`    | `/api/users/profile`  | Get the current user's profile (requires auth)         |
-| `PUT`    | `/api/users/profile`  | Update the current user's profile (support partial update)        |
-| `DELETE` | `/api/users/profile`  | Delete user account                                    |
+```
+POST   /api/v1/auth/register          - Register new owner account
+POST   /api/v1/auth/login             - Login (returns JWT)
+POST   /api/v1/auth/refresh           - Refresh access token
+POST   /api/v1/auth/logout            - Logout (invalidate token)
+POST   /api/v1/auth/forgot-password   - Request password reset
+POST   /api/v1/auth/reset-password    - Reset password with token
+```
 
+---
+
+## User & Staff Management
+
+```
+GET    /api/v1/users/me                    [JWT: All]
+PUT    /api/v1/users/me                    [JWT: All]
+PUT    /api/v1/users/me/password           [JWT: All]
+
+GET    /api/v1/staff                       [JWT: Owner, Manager]
+POST   /api/v1/staff                       [JWT: Owner, Manager]
+GET    /api/v1/staff/:id                   [JWT: Owner, Manager]
+PUT    /api/v1/staff/:id                   [JWT: Owner, Manager]
+DELETE /api/v1/staff/:id                   [JWT: Owner]
+PUT    /api/v1/staff/:id/role              [JWT: Owner]
+PUT    /api/v1/staff/:id/status            [JWT: Owner, Manager]
+```
+
+---
+
+## Restaurant Management
+
+```
+GET    /api/v1/restaurants                 [JWT: Owner]
+POST   /api/v1/restaurants                 [JWT: Owner]
+GET    /api/v1/restaurants/:id             [JWT: Owner, Staff of restaurant]
+PUT    /api/v1/restaurants/:id             [JWT: Owner]
+DELETE /api/v1/restaurants/:id             [JWT: Owner]
+PUT    /api/v1/restaurants/:id/settings    [JWT: Owner, Manager]
+```
+
+---
 
 ## Menu Items API
 
@@ -80,142 +119,73 @@
 
 ---
 
-## Example Payloads
+## Table API
 
-### Create Menu Item
-**POST** `/api/menu-items`
-
-```json
-{
-  "name": "Margherita Pizza",
-  "description": "Classic pizza with tomato and mozzarella",
-  "price": 12.99,
-  "category_id": 1,
-  "image_url": "https://example.com/pizza.jpg",
-  "is_available": true,
-  "addon_ids": [1, 2, 3]
-}
+```
+GET    /api/v1/restaurants/:id/tables      [JWT: Owner, Manager, Waiter]
+POST   /api/v1/tables                      [JWT: Owner, Manager]
+PUT    /api/v1/tables/:id                  [JWT: Owner, Manager]
+DELETE /api/v1/tables/:id                  [JWT: Owner, Manager]
+PUT    /api/v1/tables/:id/status           [JWT: Owner, Manager, Waiter]
+GET    /api/v1/tables/:id/current-order    [JWT: Owner, Manager, Waiter]
 ```
 
-**Response (201 Created):**
-```json
-{
-  "id": 42,
-  "name": "Margherita Pizza",
-  "description": "Classic pizza with tomato and mozzarella",
-  "price": 12.99,
-  "category_id": 1,
-  "image_url": "https://example.com/pizza.jpg",
-  "is_available": true,
-  "addon_ids": [1, 2, 3],
-  "created_at": "2025-10-27T10:30:00Z",
-  "updated_at": "2025-10-27T10:30:00Z"
-}
+---
+
+## Order API
+
+```
+POST   /api/v1/orders                      [JWT: Waiter, Manager]
+GET    /api/v1/orders                      [JWT: Owner, Manager, Kitchen, Waiter]
+GET    /api/v1/orders/:id                  [JWT: All staff]
+PUT    /api/v1/orders/:id                  [JWT: Waiter, Manager]
+DELETE /api/v1/orders/:id                  [JWT: Manager, Owner]
+
+POST   /api/v1/orders/:id/items            [JWT: Waiter, Manager]
+PUT    /api/v1/orders/:id/items/:itemId    [JWT: Waiter, Manager]
+DELETE /api/v1/orders/:id/items/:itemId    [JWT: Waiter, Manager]
+
+PUT    /api/v1/orders/:id/status           [JWT: Kitchen, Manager]
+POST   /api/v1/orders/:id/special-request  [JWT: Waiter, Manager]
 ```
 
-### Create Category
-**POST** `/api/categories`
+---
 
-```json
-{
-  "name": "Pizzas",
-  "description": "All our delicious pizzas",
-  "display_order": 1,
-  "is_active": true
-}
+## Payment API
+
+```
+POST   /api/v1/orders/:id/checkout         [JWT: Cashier, Waiter, Manager]
+POST   /api/v1/orders/:id/payment          [JWT: Cashier, Manager]
+POST   /api/v1/orders/:id/split            [JWT: Cashier, Waiter, Manager]
+POST   /api/v1/orders/:id/refund           [JWT: Manager, Owner]
+GET    /api/v1/orders/:id/invoice          [JWT: Cashier, Manager, Owner]
 ```
 
-**Response (201 Created):**
-```json
-{
-  "id": 1,
-  "name": "Pizzas",
-  "description": "All our delicious pizzas",
-  "display_order": 1,
-  "is_active": true,
-  "created_at": "2025-10-27T10:30:00Z",
-  "updated_at": "2025-10-27T10:30:00Z"
-}
+---
+
+## Reservation API
+
+```
+POST   /api/v1/reservations                [Public or JWT: Customer]
+GET    /api/v1/reservations                [JWT: Owner, Manager, Waiter]
+GET    /api/v1/reservations/:id            [JWT: All staff, or customer who created]
+PUT    /api/v1/reservations/:id            [JWT: Manager, Waiter]
+DELETE /api/v1/reservations/:id            [JWT: Manager, Owner]
+PUT    /api/v1/reservations/:id/status     [JWT: Manager, Waiter]
+GET    /api/v1/reservations/today          [JWT: Manager, Waiter]
 ```
 
-### Create Addon
-**POST** `/api/addons`
+---
 
-```json
-{
-  "name": "Extra Cheese",
-  "price": 2.50,
-  "is_available": true,
-  "applicable_category_ids": [1, 2]
-}
+## Customer API
+
 ```
-
-**Response (201 Created):**
-```json
-{
-  "id": 1,
-  "name": "Extra Cheese",
-  "price": 2.50,
-  "is_available": true,
-  "applicable_category_ids": [1, 2],
-  "created_at": "2025-10-27T10:30:00Z",
-  "updated_at": "2025-10-27T10:30:00Z"
-}
-```
-
-### Update Menu Item (Partial)
-**PATCH** `/api/menu-items/42`
-
-```json
-{
-  "price": 13.99,
-  "is_available": false
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "id": 42,
-  "name": "Margherita Pizza",
-  "description": "Classic pizza with tomato and mozzarella",
-  "price": 13.99,
-  "category_id": 1,
-  "image_url": "https://example.com/pizza.jpg",
-  "is_available": false,
-  "addon_ids": [1, 2, 3],
-  "created_at": "2025-10-27T10:30:00Z",
-  "updated_at": "2025-10-27T11:45:00Z"
-}
-```
-
-### Get All Menu Items
-**GET** `/api/menu-items?category_id=1&is_available=true&page=1&limit=10`
-
-**Response (200 OK):**
-```json
-{
-  "data": [
-    {
-      "id": 42,
-      "name": "Margherita Pizza",
-      "description": "Classic pizza with tomato and mozzarella",
-      "price": 13.99,
-      "category_id": 1,
-      "image_url": "https://example.com/pizza.jpg",
-      "is_available": true,
-      "addon_ids": [1, 2, 3],
-      "created_at": "2025-10-27T10:30:00Z",
-      "updated_at": "2025-10-27T10:30:00Z"
-    }
-  ],
-  "pagination": {
-    "page": 1,
-    "limit": 10,
-    "total": 1,
-    "total_pages": 1
-  }
-}
+GET    /api/v1/customers                   [JWT: Owner, Manager]
+GET    /api/v1/customers/:id               [JWT: Owner, Manager]
+POST   /api/v1/customers                   [JWT: Waiter, Manager]
+PUT    /api/v1/customers/:id               [JWT: Manager]
+GET    /api/v1/customers/:id/orders        [JWT: Owner, Manager]
+POST   /api/v1/customers/:id/feedback      [JWT: Waiter, Manager]
 ```
 
 ---
@@ -229,23 +199,6 @@
 | `POST` | `/api/menu-items/bulk` | Create multiple menu items |
 | `PATCH` | `/api/menu-items/bulk` | Update multiple menu items |
 | `DELETE` | `/api/menu-items/bulk` | Delete multiple menu items |
-
-### Bulk Delete Example
-**DELETE** `/api/menu-items/bulk`
-
-```json
-{
-  "ids": [1, 2, 3, 4, 5]
-}
-```
-
-**Response (200 OK):**
-```json
-{
-  "deleted_count": 5,
-  "deleted_ids": [1, 2, 3, 4, 5]
-}
-```
 
 ---
 

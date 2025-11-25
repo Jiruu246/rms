@@ -66,14 +66,17 @@ func (s *Server) routes() {
 	// initialize repositories
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
+	restaurantRepo := repos.NewEntRestaurantRepository(s.client)
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
 	userService := services.NewUserService(userRepo)
+	restaurantService := services.NewRestaurantService(restaurantRepo)
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	userHandler := handler.NewUserHandler(userService)
+	restaurantHandler := handler.NewRestaurantHandler(restaurantService)
 
 	// API routes
 	api := s.engine.Group("/api")
@@ -102,6 +105,18 @@ func (s *Server) routes() {
 				profile.PUT("", userHandler.UpdateProfile)
 				profile.DELETE("", userHandler.DeleteAccount)
 			}
+		}
+
+		restaurants := api.Group("/restaurants")
+		{
+			// Apply JWT middleware to all restaurant routes
+			restaurants.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+
+			restaurants.POST("", restaurantHandler.CreateRestaurant)
+			restaurants.GET("", restaurantHandler.GetRestaurants)
+			restaurants.GET("/:id", restaurantHandler.GetRestaurant)
+			restaurants.PUT("/:id", restaurantHandler.UpdateRestaurant)
+			restaurants.DELETE("/:id", restaurantHandler.DeleteRestaurant)
 		}
 	}
 }

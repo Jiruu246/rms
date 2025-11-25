@@ -11,69 +11,69 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
 )
 
-// CategoryQuery is the builder for querying Category entities.
-type CategoryQuery struct {
+// RestaurantQuery is the builder for querying Restaurant entities.
+type RestaurantQuery struct {
 	config
 	ctx        *QueryContext
-	order      []category.OrderOption
+	order      []restaurant.OrderOption
 	inters     []Interceptor
-	predicates []predicate.Category
+	predicates []predicate.Restaurant
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
 }
 
-// Where adds a new predicate for the CategoryQuery builder.
-func (_q *CategoryQuery) Where(ps ...predicate.Category) *CategoryQuery {
+// Where adds a new predicate for the RestaurantQuery builder.
+func (_q *RestaurantQuery) Where(ps ...predicate.Restaurant) *RestaurantQuery {
 	_q.predicates = append(_q.predicates, ps...)
 	return _q
 }
 
 // Limit the number of records to be returned by this query.
-func (_q *CategoryQuery) Limit(limit int) *CategoryQuery {
+func (_q *RestaurantQuery) Limit(limit int) *RestaurantQuery {
 	_q.ctx.Limit = &limit
 	return _q
 }
 
 // Offset to start from.
-func (_q *CategoryQuery) Offset(offset int) *CategoryQuery {
+func (_q *RestaurantQuery) Offset(offset int) *RestaurantQuery {
 	_q.ctx.Offset = &offset
 	return _q
 }
 
 // Unique configures the query builder to filter duplicate records on query.
 // By default, unique is set to true, and can be disabled using this method.
-func (_q *CategoryQuery) Unique(unique bool) *CategoryQuery {
+func (_q *RestaurantQuery) Unique(unique bool) *RestaurantQuery {
 	_q.ctx.Unique = &unique
 	return _q
 }
 
 // Order specifies how the records should be ordered.
-func (_q *CategoryQuery) Order(o ...category.OrderOption) *CategoryQuery {
+func (_q *RestaurantQuery) Order(o ...restaurant.OrderOption) *RestaurantQuery {
 	_q.order = append(_q.order, o...)
 	return _q
 }
 
-// First returns the first Category entity from the query.
-// Returns a *NotFoundError when no Category was found.
-func (_q *CategoryQuery) First(ctx context.Context) (*Category, error) {
+// First returns the first Restaurant entity from the query.
+// Returns a *NotFoundError when no Restaurant was found.
+func (_q *RestaurantQuery) First(ctx context.Context) (*Restaurant, error) {
 	nodes, err := _q.Limit(1).All(setContextOp(ctx, _q.ctx, ent.OpQueryFirst))
 	if err != nil {
 		return nil, err
 	}
 	if len(nodes) == 0 {
-		return nil, &NotFoundError{category.Label}
+		return nil, &NotFoundError{restaurant.Label}
 	}
 	return nodes[0], nil
 }
 
 // FirstX is like First, but panics if an error occurs.
-func (_q *CategoryQuery) FirstX(ctx context.Context) *Category {
+func (_q *RestaurantQuery) FirstX(ctx context.Context) *Restaurant {
 	node, err := _q.First(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -81,22 +81,22 @@ func (_q *CategoryQuery) FirstX(ctx context.Context) *Category {
 	return node
 }
 
-// FirstID returns the first Category ID from the query.
-// Returns a *NotFoundError when no Category ID was found.
-func (_q *CategoryQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
+// FirstID returns the first Restaurant ID from the query.
+// Returns a *NotFoundError when no Restaurant ID was found.
+func (_q *RestaurantQuery) FirstID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(1).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryFirstID)); err != nil {
 		return
 	}
 	if len(ids) == 0 {
-		err = &NotFoundError{category.Label}
+		err = &NotFoundError{restaurant.Label}
 		return
 	}
 	return ids[0], nil
 }
 
 // FirstIDX is like FirstID, but panics if an error occurs.
-func (_q *CategoryQuery) FirstIDX(ctx context.Context) uuid.UUID {
+func (_q *RestaurantQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.FirstID(ctx)
 	if err != nil && !IsNotFound(err) {
 		panic(err)
@@ -104,10 +104,10 @@ func (_q *CategoryQuery) FirstIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// Only returns a single Category entity found by the query, ensuring it only returns one.
-// Returns a *NotSingularError when more than one Category entity is found.
-// Returns a *NotFoundError when no Category entities are found.
-func (_q *CategoryQuery) Only(ctx context.Context) (*Category, error) {
+// Only returns a single Restaurant entity found by the query, ensuring it only returns one.
+// Returns a *NotSingularError when more than one Restaurant entity is found.
+// Returns a *NotFoundError when no Restaurant entities are found.
+func (_q *RestaurantQuery) Only(ctx context.Context) (*Restaurant, error) {
 	nodes, err := _q.Limit(2).All(setContextOp(ctx, _q.ctx, ent.OpQueryOnly))
 	if err != nil {
 		return nil, err
@@ -116,14 +116,14 @@ func (_q *CategoryQuery) Only(ctx context.Context) (*Category, error) {
 	case 1:
 		return nodes[0], nil
 	case 0:
-		return nil, &NotFoundError{category.Label}
+		return nil, &NotFoundError{restaurant.Label}
 	default:
-		return nil, &NotSingularError{category.Label}
+		return nil, &NotSingularError{restaurant.Label}
 	}
 }
 
 // OnlyX is like Only, but panics if an error occurs.
-func (_q *CategoryQuery) OnlyX(ctx context.Context) *Category {
+func (_q *RestaurantQuery) OnlyX(ctx context.Context) *Restaurant {
 	node, err := _q.Only(ctx)
 	if err != nil {
 		panic(err)
@@ -131,10 +131,10 @@ func (_q *CategoryQuery) OnlyX(ctx context.Context) *Category {
 	return node
 }
 
-// OnlyID is like Only, but returns the only Category ID in the query.
-// Returns a *NotSingularError when more than one Category ID is found.
+// OnlyID is like Only, but returns the only Restaurant ID in the query.
+// Returns a *NotSingularError when more than one Restaurant ID is found.
 // Returns a *NotFoundError when no entities are found.
-func (_q *CategoryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
+func (_q *RestaurantQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	var ids []uuid.UUID
 	if ids, err = _q.Limit(2).IDs(setContextOp(ctx, _q.ctx, ent.OpQueryOnlyID)); err != nil {
 		return
@@ -143,15 +143,15 @@ func (_q *CategoryQuery) OnlyID(ctx context.Context) (id uuid.UUID, err error) {
 	case 1:
 		id = ids[0]
 	case 0:
-		err = &NotFoundError{category.Label}
+		err = &NotFoundError{restaurant.Label}
 	default:
-		err = &NotSingularError{category.Label}
+		err = &NotSingularError{restaurant.Label}
 	}
 	return
 }
 
 // OnlyIDX is like OnlyID, but panics if an error occurs.
-func (_q *CategoryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
+func (_q *RestaurantQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	id, err := _q.OnlyID(ctx)
 	if err != nil {
 		panic(err)
@@ -159,18 +159,18 @@ func (_q *CategoryQuery) OnlyIDX(ctx context.Context) uuid.UUID {
 	return id
 }
 
-// All executes the query and returns a list of Categories.
-func (_q *CategoryQuery) All(ctx context.Context) ([]*Category, error) {
+// All executes the query and returns a list of Restaurants.
+func (_q *RestaurantQuery) All(ctx context.Context) ([]*Restaurant, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryAll)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return nil, err
 	}
-	qr := querierAll[[]*Category, *CategoryQuery]()
-	return withInterceptors[[]*Category](ctx, _q, qr, _q.inters)
+	qr := querierAll[[]*Restaurant, *RestaurantQuery]()
+	return withInterceptors[[]*Restaurant](ctx, _q, qr, _q.inters)
 }
 
 // AllX is like All, but panics if an error occurs.
-func (_q *CategoryQuery) AllX(ctx context.Context) []*Category {
+func (_q *RestaurantQuery) AllX(ctx context.Context) []*Restaurant {
 	nodes, err := _q.All(ctx)
 	if err != nil {
 		panic(err)
@@ -178,20 +178,20 @@ func (_q *CategoryQuery) AllX(ctx context.Context) []*Category {
 	return nodes
 }
 
-// IDs executes the query and returns a list of Category IDs.
-func (_q *CategoryQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
+// IDs executes the query and returns a list of Restaurant IDs.
+func (_q *RestaurantQuery) IDs(ctx context.Context) (ids []uuid.UUID, err error) {
 	if _q.ctx.Unique == nil && _q.path != nil {
 		_q.Unique(true)
 	}
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryIDs)
-	if err = _q.Select(category.FieldID).Scan(ctx, &ids); err != nil {
+	if err = _q.Select(restaurant.FieldID).Scan(ctx, &ids); err != nil {
 		return nil, err
 	}
 	return ids, nil
 }
 
 // IDsX is like IDs, but panics if an error occurs.
-func (_q *CategoryQuery) IDsX(ctx context.Context) []uuid.UUID {
+func (_q *RestaurantQuery) IDsX(ctx context.Context) []uuid.UUID {
 	ids, err := _q.IDs(ctx)
 	if err != nil {
 		panic(err)
@@ -200,16 +200,16 @@ func (_q *CategoryQuery) IDsX(ctx context.Context) []uuid.UUID {
 }
 
 // Count returns the count of the given query.
-func (_q *CategoryQuery) Count(ctx context.Context) (int, error) {
+func (_q *RestaurantQuery) Count(ctx context.Context) (int, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryCount)
 	if err := _q.prepareQuery(ctx); err != nil {
 		return 0, err
 	}
-	return withInterceptors[int](ctx, _q, querierCount[*CategoryQuery](), _q.inters)
+	return withInterceptors[int](ctx, _q, querierCount[*RestaurantQuery](), _q.inters)
 }
 
 // CountX is like Count, but panics if an error occurs.
-func (_q *CategoryQuery) CountX(ctx context.Context) int {
+func (_q *RestaurantQuery) CountX(ctx context.Context) int {
 	count, err := _q.Count(ctx)
 	if err != nil {
 		panic(err)
@@ -218,7 +218,7 @@ func (_q *CategoryQuery) CountX(ctx context.Context) int {
 }
 
 // Exist returns true if the query has elements in the graph.
-func (_q *CategoryQuery) Exist(ctx context.Context) (bool, error) {
+func (_q *RestaurantQuery) Exist(ctx context.Context) (bool, error) {
 	ctx = setContextOp(ctx, _q.ctx, ent.OpQueryExist)
 	switch _, err := _q.FirstID(ctx); {
 	case IsNotFound(err):
@@ -231,7 +231,7 @@ func (_q *CategoryQuery) Exist(ctx context.Context) (bool, error) {
 }
 
 // ExistX is like Exist, but panics if an error occurs.
-func (_q *CategoryQuery) ExistX(ctx context.Context) bool {
+func (_q *RestaurantQuery) ExistX(ctx context.Context) bool {
 	exist, err := _q.Exist(ctx)
 	if err != nil {
 		panic(err)
@@ -239,18 +239,18 @@ func (_q *CategoryQuery) ExistX(ctx context.Context) bool {
 	return exist
 }
 
-// Clone returns a duplicate of the CategoryQuery builder, including all associated steps. It can be
+// Clone returns a duplicate of the RestaurantQuery builder, including all associated steps. It can be
 // used to prepare common query builders and use them differently after the clone is made.
-func (_q *CategoryQuery) Clone() *CategoryQuery {
+func (_q *RestaurantQuery) Clone() *RestaurantQuery {
 	if _q == nil {
 		return nil
 	}
-	return &CategoryQuery{
+	return &RestaurantQuery{
 		config:     _q.config,
 		ctx:        _q.ctx.Clone(),
-		order:      append([]category.OrderOption{}, _q.order...),
+		order:      append([]restaurant.OrderOption{}, _q.order...),
 		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Category{}, _q.predicates...),
+		predicates: append([]predicate.Restaurant{}, _q.predicates...),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -267,15 +267,15 @@ func (_q *CategoryQuery) Clone() *CategoryQuery {
 //		Count int `json:"count,omitempty"`
 //	}
 //
-//	client.Category.Query().
-//		GroupBy(category.FieldUpdateTime).
+//	client.Restaurant.Query().
+//		GroupBy(restaurant.FieldUpdateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
-func (_q *CategoryQuery) GroupBy(field string, fields ...string) *CategoryGroupBy {
+func (_q *RestaurantQuery) GroupBy(field string, fields ...string) *RestaurantGroupBy {
 	_q.ctx.Fields = append([]string{field}, fields...)
-	grbuild := &CategoryGroupBy{build: _q}
+	grbuild := &RestaurantGroupBy{build: _q}
 	grbuild.flds = &_q.ctx.Fields
-	grbuild.label = category.Label
+	grbuild.label = restaurant.Label
 	grbuild.scan = grbuild.Scan
 	return grbuild
 }
@@ -289,23 +289,23 @@ func (_q *CategoryQuery) GroupBy(field string, fields ...string) *CategoryGroupB
 //		UpdateTime time.Time `json:"update_time,omitempty"`
 //	}
 //
-//	client.Category.Query().
-//		Select(category.FieldUpdateTime).
+//	client.Restaurant.Query().
+//		Select(restaurant.FieldUpdateTime).
 //		Scan(ctx, &v)
-func (_q *CategoryQuery) Select(fields ...string) *CategorySelect {
+func (_q *RestaurantQuery) Select(fields ...string) *RestaurantSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)
-	sbuild := &CategorySelect{CategoryQuery: _q}
-	sbuild.label = category.Label
+	sbuild := &RestaurantSelect{RestaurantQuery: _q}
+	sbuild.label = restaurant.Label
 	sbuild.flds, sbuild.scan = &_q.ctx.Fields, sbuild.Scan
 	return sbuild
 }
 
-// Aggregate returns a CategorySelect configured with the given aggregations.
-func (_q *CategoryQuery) Aggregate(fns ...AggregateFunc) *CategorySelect {
+// Aggregate returns a RestaurantSelect configured with the given aggregations.
+func (_q *RestaurantQuery) Aggregate(fns ...AggregateFunc) *RestaurantSelect {
 	return _q.Select().Aggregate(fns...)
 }
 
-func (_q *CategoryQuery) prepareQuery(ctx context.Context) error {
+func (_q *RestaurantQuery) prepareQuery(ctx context.Context) error {
 	for _, inter := range _q.inters {
 		if inter == nil {
 			return fmt.Errorf("ent: uninitialized interceptor (forgotten import ent/runtime?)")
@@ -317,7 +317,7 @@ func (_q *CategoryQuery) prepareQuery(ctx context.Context) error {
 		}
 	}
 	for _, f := range _q.ctx.Fields {
-		if !category.ValidColumn(f) {
+		if !restaurant.ValidColumn(f) {
 			return &ValidationError{Name: f, err: fmt.Errorf("ent: invalid field %q for query", f)}
 		}
 	}
@@ -331,16 +331,16 @@ func (_q *CategoryQuery) prepareQuery(ctx context.Context) error {
 	return nil
 }
 
-func (_q *CategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Category, error) {
+func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Restaurant, error) {
 	var (
-		nodes = []*Category{}
+		nodes = []*Restaurant{}
 		_spec = _q.querySpec()
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
-		return (*Category).scanValues(nil, columns)
+		return (*Restaurant).scanValues(nil, columns)
 	}
 	_spec.Assign = func(columns []string, values []any) error {
-		node := &Category{config: _q.config}
+		node := &Restaurant{config: _q.config}
 		nodes = append(nodes, node)
 		return node.assignValues(columns, values)
 	}
@@ -356,7 +356,7 @@ func (_q *CategoryQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Cat
 	return nodes, nil
 }
 
-func (_q *CategoryQuery) sqlCount(ctx context.Context) (int, error) {
+func (_q *RestaurantQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
 	_spec.Node.Columns = _q.ctx.Fields
 	if len(_q.ctx.Fields) > 0 {
@@ -365,8 +365,8 @@ func (_q *CategoryQuery) sqlCount(ctx context.Context) (int, error) {
 	return sqlgraph.CountNodes(ctx, _q.driver, _spec)
 }
 
-func (_q *CategoryQuery) querySpec() *sqlgraph.QuerySpec {
-	_spec := sqlgraph.NewQuerySpec(category.Table, category.Columns, sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID))
+func (_q *RestaurantQuery) querySpec() *sqlgraph.QuerySpec {
+	_spec := sqlgraph.NewQuerySpec(restaurant.Table, restaurant.Columns, sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID))
 	_spec.From = _q.sql
 	if unique := _q.ctx.Unique; unique != nil {
 		_spec.Unique = *unique
@@ -375,9 +375,9 @@ func (_q *CategoryQuery) querySpec() *sqlgraph.QuerySpec {
 	}
 	if fields := _q.ctx.Fields; len(fields) > 0 {
 		_spec.Node.Columns = make([]string, 0, len(fields))
-		_spec.Node.Columns = append(_spec.Node.Columns, category.FieldID)
+		_spec.Node.Columns = append(_spec.Node.Columns, restaurant.FieldID)
 		for i := range fields {
-			if fields[i] != category.FieldID {
+			if fields[i] != restaurant.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
 		}
@@ -405,12 +405,12 @@ func (_q *CategoryQuery) querySpec() *sqlgraph.QuerySpec {
 	return _spec
 }
 
-func (_q *CategoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
+func (_q *RestaurantQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	builder := sql.Dialect(_q.driver.Dialect())
-	t1 := builder.Table(category.Table)
+	t1 := builder.Table(restaurant.Table)
 	columns := _q.ctx.Fields
 	if len(columns) == 0 {
-		columns = category.Columns
+		columns = restaurant.Columns
 	}
 	selector := builder.Select(t1.Columns(columns...)...).From(t1)
 	if _q.sql != nil {
@@ -437,28 +437,28 @@ func (_q *CategoryQuery) sqlQuery(ctx context.Context) *sql.Selector {
 	return selector
 }
 
-// CategoryGroupBy is the group-by builder for Category entities.
-type CategoryGroupBy struct {
+// RestaurantGroupBy is the group-by builder for Restaurant entities.
+type RestaurantGroupBy struct {
 	selector
-	build *CategoryQuery
+	build *RestaurantQuery
 }
 
 // Aggregate adds the given aggregation functions to the group-by query.
-func (_g *CategoryGroupBy) Aggregate(fns ...AggregateFunc) *CategoryGroupBy {
+func (_g *RestaurantGroupBy) Aggregate(fns ...AggregateFunc) *RestaurantGroupBy {
 	_g.fns = append(_g.fns, fns...)
 	return _g
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_g *CategoryGroupBy) Scan(ctx context.Context, v any) error {
+func (_g *RestaurantGroupBy) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _g.build.ctx, ent.OpQueryGroupBy)
 	if err := _g.build.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CategoryQuery, *CategoryGroupBy](ctx, _g.build, _g, _g.build.inters, v)
+	return scanWithInterceptors[*RestaurantQuery, *RestaurantGroupBy](ctx, _g.build, _g, _g.build.inters, v)
 }
 
-func (_g *CategoryGroupBy) sqlScan(ctx context.Context, root *CategoryQuery, v any) error {
+func (_g *RestaurantGroupBy) sqlScan(ctx context.Context, root *RestaurantQuery, v any) error {
 	selector := root.sqlQuery(ctx).Select()
 	aggregation := make([]string, 0, len(_g.fns))
 	for _, fn := range _g.fns {
@@ -485,28 +485,28 @@ func (_g *CategoryGroupBy) sqlScan(ctx context.Context, root *CategoryQuery, v a
 	return sql.ScanSlice(rows, v)
 }
 
-// CategorySelect is the builder for selecting fields of Category entities.
-type CategorySelect struct {
-	*CategoryQuery
+// RestaurantSelect is the builder for selecting fields of Restaurant entities.
+type RestaurantSelect struct {
+	*RestaurantQuery
 	selector
 }
 
 // Aggregate adds the given aggregation functions to the selector query.
-func (_s *CategorySelect) Aggregate(fns ...AggregateFunc) *CategorySelect {
+func (_s *RestaurantSelect) Aggregate(fns ...AggregateFunc) *RestaurantSelect {
 	_s.fns = append(_s.fns, fns...)
 	return _s
 }
 
 // Scan applies the selector query and scans the result into the given value.
-func (_s *CategorySelect) Scan(ctx context.Context, v any) error {
+func (_s *RestaurantSelect) Scan(ctx context.Context, v any) error {
 	ctx = setContextOp(ctx, _s.ctx, ent.OpQuerySelect)
 	if err := _s.prepareQuery(ctx); err != nil {
 		return err
 	}
-	return scanWithInterceptors[*CategoryQuery, *CategorySelect](ctx, _s.CategoryQuery, _s, _s.inters, v)
+	return scanWithInterceptors[*RestaurantQuery, *RestaurantSelect](ctx, _s.RestaurantQuery, _s, _s.inters, v)
 }
 
-func (_s *CategorySelect) sqlScan(ctx context.Context, root *CategoryQuery, v any) error {
+func (_s *RestaurantSelect) sqlScan(ctx context.Context, root *RestaurantQuery, v any) error {
 	selector := root.sqlQuery(ctx)
 	aggregation := make([]string, 0, len(_s.fns))
 	for _, fn := range _s.fns {

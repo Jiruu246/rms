@@ -1,20 +1,22 @@
 package schema
 
 import (
-	"time"
-
 	"entgo.io/ent"
-	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/mixin"
 	"github.com/google/uuid"
 )
 
-// Category holds the schema definition for the Category entity.
 type Category struct {
 	ent.Schema
 }
 
-// Fields of the Category.
+func (Category) Mixin() []ent.Mixin {
+	return []ent.Mixin{
+		mixin.UpdateTime{},
+	}
+}
+
 func (Category) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.UUID{}).
@@ -35,17 +37,9 @@ func (Category) Fields() []ent.Field {
 		field.Bool("is_active").
 			Default(true).
 			Comment("Whether the category is active"),
-		field.Time("created_at").
-			Default(time.Now).
-			Immutable().
-			Annotations(entsql.Annotation{
-				Default: "CURRENT_TIMESTAMP",
-			}).
-			Comment("Creation timestamp"),
 	}
 }
 
-// Edges of the Category.
 func (Category) Edges() []ent.Edge {
 	return nil
 }

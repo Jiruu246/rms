@@ -12,8 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/ent/category"
-	"github.com/Jiruu246/rms/internal/ent/customer"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
 )
 
@@ -26,8 +26,8 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCategory = "Category"
-	TypeCustomer = "Customer"
+	TypeCategory   = "Category"
+	TypeRestaurant = "Restaurant"
 )
 
 // CategoryMutation represents an operation that mutates the Category nodes in the graph.
@@ -36,12 +36,12 @@ type CategoryMutation struct {
 	op               Op
 	typ              string
 	id               *uuid.UUID
+	update_time      *time.Time
 	name             *string
 	description      *string
 	display_order    *int
 	adddisplay_order *int
 	is_active        *bool
-	created_at       *time.Time
 	clearedFields    map[string]struct{}
 	done             bool
 	oldValue         func(context.Context) (*Category, error)
@@ -150,6 +150,42 @@ func (m *CategoryMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *CategoryMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *CategoryMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Category entity.
+// If the Category object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CategoryMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *CategoryMutation) ResetUpdateTime() {
+	m.update_time = nil
 }
 
 // SetName sets the "name" field.
@@ -316,42 +352,6 @@ func (m *CategoryMutation) ResetIsActive() {
 	m.is_active = nil
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (m *CategoryMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
-}
-
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *CategoryMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
-	if v == nil {
-		return
-	}
-	return *v, true
-}
-
-// OldCreatedAt returns the old "created_at" field's value of the Category entity.
-// If the Category object wasn't provided to the builder, the object is fetched from the database.
-// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CategoryMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
-	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
-	}
-	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
-	}
-	oldValue, err := m.oldValue(ctx)
-	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
-	}
-	return oldValue.CreatedAt, nil
-}
-
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *CategoryMutation) ResetCreatedAt() {
-	m.created_at = nil
-}
-
 // Where appends a list predicates to the CategoryMutation builder.
 func (m *CategoryMutation) Where(ps ...predicate.Category) {
 	m.predicates = append(m.predicates, ps...)
@@ -387,6 +387,9 @@ func (m *CategoryMutation) Type() string {
 // AddedFields().
 func (m *CategoryMutation) Fields() []string {
 	fields := make([]string, 0, 5)
+	if m.update_time != nil {
+		fields = append(fields, category.FieldUpdateTime)
+	}
 	if m.name != nil {
 		fields = append(fields, category.FieldName)
 	}
@@ -399,9 +402,6 @@ func (m *CategoryMutation) Fields() []string {
 	if m.is_active != nil {
 		fields = append(fields, category.FieldIsActive)
 	}
-	if m.created_at != nil {
-		fields = append(fields, category.FieldCreatedAt)
-	}
 	return fields
 }
 
@@ -410,6 +410,8 @@ func (m *CategoryMutation) Fields() []string {
 // schema.
 func (m *CategoryMutation) Field(name string) (ent.Value, bool) {
 	switch name {
+	case category.FieldUpdateTime:
+		return m.UpdateTime()
 	case category.FieldName:
 		return m.Name()
 	case category.FieldDescription:
@@ -418,8 +420,6 @@ func (m *CategoryMutation) Field(name string) (ent.Value, bool) {
 		return m.DisplayOrder()
 	case category.FieldIsActive:
 		return m.IsActive()
-	case category.FieldCreatedAt:
-		return m.CreatedAt()
 	}
 	return nil, false
 }
@@ -429,6 +429,8 @@ func (m *CategoryMutation) Field(name string) (ent.Value, bool) {
 // database failed.
 func (m *CategoryMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
+	case category.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
 	case category.FieldName:
 		return m.OldName(ctx)
 	case category.FieldDescription:
@@ -437,8 +439,6 @@ func (m *CategoryMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldDisplayOrder(ctx)
 	case category.FieldIsActive:
 		return m.OldIsActive(ctx)
-	case category.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
 	}
 	return nil, fmt.Errorf("unknown Category field %s", name)
 }
@@ -448,6 +448,13 @@ func (m *CategoryMutation) OldField(ctx context.Context, name string) (ent.Value
 // type.
 func (m *CategoryMutation) SetField(name string, value ent.Value) error {
 	switch name {
+	case category.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
 	case category.FieldName:
 		v, ok := value.(string)
 		if !ok {
@@ -475,13 +482,6 @@ func (m *CategoryMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetIsActive(v)
-		return nil
-	case category.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Category field %s", name)
@@ -547,6 +547,9 @@ func (m *CategoryMutation) ClearField(name string) error {
 // It returns an error if the field is not defined in the schema.
 func (m *CategoryMutation) ResetField(name string) error {
 	switch name {
+	case category.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
 	case category.FieldName:
 		m.ResetName()
 		return nil
@@ -558,9 +561,6 @@ func (m *CategoryMutation) ResetField(name string) error {
 		return nil
 	case category.FieldIsActive:
 		m.ResetIsActive()
-		return nil
-	case category.FieldCreatedAt:
-		m.ResetCreatedAt()
 		return nil
 	}
 	return fmt.Errorf("unknown Category field %s", name)
@@ -614,35 +614,44 @@ func (m *CategoryMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Category edge %s", name)
 }
 
-// CustomerMutation represents an operation that mutates the Customer nodes in the graph.
-type CustomerMutation struct {
+// RestaurantMutation represents an operation that mutates the Restaurant nodes in the graph.
+type RestaurantMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	name          *string
-	email         *string
-	phone_number  *string
-	is_active     *bool
-	created_at    *time.Time
-	password_hash *string
-	clearedFields map[string]struct{}
-	done          bool
-	oldValue      func(context.Context) (*Customer, error)
-	predicates    []predicate.Customer
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	update_time     *time.Time
+	name            *string
+	description     *string
+	phone           *string
+	email           *string
+	address         *string
+	city            *string
+	state           *string
+	zip_code        *string
+	country         *string
+	logo_url        *string
+	cover_image_url *string
+	status          *restaurant.Status
+	operating_hours *map[string]interface{}
+	currency        *string
+	clearedFields   map[string]struct{}
+	done            bool
+	oldValue        func(context.Context) (*Restaurant, error)
+	predicates      []predicate.Restaurant
 }
 
-var _ ent.Mutation = (*CustomerMutation)(nil)
+var _ ent.Mutation = (*RestaurantMutation)(nil)
 
-// customerOption allows management of the mutation configuration using functional options.
-type customerOption func(*CustomerMutation)
+// restaurantOption allows management of the mutation configuration using functional options.
+type restaurantOption func(*RestaurantMutation)
 
-// newCustomerMutation creates new mutation for the Customer entity.
-func newCustomerMutation(c config, op Op, opts ...customerOption) *CustomerMutation {
-	m := &CustomerMutation{
+// newRestaurantMutation creates new mutation for the Restaurant entity.
+func newRestaurantMutation(c config, op Op, opts ...restaurantOption) *RestaurantMutation {
+	m := &RestaurantMutation{
 		config:        c,
 		op:            op,
-		typ:           TypeCustomer,
+		typ:           TypeRestaurant,
 		clearedFields: make(map[string]struct{}),
 	}
 	for _, opt := range opts {
@@ -651,20 +660,20 @@ func newCustomerMutation(c config, op Op, opts ...customerOption) *CustomerMutat
 	return m
 }
 
-// withCustomerID sets the ID field of the mutation.
-func withCustomerID(id uuid.UUID) customerOption {
-	return func(m *CustomerMutation) {
+// withRestaurantID sets the ID field of the mutation.
+func withRestaurantID(id uuid.UUID) restaurantOption {
+	return func(m *RestaurantMutation) {
 		var (
 			err   error
 			once  sync.Once
-			value *Customer
+			value *Restaurant
 		)
-		m.oldValue = func(ctx context.Context) (*Customer, error) {
+		m.oldValue = func(ctx context.Context) (*Restaurant, error) {
 			once.Do(func() {
 				if m.done {
 					err = errors.New("querying old values post mutation is not allowed")
 				} else {
-					value, err = m.Client().Customer.Get(ctx, id)
+					value, err = m.Client().Restaurant.Get(ctx, id)
 				}
 			})
 			return value, err
@@ -673,10 +682,10 @@ func withCustomerID(id uuid.UUID) customerOption {
 	}
 }
 
-// withCustomer sets the old Customer of the mutation.
-func withCustomer(node *Customer) customerOption {
-	return func(m *CustomerMutation) {
-		m.oldValue = func(context.Context) (*Customer, error) {
+// withRestaurant sets the old Restaurant of the mutation.
+func withRestaurant(node *Restaurant) restaurantOption {
+	return func(m *RestaurantMutation) {
+		m.oldValue = func(context.Context) (*Restaurant, error) {
 			return node, nil
 		}
 		m.id = &node.ID
@@ -685,7 +694,7 @@ func withCustomer(node *Customer) customerOption {
 
 // Client returns a new `ent.Client` from the mutation. If the mutation was
 // executed in a transaction (ent.Tx), a transactional client is returned.
-func (m CustomerMutation) Client() *Client {
+func (m RestaurantMutation) Client() *Client {
 	client := &Client{config: m.config}
 	client.init()
 	return client
@@ -693,7 +702,7 @@ func (m CustomerMutation) Client() *Client {
 
 // Tx returns an `ent.Tx` for mutations that were executed in transactions;
 // it returns an error otherwise.
-func (m CustomerMutation) Tx() (*Tx, error) {
+func (m RestaurantMutation) Tx() (*Tx, error) {
 	if _, ok := m.driver.(*txDriver); !ok {
 		return nil, errors.New("ent: mutation is not running in a transaction")
 	}
@@ -703,14 +712,14 @@ func (m CustomerMutation) Tx() (*Tx, error) {
 }
 
 // SetID sets the value of the id field. Note that this
-// operation is only accepted on creation of Customer entities.
-func (m *CustomerMutation) SetID(id uuid.UUID) {
+// operation is only accepted on creation of Restaurant entities.
+func (m *RestaurantMutation) SetID(id uuid.UUID) {
 	m.id = &id
 }
 
 // ID returns the ID value in the mutation. Note that the ID is only available
 // if it was provided to the builder or after it was returned from the database.
-func (m *CustomerMutation) ID() (id uuid.UUID, exists bool) {
+func (m *RestaurantMutation) ID() (id uuid.UUID, exists bool) {
 	if m.id == nil {
 		return
 	}
@@ -721,7 +730,7 @@ func (m *CustomerMutation) ID() (id uuid.UUID, exists bool) {
 // That means, if the mutation is applied within a transaction with an isolation level such
 // as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
 // or updated by the mutation.
-func (m *CustomerMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+func (m *RestaurantMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 	switch {
 	case m.op.Is(OpUpdateOne | OpDeleteOne):
 		id, exists := m.ID()
@@ -730,19 +739,55 @@ func (m *CustomerMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
 		}
 		fallthrough
 	case m.op.Is(OpUpdate | OpDelete):
-		return m.Client().Customer.Query().Where(m.predicates...).IDs(ctx)
+		return m.Client().Restaurant.Query().Where(m.predicates...).IDs(ctx)
 	default:
 		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
 	}
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (m *RestaurantMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *RestaurantMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *RestaurantMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
 // SetName sets the "name" field.
-func (m *CustomerMutation) SetName(s string) {
+func (m *RestaurantMutation) SetName(s string) {
 	m.name = &s
 }
 
 // Name returns the value of the "name" field in the mutation.
-func (m *CustomerMutation) Name() (r string, exists bool) {
+func (m *RestaurantMutation) Name() (r string, exists bool) {
 	v := m.name
 	if v == nil {
 		return
@@ -750,10 +795,10 @@ func (m *CustomerMutation) Name() (r string, exists bool) {
 	return *v, true
 }
 
-// OldName returns the old "name" field's value of the Customer entity.
-// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// OldName returns the old "name" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CustomerMutation) OldName(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldName(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldName is only allowed on UpdateOne operations")
 	}
@@ -768,17 +813,102 @@ func (m *CustomerMutation) OldName(ctx context.Context) (v string, err error) {
 }
 
 // ResetName resets all changes to the "name" field.
-func (m *CustomerMutation) ResetName() {
+func (m *RestaurantMutation) ResetName() {
 	m.name = nil
 }
 
+// SetDescription sets the "description" field.
+func (m *RestaurantMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *RestaurantMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ClearDescription clears the value of the "description" field.
+func (m *RestaurantMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[restaurant.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *RestaurantMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldDescription]
+	return ok
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *RestaurantMutation) ResetDescription() {
+	m.description = nil
+	delete(m.clearedFields, restaurant.FieldDescription)
+}
+
+// SetPhone sets the "phone" field.
+func (m *RestaurantMutation) SetPhone(s string) {
+	m.phone = &s
+}
+
+// Phone returns the value of the "phone" field in the mutation.
+func (m *RestaurantMutation) Phone() (r string, exists bool) {
+	v := m.phone
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPhone returns the old "phone" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldPhone(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPhone is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPhone requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPhone: %w", err)
+	}
+	return oldValue.Phone, nil
+}
+
+// ResetPhone resets all changes to the "phone" field.
+func (m *RestaurantMutation) ResetPhone() {
+	m.phone = nil
+}
+
 // SetEmail sets the "email" field.
-func (m *CustomerMutation) SetEmail(s string) {
+func (m *RestaurantMutation) SetEmail(s string) {
 	m.email = &s
 }
 
 // Email returns the value of the "email" field in the mutation.
-func (m *CustomerMutation) Email() (r string, exists bool) {
+func (m *RestaurantMutation) Email() (r string, exists bool) {
 	v := m.email
 	if v == nil {
 		return
@@ -786,10 +916,10 @@ func (m *CustomerMutation) Email() (r string, exists bool) {
 	return *v, true
 }
 
-// OldEmail returns the old "email" field's value of the Customer entity.
-// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// OldEmail returns the old "email" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CustomerMutation) OldEmail(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldEmail(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldEmail is only allowed on UpdateOne operations")
 	}
@@ -804,163 +934,418 @@ func (m *CustomerMutation) OldEmail(ctx context.Context) (v string, err error) {
 }
 
 // ResetEmail resets all changes to the "email" field.
-func (m *CustomerMutation) ResetEmail() {
+func (m *RestaurantMutation) ResetEmail() {
 	m.email = nil
 }
 
-// SetPhoneNumber sets the "phone_number" field.
-func (m *CustomerMutation) SetPhoneNumber(s string) {
-	m.phone_number = &s
+// SetAddress sets the "address" field.
+func (m *RestaurantMutation) SetAddress(s string) {
+	m.address = &s
 }
 
-// PhoneNumber returns the value of the "phone_number" field in the mutation.
-func (m *CustomerMutation) PhoneNumber() (r string, exists bool) {
-	v := m.phone_number
+// Address returns the value of the "address" field in the mutation.
+func (m *RestaurantMutation) Address() (r string, exists bool) {
+	v := m.address
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPhoneNumber returns the old "phone_number" field's value of the Customer entity.
-// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// OldAddress returns the old "address" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CustomerMutation) OldPhoneNumber(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldAddress(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPhoneNumber is only allowed on UpdateOne operations")
+		return v, errors.New("OldAddress is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPhoneNumber requires an ID field in the mutation")
+		return v, errors.New("OldAddress requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPhoneNumber: %w", err)
+		return v, fmt.Errorf("querying old value for OldAddress: %w", err)
 	}
-	return oldValue.PhoneNumber, nil
+	return oldValue.Address, nil
 }
 
-// ResetPhoneNumber resets all changes to the "phone_number" field.
-func (m *CustomerMutation) ResetPhoneNumber() {
-	m.phone_number = nil
+// ResetAddress resets all changes to the "address" field.
+func (m *RestaurantMutation) ResetAddress() {
+	m.address = nil
 }
 
-// SetIsActive sets the "is_active" field.
-func (m *CustomerMutation) SetIsActive(b bool) {
-	m.is_active = &b
+// SetCity sets the "city" field.
+func (m *RestaurantMutation) SetCity(s string) {
+	m.city = &s
 }
 
-// IsActive returns the value of the "is_active" field in the mutation.
-func (m *CustomerMutation) IsActive() (r bool, exists bool) {
-	v := m.is_active
+// City returns the value of the "city" field in the mutation.
+func (m *RestaurantMutation) City() (r string, exists bool) {
+	v := m.city
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldIsActive returns the old "is_active" field's value of the Customer entity.
-// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// OldCity returns the old "city" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CustomerMutation) OldIsActive(ctx context.Context) (v bool, err error) {
+func (m *RestaurantMutation) OldCity(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldIsActive is only allowed on UpdateOne operations")
+		return v, errors.New("OldCity is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldIsActive requires an ID field in the mutation")
+		return v, errors.New("OldCity requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldIsActive: %w", err)
+		return v, fmt.Errorf("querying old value for OldCity: %w", err)
 	}
-	return oldValue.IsActive, nil
+	return oldValue.City, nil
 }
 
-// ResetIsActive resets all changes to the "is_active" field.
-func (m *CustomerMutation) ResetIsActive() {
-	m.is_active = nil
+// ResetCity resets all changes to the "city" field.
+func (m *RestaurantMutation) ResetCity() {
+	m.city = nil
 }
 
-// SetCreatedAt sets the "created_at" field.
-func (m *CustomerMutation) SetCreatedAt(t time.Time) {
-	m.created_at = &t
+// SetState sets the "state" field.
+func (m *RestaurantMutation) SetState(s string) {
+	m.state = &s
 }
 
-// CreatedAt returns the value of the "created_at" field in the mutation.
-func (m *CustomerMutation) CreatedAt() (r time.Time, exists bool) {
-	v := m.created_at
+// State returns the value of the "state" field in the mutation.
+func (m *RestaurantMutation) State() (r string, exists bool) {
+	v := m.state
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCreatedAt returns the old "created_at" field's value of the Customer entity.
-// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// OldState returns the old "state" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CustomerMutation) OldCreatedAt(ctx context.Context) (v time.Time, err error) {
+func (m *RestaurantMutation) OldState(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCreatedAt is only allowed on UpdateOne operations")
+		return v, errors.New("OldState is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCreatedAt requires an ID field in the mutation")
+		return v, errors.New("OldState requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCreatedAt: %w", err)
+		return v, fmt.Errorf("querying old value for OldState: %w", err)
 	}
-	return oldValue.CreatedAt, nil
+	return oldValue.State, nil
 }
 
-// ResetCreatedAt resets all changes to the "created_at" field.
-func (m *CustomerMutation) ResetCreatedAt() {
-	m.created_at = nil
+// ResetState resets all changes to the "state" field.
+func (m *RestaurantMutation) ResetState() {
+	m.state = nil
 }
 
-// SetPasswordHash sets the "password_hash" field.
-func (m *CustomerMutation) SetPasswordHash(s string) {
-	m.password_hash = &s
+// SetZipCode sets the "zip_code" field.
+func (m *RestaurantMutation) SetZipCode(s string) {
+	m.zip_code = &s
 }
 
-// PasswordHash returns the value of the "password_hash" field in the mutation.
-func (m *CustomerMutation) PasswordHash() (r string, exists bool) {
-	v := m.password_hash
+// ZipCode returns the value of the "zip_code" field in the mutation.
+func (m *RestaurantMutation) ZipCode() (r string, exists bool) {
+	v := m.zip_code
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldPasswordHash returns the old "password_hash" field's value of the Customer entity.
-// If the Customer object wasn't provided to the builder, the object is fetched from the database.
+// OldZipCode returns the old "zip_code" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *CustomerMutation) OldPasswordHash(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldZipCode(ctx context.Context) (v string, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldPasswordHash is only allowed on UpdateOne operations")
+		return v, errors.New("OldZipCode is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldPasswordHash requires an ID field in the mutation")
+		return v, errors.New("OldZipCode requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldPasswordHash: %w", err)
+		return v, fmt.Errorf("querying old value for OldZipCode: %w", err)
 	}
-	return oldValue.PasswordHash, nil
+	return oldValue.ZipCode, nil
 }
 
-// ResetPasswordHash resets all changes to the "password_hash" field.
-func (m *CustomerMutation) ResetPasswordHash() {
-	m.password_hash = nil
+// ResetZipCode resets all changes to the "zip_code" field.
+func (m *RestaurantMutation) ResetZipCode() {
+	m.zip_code = nil
 }
 
-// Where appends a list predicates to the CustomerMutation builder.
-func (m *CustomerMutation) Where(ps ...predicate.Customer) {
+// SetCountry sets the "country" field.
+func (m *RestaurantMutation) SetCountry(s string) {
+	m.country = &s
+}
+
+// Country returns the value of the "country" field in the mutation.
+func (m *RestaurantMutation) Country() (r string, exists bool) {
+	v := m.country
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCountry returns the old "country" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldCountry(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCountry is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCountry requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCountry: %w", err)
+	}
+	return oldValue.Country, nil
+}
+
+// ResetCountry resets all changes to the "country" field.
+func (m *RestaurantMutation) ResetCountry() {
+	m.country = nil
+}
+
+// SetLogoURL sets the "logo_url" field.
+func (m *RestaurantMutation) SetLogoURL(s string) {
+	m.logo_url = &s
+}
+
+// LogoURL returns the value of the "logo_url" field in the mutation.
+func (m *RestaurantMutation) LogoURL() (r string, exists bool) {
+	v := m.logo_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldLogoURL returns the old "logo_url" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldLogoURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldLogoURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldLogoURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldLogoURL: %w", err)
+	}
+	return oldValue.LogoURL, nil
+}
+
+// ClearLogoURL clears the value of the "logo_url" field.
+func (m *RestaurantMutation) ClearLogoURL() {
+	m.logo_url = nil
+	m.clearedFields[restaurant.FieldLogoURL] = struct{}{}
+}
+
+// LogoURLCleared returns if the "logo_url" field was cleared in this mutation.
+func (m *RestaurantMutation) LogoURLCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldLogoURL]
+	return ok
+}
+
+// ResetLogoURL resets all changes to the "logo_url" field.
+func (m *RestaurantMutation) ResetLogoURL() {
+	m.logo_url = nil
+	delete(m.clearedFields, restaurant.FieldLogoURL)
+}
+
+// SetCoverImageURL sets the "cover_image_url" field.
+func (m *RestaurantMutation) SetCoverImageURL(s string) {
+	m.cover_image_url = &s
+}
+
+// CoverImageURL returns the value of the "cover_image_url" field in the mutation.
+func (m *RestaurantMutation) CoverImageURL() (r string, exists bool) {
+	v := m.cover_image_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCoverImageURL returns the old "cover_image_url" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldCoverImageURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCoverImageURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCoverImageURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCoverImageURL: %w", err)
+	}
+	return oldValue.CoverImageURL, nil
+}
+
+// ClearCoverImageURL clears the value of the "cover_image_url" field.
+func (m *RestaurantMutation) ClearCoverImageURL() {
+	m.cover_image_url = nil
+	m.clearedFields[restaurant.FieldCoverImageURL] = struct{}{}
+}
+
+// CoverImageURLCleared returns if the "cover_image_url" field was cleared in this mutation.
+func (m *RestaurantMutation) CoverImageURLCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldCoverImageURL]
+	return ok
+}
+
+// ResetCoverImageURL resets all changes to the "cover_image_url" field.
+func (m *RestaurantMutation) ResetCoverImageURL() {
+	m.cover_image_url = nil
+	delete(m.clearedFields, restaurant.FieldCoverImageURL)
+}
+
+// SetStatus sets the "status" field.
+func (m *RestaurantMutation) SetStatus(r restaurant.Status) {
+	m.status = &r
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *RestaurantMutation) Status() (r restaurant.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldStatus(ctx context.Context) (v restaurant.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *RestaurantMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetOperatingHours sets the "operating_hours" field.
+func (m *RestaurantMutation) SetOperatingHours(value map[string]interface{}) {
+	m.operating_hours = &value
+}
+
+// OperatingHours returns the value of the "operating_hours" field in the mutation.
+func (m *RestaurantMutation) OperatingHours() (r map[string]interface{}, exists bool) {
+	v := m.operating_hours
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOperatingHours returns the old "operating_hours" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldOperatingHours(ctx context.Context) (v map[string]interface{}, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOperatingHours is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOperatingHours requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOperatingHours: %w", err)
+	}
+	return oldValue.OperatingHours, nil
+}
+
+// ClearOperatingHours clears the value of the "operating_hours" field.
+func (m *RestaurantMutation) ClearOperatingHours() {
+	m.operating_hours = nil
+	m.clearedFields[restaurant.FieldOperatingHours] = struct{}{}
+}
+
+// OperatingHoursCleared returns if the "operating_hours" field was cleared in this mutation.
+func (m *RestaurantMutation) OperatingHoursCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldOperatingHours]
+	return ok
+}
+
+// ResetOperatingHours resets all changes to the "operating_hours" field.
+func (m *RestaurantMutation) ResetOperatingHours() {
+	m.operating_hours = nil
+	delete(m.clearedFields, restaurant.FieldOperatingHours)
+}
+
+// SetCurrency sets the "currency" field.
+func (m *RestaurantMutation) SetCurrency(s string) {
+	m.currency = &s
+}
+
+// Currency returns the value of the "currency" field in the mutation.
+func (m *RestaurantMutation) Currency() (r string, exists bool) {
+	v := m.currency
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCurrency returns the old "currency" field's value of the Restaurant entity.
+// If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *RestaurantMutation) OldCurrency(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCurrency is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCurrency requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCurrency: %w", err)
+	}
+	return oldValue.Currency, nil
+}
+
+// ResetCurrency resets all changes to the "currency" field.
+func (m *RestaurantMutation) ResetCurrency() {
+	m.currency = nil
+}
+
+// Where appends a list predicates to the RestaurantMutation builder.
+func (m *RestaurantMutation) Where(ps ...predicate.Restaurant) {
 	m.predicates = append(m.predicates, ps...)
 }
 
-// WhereP appends storage-level predicates to the CustomerMutation builder. Using this method,
+// WhereP appends storage-level predicates to the RestaurantMutation builder. Using this method,
 // users can use type-assertion to append predicates that do not depend on any generated package.
-func (m *CustomerMutation) WhereP(ps ...func(*sql.Selector)) {
-	p := make([]predicate.Customer, len(ps))
+func (m *RestaurantMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Restaurant, len(ps))
 	for i := range ps {
 		p[i] = ps[i]
 	}
@@ -968,42 +1353,69 @@ func (m *CustomerMutation) WhereP(ps ...func(*sql.Selector)) {
 }
 
 // Op returns the operation name.
-func (m *CustomerMutation) Op() Op {
+func (m *RestaurantMutation) Op() Op {
 	return m.op
 }
 
 // SetOp allows setting the mutation operation.
-func (m *CustomerMutation) SetOp(op Op) {
+func (m *RestaurantMutation) SetOp(op Op) {
 	m.op = op
 }
 
-// Type returns the node type of this mutation (Customer).
-func (m *CustomerMutation) Type() string {
+// Type returns the node type of this mutation (Restaurant).
+func (m *RestaurantMutation) Type() string {
 	return m.typ
 }
 
 // Fields returns all fields that were changed during this mutation. Note that in
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
-func (m *CustomerMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+func (m *RestaurantMutation) Fields() []string {
+	fields := make([]string, 0, 15)
+	if m.update_time != nil {
+		fields = append(fields, restaurant.FieldUpdateTime)
+	}
 	if m.name != nil {
-		fields = append(fields, customer.FieldName)
+		fields = append(fields, restaurant.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, restaurant.FieldDescription)
+	}
+	if m.phone != nil {
+		fields = append(fields, restaurant.FieldPhone)
 	}
 	if m.email != nil {
-		fields = append(fields, customer.FieldEmail)
+		fields = append(fields, restaurant.FieldEmail)
 	}
-	if m.phone_number != nil {
-		fields = append(fields, customer.FieldPhoneNumber)
+	if m.address != nil {
+		fields = append(fields, restaurant.FieldAddress)
 	}
-	if m.is_active != nil {
-		fields = append(fields, customer.FieldIsActive)
+	if m.city != nil {
+		fields = append(fields, restaurant.FieldCity)
 	}
-	if m.created_at != nil {
-		fields = append(fields, customer.FieldCreatedAt)
+	if m.state != nil {
+		fields = append(fields, restaurant.FieldState)
 	}
-	if m.password_hash != nil {
-		fields = append(fields, customer.FieldPasswordHash)
+	if m.zip_code != nil {
+		fields = append(fields, restaurant.FieldZipCode)
+	}
+	if m.country != nil {
+		fields = append(fields, restaurant.FieldCountry)
+	}
+	if m.logo_url != nil {
+		fields = append(fields, restaurant.FieldLogoURL)
+	}
+	if m.cover_image_url != nil {
+		fields = append(fields, restaurant.FieldCoverImageURL)
+	}
+	if m.status != nil {
+		fields = append(fields, restaurant.FieldStatus)
+	}
+	if m.operating_hours != nil {
+		fields = append(fields, restaurant.FieldOperatingHours)
+	}
+	if m.currency != nil {
+		fields = append(fields, restaurant.FieldCurrency)
 	}
 	return fields
 }
@@ -1011,20 +1423,38 @@ func (m *CustomerMutation) Fields() []string {
 // Field returns the value of a field with the given name. The second boolean
 // return value indicates that this field was not set, or was not defined in the
 // schema.
-func (m *CustomerMutation) Field(name string) (ent.Value, bool) {
+func (m *RestaurantMutation) Field(name string) (ent.Value, bool) {
 	switch name {
-	case customer.FieldName:
+	case restaurant.FieldUpdateTime:
+		return m.UpdateTime()
+	case restaurant.FieldName:
 		return m.Name()
-	case customer.FieldEmail:
+	case restaurant.FieldDescription:
+		return m.Description()
+	case restaurant.FieldPhone:
+		return m.Phone()
+	case restaurant.FieldEmail:
 		return m.Email()
-	case customer.FieldPhoneNumber:
-		return m.PhoneNumber()
-	case customer.FieldIsActive:
-		return m.IsActive()
-	case customer.FieldCreatedAt:
-		return m.CreatedAt()
-	case customer.FieldPasswordHash:
-		return m.PasswordHash()
+	case restaurant.FieldAddress:
+		return m.Address()
+	case restaurant.FieldCity:
+		return m.City()
+	case restaurant.FieldState:
+		return m.State()
+	case restaurant.FieldZipCode:
+		return m.ZipCode()
+	case restaurant.FieldCountry:
+		return m.Country()
+	case restaurant.FieldLogoURL:
+		return m.LogoURL()
+	case restaurant.FieldCoverImageURL:
+		return m.CoverImageURL()
+	case restaurant.FieldStatus:
+		return m.Status()
+	case restaurant.FieldOperatingHours:
+		return m.OperatingHours()
+	case restaurant.FieldCurrency:
+		return m.Currency()
 	}
 	return nil, false
 }
@@ -1032,186 +1462,321 @@ func (m *CustomerMutation) Field(name string) (ent.Value, bool) {
 // OldField returns the old value of the field from the database. An error is
 // returned if the mutation operation is not UpdateOne, or the query to the
 // database failed.
-func (m *CustomerMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+func (m *RestaurantMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
 	switch name {
-	case customer.FieldName:
+	case restaurant.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case restaurant.FieldName:
 		return m.OldName(ctx)
-	case customer.FieldEmail:
+	case restaurant.FieldDescription:
+		return m.OldDescription(ctx)
+	case restaurant.FieldPhone:
+		return m.OldPhone(ctx)
+	case restaurant.FieldEmail:
 		return m.OldEmail(ctx)
-	case customer.FieldPhoneNumber:
-		return m.OldPhoneNumber(ctx)
-	case customer.FieldIsActive:
-		return m.OldIsActive(ctx)
-	case customer.FieldCreatedAt:
-		return m.OldCreatedAt(ctx)
-	case customer.FieldPasswordHash:
-		return m.OldPasswordHash(ctx)
+	case restaurant.FieldAddress:
+		return m.OldAddress(ctx)
+	case restaurant.FieldCity:
+		return m.OldCity(ctx)
+	case restaurant.FieldState:
+		return m.OldState(ctx)
+	case restaurant.FieldZipCode:
+		return m.OldZipCode(ctx)
+	case restaurant.FieldCountry:
+		return m.OldCountry(ctx)
+	case restaurant.FieldLogoURL:
+		return m.OldLogoURL(ctx)
+	case restaurant.FieldCoverImageURL:
+		return m.OldCoverImageURL(ctx)
+	case restaurant.FieldStatus:
+		return m.OldStatus(ctx)
+	case restaurant.FieldOperatingHours:
+		return m.OldOperatingHours(ctx)
+	case restaurant.FieldCurrency:
+		return m.OldCurrency(ctx)
 	}
-	return nil, fmt.Errorf("unknown Customer field %s", name)
+	return nil, fmt.Errorf("unknown Restaurant field %s", name)
 }
 
 // SetField sets the value of a field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *CustomerMutation) SetField(name string, value ent.Value) error {
+func (m *RestaurantMutation) SetField(name string, value ent.Value) error {
 	switch name {
-	case customer.FieldName:
+	case restaurant.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case restaurant.FieldName:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
 		return nil
-	case customer.FieldEmail:
+	case restaurant.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
+		return nil
+	case restaurant.FieldPhone:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPhone(v)
+		return nil
+	case restaurant.FieldEmail:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetEmail(v)
 		return nil
-	case customer.FieldPhoneNumber:
+	case restaurant.FieldAddress:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetPhoneNumber(v)
+		m.SetAddress(v)
 		return nil
-	case customer.FieldIsActive:
-		v, ok := value.(bool)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetIsActive(v)
-		return nil
-	case customer.FieldCreatedAt:
-		v, ok := value.(time.Time)
-		if !ok {
-			return fmt.Errorf("unexpected type %T for field %s", value, name)
-		}
-		m.SetCreatedAt(v)
-		return nil
-	case customer.FieldPasswordHash:
+	case restaurant.FieldCity:
 		v, ok := value.(string)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetPasswordHash(v)
+		m.SetCity(v)
+		return nil
+	case restaurant.FieldState:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetState(v)
+		return nil
+	case restaurant.FieldZipCode:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetZipCode(v)
+		return nil
+	case restaurant.FieldCountry:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCountry(v)
+		return nil
+	case restaurant.FieldLogoURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetLogoURL(v)
+		return nil
+	case restaurant.FieldCoverImageURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCoverImageURL(v)
+		return nil
+	case restaurant.FieldStatus:
+		v, ok := value.(restaurant.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case restaurant.FieldOperatingHours:
+		v, ok := value.(map[string]interface{})
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOperatingHours(v)
+		return nil
+	case restaurant.FieldCurrency:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCurrency(v)
 		return nil
 	}
-	return fmt.Errorf("unknown Customer field %s", name)
+	return fmt.Errorf("unknown Restaurant field %s", name)
 }
 
 // AddedFields returns all numeric fields that were incremented/decremented during
 // this mutation.
-func (m *CustomerMutation) AddedFields() []string {
+func (m *RestaurantMutation) AddedFields() []string {
 	return nil
 }
 
 // AddedField returns the numeric value that was incremented/decremented on a field
 // with the given name. The second boolean return value indicates that this field
 // was not set, or was not defined in the schema.
-func (m *CustomerMutation) AddedField(name string) (ent.Value, bool) {
+func (m *RestaurantMutation) AddedField(name string) (ent.Value, bool) {
 	return nil, false
 }
 
 // AddField adds the value to the field with the given name. It returns an error if
 // the field is not defined in the schema, or if the type mismatched the field
 // type.
-func (m *CustomerMutation) AddField(name string, value ent.Value) error {
+func (m *RestaurantMutation) AddField(name string, value ent.Value) error {
 	switch name {
 	}
-	return fmt.Errorf("unknown Customer numeric field %s", name)
+	return fmt.Errorf("unknown Restaurant numeric field %s", name)
 }
 
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
-func (m *CustomerMutation) ClearedFields() []string {
-	return nil
+func (m *RestaurantMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(restaurant.FieldDescription) {
+		fields = append(fields, restaurant.FieldDescription)
+	}
+	if m.FieldCleared(restaurant.FieldLogoURL) {
+		fields = append(fields, restaurant.FieldLogoURL)
+	}
+	if m.FieldCleared(restaurant.FieldCoverImageURL) {
+		fields = append(fields, restaurant.FieldCoverImageURL)
+	}
+	if m.FieldCleared(restaurant.FieldOperatingHours) {
+		fields = append(fields, restaurant.FieldOperatingHours)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
 // cleared in this mutation.
-func (m *CustomerMutation) FieldCleared(name string) bool {
+func (m *RestaurantMutation) FieldCleared(name string) bool {
 	_, ok := m.clearedFields[name]
 	return ok
 }
 
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
-func (m *CustomerMutation) ClearField(name string) error {
-	return fmt.Errorf("unknown Customer nullable field %s", name)
+func (m *RestaurantMutation) ClearField(name string) error {
+	switch name {
+	case restaurant.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case restaurant.FieldLogoURL:
+		m.ClearLogoURL()
+		return nil
+	case restaurant.FieldCoverImageURL:
+		m.ClearCoverImageURL()
+		return nil
+	case restaurant.FieldOperatingHours:
+		m.ClearOperatingHours()
+		return nil
+	}
+	return fmt.Errorf("unknown Restaurant nullable field %s", name)
 }
 
 // ResetField resets all changes in the mutation for the field with the given name.
 // It returns an error if the field is not defined in the schema.
-func (m *CustomerMutation) ResetField(name string) error {
+func (m *RestaurantMutation) ResetField(name string) error {
 	switch name {
-	case customer.FieldName:
+	case restaurant.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case restaurant.FieldName:
 		m.ResetName()
 		return nil
-	case customer.FieldEmail:
+	case restaurant.FieldDescription:
+		m.ResetDescription()
+		return nil
+	case restaurant.FieldPhone:
+		m.ResetPhone()
+		return nil
+	case restaurant.FieldEmail:
 		m.ResetEmail()
 		return nil
-	case customer.FieldPhoneNumber:
-		m.ResetPhoneNumber()
+	case restaurant.FieldAddress:
+		m.ResetAddress()
 		return nil
-	case customer.FieldIsActive:
-		m.ResetIsActive()
+	case restaurant.FieldCity:
+		m.ResetCity()
 		return nil
-	case customer.FieldCreatedAt:
-		m.ResetCreatedAt()
+	case restaurant.FieldState:
+		m.ResetState()
 		return nil
-	case customer.FieldPasswordHash:
-		m.ResetPasswordHash()
+	case restaurant.FieldZipCode:
+		m.ResetZipCode()
+		return nil
+	case restaurant.FieldCountry:
+		m.ResetCountry()
+		return nil
+	case restaurant.FieldLogoURL:
+		m.ResetLogoURL()
+		return nil
+	case restaurant.FieldCoverImageURL:
+		m.ResetCoverImageURL()
+		return nil
+	case restaurant.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case restaurant.FieldOperatingHours:
+		m.ResetOperatingHours()
+		return nil
+	case restaurant.FieldCurrency:
+		m.ResetCurrency()
 		return nil
 	}
-	return fmt.Errorf("unknown Customer field %s", name)
+	return fmt.Errorf("unknown Restaurant field %s", name)
 }
 
 // AddedEdges returns all edge names that were set/added in this mutation.
-func (m *CustomerMutation) AddedEdges() []string {
+func (m *RestaurantMutation) AddedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // AddedIDs returns all IDs (to other nodes) that were added for the given edge
 // name in this mutation.
-func (m *CustomerMutation) AddedIDs(name string) []ent.Value {
+func (m *RestaurantMutation) AddedIDs(name string) []ent.Value {
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
-func (m *CustomerMutation) RemovedEdges() []string {
+func (m *RestaurantMutation) RemovedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
 // the given name in this mutation.
-func (m *CustomerMutation) RemovedIDs(name string) []ent.Value {
+func (m *RestaurantMutation) RemovedIDs(name string) []ent.Value {
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
-func (m *CustomerMutation) ClearedEdges() []string {
+func (m *RestaurantMutation) ClearedEdges() []string {
 	edges := make([]string, 0, 0)
 	return edges
 }
 
 // EdgeCleared returns a boolean which indicates if the edge with the given name
 // was cleared in this mutation.
-func (m *CustomerMutation) EdgeCleared(name string) bool {
+func (m *RestaurantMutation) EdgeCleared(name string) bool {
 	return false
 }
 
 // ClearEdge clears the value of the edge with the given name. It returns an error
 // if that edge is not defined in the schema.
-func (m *CustomerMutation) ClearEdge(name string) error {
-	return fmt.Errorf("unknown Customer unique edge %s", name)
+func (m *RestaurantMutation) ClearEdge(name string) error {
+	return fmt.Errorf("unknown Restaurant unique edge %s", name)
 }
 
 // ResetEdge resets all changes to the edge with the given name in this mutation.
 // It returns an error if the edge is not defined in the schema.
-func (m *CustomerMutation) ResetEdge(name string) error {
-	return fmt.Errorf("unknown Customer edge %s", name)
+func (m *RestaurantMutation) ResetEdge(name string) error {
+	return fmt.Errorf("unknown Restaurant edge %s", name)
 }

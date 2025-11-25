@@ -15,8 +15,17 @@ import (
 // (default values, validators, hooks and policies) and stitches it
 // to their package variables.
 func init() {
+	categoryMixin := schema.Category{}.Mixin()
+	categoryMixinFields0 := categoryMixin[0].Fields()
+	_ = categoryMixinFields0
 	categoryFields := schema.Category{}.Fields()
 	_ = categoryFields
+	// categoryDescUpdateTime is the schema descriptor for update_time field.
+	categoryDescUpdateTime := categoryMixinFields0[0].Descriptor()
+	// category.DefaultUpdateTime holds the default value on creation for the update_time field.
+	category.DefaultUpdateTime = categoryDescUpdateTime.Default.(func() time.Time)
+	// category.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	category.UpdateDefaultUpdateTime = categoryDescUpdateTime.UpdateDefault.(func() time.Time)
 	// categoryDescName is the schema descriptor for name field.
 	categoryDescName := categoryFields[1].Descriptor()
 	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.
@@ -51,10 +60,6 @@ func init() {
 	categoryDescIsActive := categoryFields[4].Descriptor()
 	// category.DefaultIsActive holds the default value on creation for the is_active field.
 	category.DefaultIsActive = categoryDescIsActive.Default.(bool)
-	// categoryDescCreatedAt is the schema descriptor for created_at field.
-	categoryDescCreatedAt := categoryFields[5].Descriptor()
-	// category.DefaultCreatedAt holds the default value on creation for the created_at field.
-	category.DefaultCreatedAt = categoryDescCreatedAt.Default.(func() time.Time)
 	// categoryDescID is the schema descriptor for id field.
 	categoryDescID := categoryFields[0].Descriptor()
 	// category.DefaultID holds the default value on creation for the id field.

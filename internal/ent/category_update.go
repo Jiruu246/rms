@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,12 @@ type CategoryUpdate struct {
 // Where appends a list predicates to the CategoryUpdate builder.
 func (_u *CategoryUpdate) Where(ps ...predicate.Category) *CategoryUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (_u *CategoryUpdate) SetUpdateTime(v time.Time) *CategoryUpdate {
+	_u.mutation.SetUpdateTime(v)
 	return _u
 }
 
@@ -97,6 +104,7 @@ func (_u *CategoryUpdate) Mutation() *CategoryMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *CategoryUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -119,6 +127,14 @@ func (_u *CategoryUpdate) Exec(ctx context.Context) error {
 func (_u *CategoryUpdate) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *CategoryUpdate) defaults() {
+	if _, ok := _u.mutation.UpdateTime(); !ok {
+		v := category.UpdateDefaultUpdateTime()
+		_u.mutation.SetUpdateTime(v)
 	}
 }
 
@@ -154,6 +170,9 @@ func (_u *CategoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			}
 		}
 	}
+	if value, ok := _u.mutation.UpdateTime(); ok {
+		_spec.SetField(category.FieldUpdateTime, field.TypeTime, value)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)
 	}
@@ -187,6 +206,12 @@ type CategoryUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *CategoryMutation
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (_u *CategoryUpdateOne) SetUpdateTime(v time.Time) *CategoryUpdateOne {
+	_u.mutation.SetUpdateTime(v)
+	return _u
 }
 
 // SetName sets the "name" field.
@@ -272,6 +297,7 @@ func (_u *CategoryUpdateOne) Select(field string, fields ...string) *CategoryUpd
 
 // Save executes the query and returns the updated Category entity.
 func (_u *CategoryUpdateOne) Save(ctx context.Context) (*Category, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -294,6 +320,14 @@ func (_u *CategoryUpdateOne) Exec(ctx context.Context) error {
 func (_u *CategoryUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *CategoryUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdateTime(); !ok {
+		v := category.UpdateDefaultUpdateTime()
+		_u.mutation.SetUpdateTime(v)
 	}
 }
 
@@ -345,6 +379,9 @@ func (_u *CategoryUpdateOne) sqlSave(ctx context.Context) (_node *Category, err 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdateTime(); ok {
+		_spec.SetField(category.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)

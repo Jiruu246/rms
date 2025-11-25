@@ -16,7 +16,7 @@ import (
 	"entgo.io/ent/dialect"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/ent/category"
-	"github.com/Jiruu246/rms/internal/ent/customer"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 )
 
 // Client is the client that holds all ent builders.
@@ -26,8 +26,8 @@ type Client struct {
 	Schema *migrate.Schema
 	// Category is the client for interacting with the Category builders.
 	Category *CategoryClient
-	// Customer is the client for interacting with the Customer builders.
-	Customer *CustomerClient
+	// Restaurant is the client for interacting with the Restaurant builders.
+	Restaurant *RestaurantClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -40,7 +40,7 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Category = NewCategoryClient(c.config)
-	c.Customer = NewCustomerClient(c.config)
+	c.Restaurant = NewRestaurantClient(c.config)
 }
 
 type (
@@ -131,10 +131,10 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		Customer: NewCustomerClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Category:   NewCategoryClient(cfg),
+		Restaurant: NewRestaurantClient(cfg),
 	}, nil
 }
 
@@ -152,10 +152,10 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Category: NewCategoryClient(cfg),
-		Customer: NewCustomerClient(cfg),
+		ctx:        ctx,
+		config:     cfg,
+		Category:   NewCategoryClient(cfg),
+		Restaurant: NewRestaurantClient(cfg),
 	}, nil
 }
 
@@ -185,14 +185,14 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	c.Category.Use(hooks...)
-	c.Customer.Use(hooks...)
+	c.Restaurant.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Category.Intercept(interceptors...)
-	c.Customer.Intercept(interceptors...)
+	c.Restaurant.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -200,8 +200,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *CategoryMutation:
 		return c.Category.mutate(ctx, m)
-	case *CustomerMutation:
-		return c.Customer.mutate(ctx, m)
+	case *RestaurantMutation:
+		return c.Restaurant.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -340,107 +340,107 @@ func (c *CategoryClient) mutate(ctx context.Context, m *CategoryMutation) (Value
 	}
 }
 
-// CustomerClient is a client for the Customer schema.
-type CustomerClient struct {
+// RestaurantClient is a client for the Restaurant schema.
+type RestaurantClient struct {
 	config
 }
 
-// NewCustomerClient returns a client for the Customer from the given config.
-func NewCustomerClient(c config) *CustomerClient {
-	return &CustomerClient{config: c}
+// NewRestaurantClient returns a client for the Restaurant from the given config.
+func NewRestaurantClient(c config) *RestaurantClient {
+	return &RestaurantClient{config: c}
 }
 
 // Use adds a list of mutation hooks to the hooks stack.
-// A call to `Use(f, g, h)` equals to `customer.Hooks(f(g(h())))`.
-func (c *CustomerClient) Use(hooks ...Hook) {
-	c.hooks.Customer = append(c.hooks.Customer, hooks...)
+// A call to `Use(f, g, h)` equals to `restaurant.Hooks(f(g(h())))`.
+func (c *RestaurantClient) Use(hooks ...Hook) {
+	c.hooks.Restaurant = append(c.hooks.Restaurant, hooks...)
 }
 
 // Intercept adds a list of query interceptors to the interceptors stack.
-// A call to `Intercept(f, g, h)` equals to `customer.Intercept(f(g(h())))`.
-func (c *CustomerClient) Intercept(interceptors ...Interceptor) {
-	c.inters.Customer = append(c.inters.Customer, interceptors...)
+// A call to `Intercept(f, g, h)` equals to `restaurant.Intercept(f(g(h())))`.
+func (c *RestaurantClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Restaurant = append(c.inters.Restaurant, interceptors...)
 }
 
-// Create returns a builder for creating a Customer entity.
-func (c *CustomerClient) Create() *CustomerCreate {
-	mutation := newCustomerMutation(c.config, OpCreate)
-	return &CustomerCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Create returns a builder for creating a Restaurant entity.
+func (c *RestaurantClient) Create() *RestaurantCreate {
+	mutation := newRestaurantMutation(c.config, OpCreate)
+	return &RestaurantCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// CreateBulk returns a builder for creating a bulk of Customer entities.
-func (c *CustomerClient) CreateBulk(builders ...*CustomerCreate) *CustomerCreateBulk {
-	return &CustomerCreateBulk{config: c.config, builders: builders}
+// CreateBulk returns a builder for creating a bulk of Restaurant entities.
+func (c *RestaurantClient) CreateBulk(builders ...*RestaurantCreate) *RestaurantCreateBulk {
+	return &RestaurantCreateBulk{config: c.config, builders: builders}
 }
 
 // MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
 // a builder and applies setFunc on it.
-func (c *CustomerClient) MapCreateBulk(slice any, setFunc func(*CustomerCreate, int)) *CustomerCreateBulk {
+func (c *RestaurantClient) MapCreateBulk(slice any, setFunc func(*RestaurantCreate, int)) *RestaurantCreateBulk {
 	rv := reflect.ValueOf(slice)
 	if rv.Kind() != reflect.Slice {
-		return &CustomerCreateBulk{err: fmt.Errorf("calling to CustomerClient.MapCreateBulk with wrong type %T, need slice", slice)}
+		return &RestaurantCreateBulk{err: fmt.Errorf("calling to RestaurantClient.MapCreateBulk with wrong type %T, need slice", slice)}
 	}
-	builders := make([]*CustomerCreate, rv.Len())
+	builders := make([]*RestaurantCreate, rv.Len())
 	for i := 0; i < rv.Len(); i++ {
 		builders[i] = c.Create()
 		setFunc(builders[i], i)
 	}
-	return &CustomerCreateBulk{config: c.config, builders: builders}
+	return &RestaurantCreateBulk{config: c.config, builders: builders}
 }
 
-// Update returns an update builder for Customer.
-func (c *CustomerClient) Update() *CustomerUpdate {
-	mutation := newCustomerMutation(c.config, OpUpdate)
-	return &CustomerUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Update returns an update builder for Restaurant.
+func (c *RestaurantClient) Update() *RestaurantUpdate {
+	mutation := newRestaurantMutation(c.config, OpUpdate)
+	return &RestaurantUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOne returns an update builder for the given entity.
-func (c *CustomerClient) UpdateOne(_m *Customer) *CustomerUpdateOne {
-	mutation := newCustomerMutation(c.config, OpUpdateOne, withCustomer(_m))
-	return &CustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *RestaurantClient) UpdateOne(_m *Restaurant) *RestaurantUpdateOne {
+	mutation := newRestaurantMutation(c.config, OpUpdateOne, withRestaurant(_m))
+	return &RestaurantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // UpdateOneID returns an update builder for the given id.
-func (c *CustomerClient) UpdateOneID(id uuid.UUID) *CustomerUpdateOne {
-	mutation := newCustomerMutation(c.config, OpUpdateOne, withCustomerID(id))
-	return &CustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+func (c *RestaurantClient) UpdateOneID(id uuid.UUID) *RestaurantUpdateOne {
+	mutation := newRestaurantMutation(c.config, OpUpdateOne, withRestaurantID(id))
+	return &RestaurantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
-// Delete returns a delete builder for Customer.
-func (c *CustomerClient) Delete() *CustomerDelete {
-	mutation := newCustomerMutation(c.config, OpDelete)
-	return &CustomerDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+// Delete returns a delete builder for Restaurant.
+func (c *RestaurantClient) Delete() *RestaurantDelete {
+	mutation := newRestaurantMutation(c.config, OpDelete)
+	return &RestaurantDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
 }
 
 // DeleteOne returns a builder for deleting the given entity.
-func (c *CustomerClient) DeleteOne(_m *Customer) *CustomerDeleteOne {
+func (c *RestaurantClient) DeleteOne(_m *Restaurant) *RestaurantDeleteOne {
 	return c.DeleteOneID(_m.ID)
 }
 
 // DeleteOneID returns a builder for deleting the given entity by its id.
-func (c *CustomerClient) DeleteOneID(id uuid.UUID) *CustomerDeleteOne {
-	builder := c.Delete().Where(customer.ID(id))
+func (c *RestaurantClient) DeleteOneID(id uuid.UUID) *RestaurantDeleteOne {
+	builder := c.Delete().Where(restaurant.ID(id))
 	builder.mutation.id = &id
 	builder.mutation.op = OpDeleteOne
-	return &CustomerDeleteOne{builder}
+	return &RestaurantDeleteOne{builder}
 }
 
-// Query returns a query builder for Customer.
-func (c *CustomerClient) Query() *CustomerQuery {
-	return &CustomerQuery{
+// Query returns a query builder for Restaurant.
+func (c *RestaurantClient) Query() *RestaurantQuery {
+	return &RestaurantQuery{
 		config: c.config,
-		ctx:    &QueryContext{Type: TypeCustomer},
+		ctx:    &QueryContext{Type: TypeRestaurant},
 		inters: c.Interceptors(),
 	}
 }
 
-// Get returns a Customer entity by its id.
-func (c *CustomerClient) Get(ctx context.Context, id uuid.UUID) (*Customer, error) {
-	return c.Query().Where(customer.ID(id)).Only(ctx)
+// Get returns a Restaurant entity by its id.
+func (c *RestaurantClient) Get(ctx context.Context, id uuid.UUID) (*Restaurant, error) {
+	return c.Query().Where(restaurant.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.
-func (c *CustomerClient) GetX(ctx context.Context, id uuid.UUID) *Customer {
+func (c *RestaurantClient) GetX(ctx context.Context, id uuid.UUID) *Restaurant {
 	obj, err := c.Get(ctx, id)
 	if err != nil {
 		panic(err)
@@ -449,36 +449,36 @@ func (c *CustomerClient) GetX(ctx context.Context, id uuid.UUID) *Customer {
 }
 
 // Hooks returns the client hooks.
-func (c *CustomerClient) Hooks() []Hook {
-	return c.hooks.Customer
+func (c *RestaurantClient) Hooks() []Hook {
+	return c.hooks.Restaurant
 }
 
 // Interceptors returns the client interceptors.
-func (c *CustomerClient) Interceptors() []Interceptor {
-	return c.inters.Customer
+func (c *RestaurantClient) Interceptors() []Interceptor {
+	return c.inters.Restaurant
 }
 
-func (c *CustomerClient) mutate(ctx context.Context, m *CustomerMutation) (Value, error) {
+func (c *RestaurantClient) mutate(ctx context.Context, m *RestaurantMutation) (Value, error) {
 	switch m.Op() {
 	case OpCreate:
-		return (&CustomerCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&RestaurantCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdate:
-		return (&CustomerUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&RestaurantUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpUpdateOne:
-		return (&CustomerUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+		return (&RestaurantUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
 	case OpDelete, OpDeleteOne:
-		return (&CustomerDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+		return (&RestaurantDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
-		return nil, fmt.Errorf("ent: unknown Customer mutation op: %q", m.Op())
+		return nil, fmt.Errorf("ent: unknown Restaurant mutation op: %q", m.Op())
 	}
 }
 
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Category, Customer []ent.Hook
+		Category, Restaurant []ent.Hook
 	}
 	inters struct {
-		Category, Customer []ent.Interceptor
+		Category, Restaurant []ent.Interceptor
 	}
 )

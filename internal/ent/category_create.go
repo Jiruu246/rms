@@ -21,6 +21,20 @@ type CategoryCreate struct {
 	hooks    []Hook
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (_c *CategoryCreate) SetUpdateTime(v time.Time) *CategoryCreate {
+	_c.mutation.SetUpdateTime(v)
+	return _c
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (_c *CategoryCreate) SetNillableUpdateTime(v *time.Time) *CategoryCreate {
+	if v != nil {
+		_c.SetUpdateTime(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *CategoryCreate) SetName(v string) *CategoryCreate {
 	_c.mutation.SetName(v)
@@ -65,20 +79,6 @@ func (_c *CategoryCreate) SetIsActive(v bool) *CategoryCreate {
 func (_c *CategoryCreate) SetNillableIsActive(v *bool) *CategoryCreate {
 	if v != nil {
 		_c.SetIsActive(*v)
-	}
-	return _c
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (_c *CategoryCreate) SetCreatedAt(v time.Time) *CategoryCreate {
-	_c.mutation.SetCreatedAt(v)
-	return _c
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *CategoryCreate) SetNillableCreatedAt(v *time.Time) *CategoryCreate {
-	if v != nil {
-		_c.SetCreatedAt(*v)
 	}
 	return _c
 }
@@ -132,6 +132,10 @@ func (_c *CategoryCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *CategoryCreate) defaults() {
+	if _, ok := _c.mutation.UpdateTime(); !ok {
+		v := category.DefaultUpdateTime()
+		_c.mutation.SetUpdateTime(v)
+	}
 	if _, ok := _c.mutation.Description(); !ok {
 		v := category.DefaultDescription
 		_c.mutation.SetDescription(v)
@@ -144,10 +148,6 @@ func (_c *CategoryCreate) defaults() {
 		v := category.DefaultIsActive
 		_c.mutation.SetIsActive(v)
 	}
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := category.DefaultCreatedAt()
-		_c.mutation.SetCreatedAt(v)
-	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := category.DefaultID()
 		_c.mutation.SetID(v)
@@ -156,6 +156,9 @@ func (_c *CategoryCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *CategoryCreate) check() error {
+	if _, ok := _c.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Category.update_time"`)}
+	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Category.name"`)}
 	}
@@ -182,9 +185,6 @@ func (_c *CategoryCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Category.is_active"`)}
-	}
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Category.created_at"`)}
 	}
 	return nil
 }
@@ -221,6 +221,10 @@ func (_c *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := _c.mutation.UpdateTime(); ok {
+		_spec.SetField(category.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -236,10 +240,6 @@ func (_c *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(category.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
-	}
-	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(category.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
 	}
 	return _node, _spec
 }

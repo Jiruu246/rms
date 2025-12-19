@@ -21,6 +21,20 @@ type CustomerCreate struct {
 	hooks    []Hook
 }
 
+// SetUpdateTime sets the "update_time" field.
+func (_c *CustomerCreate) SetUpdateTime(v time.Time) *CustomerCreate {
+	_c.mutation.SetUpdateTime(v)
+	return _c
+}
+
+// SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
+func (_c *CustomerCreate) SetNillableUpdateTime(v *time.Time) *CustomerCreate {
+	if v != nil {
+		_c.SetUpdateTime(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *CustomerCreate) SetName(v string) *CustomerCreate {
 	_c.mutation.SetName(v)
@@ -57,20 +71,6 @@ func (_c *CustomerCreate) SetIsActive(v bool) *CustomerCreate {
 func (_c *CustomerCreate) SetNillableIsActive(v *bool) *CustomerCreate {
 	if v != nil {
 		_c.SetIsActive(*v)
-	}
-	return _c
-}
-
-// SetCreatedAt sets the "created_at" field.
-func (_c *CustomerCreate) SetCreatedAt(v time.Time) *CustomerCreate {
-	_c.mutation.SetCreatedAt(v)
-	return _c
-}
-
-// SetNillableCreatedAt sets the "created_at" field if the given value is not nil.
-func (_c *CustomerCreate) SetNillableCreatedAt(v *time.Time) *CustomerCreate {
-	if v != nil {
-		_c.SetCreatedAt(*v)
 	}
 	return _c
 }
@@ -130,6 +130,10 @@ func (_c *CustomerCreate) ExecX(ctx context.Context) {
 
 // defaults sets the default values of the builder before save.
 func (_c *CustomerCreate) defaults() {
+	if _, ok := _c.mutation.UpdateTime(); !ok {
+		v := customer.DefaultUpdateTime()
+		_c.mutation.SetUpdateTime(v)
+	}
 	if _, ok := _c.mutation.PhoneNumber(); !ok {
 		v := customer.DefaultPhoneNumber
 		_c.mutation.SetPhoneNumber(v)
@@ -137,10 +141,6 @@ func (_c *CustomerCreate) defaults() {
 	if _, ok := _c.mutation.IsActive(); !ok {
 		v := customer.DefaultIsActive
 		_c.mutation.SetIsActive(v)
-	}
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		v := customer.DefaultCreatedAt
-		_c.mutation.SetCreatedAt(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
 		v := customer.DefaultID()
@@ -150,6 +150,9 @@ func (_c *CustomerCreate) defaults() {
 
 // check runs all checks and user-defined validators on the builder.
 func (_c *CustomerCreate) check() error {
+	if _, ok := _c.mutation.UpdateTime(); !ok {
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Customer.update_time"`)}
+	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Customer.name"`)}
 	}
@@ -171,9 +174,6 @@ func (_c *CustomerCreate) check() error {
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Customer.is_active"`)}
-	}
-	if _, ok := _c.mutation.CreatedAt(); !ok {
-		return &ValidationError{Name: "created_at", err: errors.New(`ent: missing required field "Customer.created_at"`)}
 	}
 	if _, ok := _c.mutation.PasswordHash(); !ok {
 		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "Customer.password_hash"`)}
@@ -218,6 +218,10 @@ func (_c *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
+	if value, ok := _c.mutation.UpdateTime(); ok {
+		_spec.SetField(customer.FieldUpdateTime, field.TypeTime, value)
+		_node.UpdateTime = value
+	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(customer.FieldName, field.TypeString, value)
 		_node.Name = value
@@ -233,10 +237,6 @@ func (_c *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(customer.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
-	}
-	if value, ok := _c.mutation.CreatedAt(); ok {
-		_spec.SetField(customer.FieldCreatedAt, field.TypeTime, value)
-		_node.CreatedAt = value
 	}
 	if value, ok := _c.mutation.PasswordHash(); ok {
 		_spec.SetField(customer.FieldPasswordHash, field.TypeString, value)

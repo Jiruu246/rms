@@ -263,12 +263,12 @@ func (_q *CustomerQuery) Clone() *CustomerQuery {
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		UpdateTime time.Time `json:"update_time,omitempty"`
 //		Count int `json:"count,omitempty"`
 //	}
 //
 //	client.Customer.Query().
-//		GroupBy(customer.FieldName).
+//		GroupBy(customer.FieldUpdateTime).
 //		Aggregate(ent.Count()).
 //		Scan(ctx, &v)
 func (_q *CustomerQuery) GroupBy(field string, fields ...string) *CustomerGroupBy {
@@ -286,11 +286,11 @@ func (_q *CustomerQuery) GroupBy(field string, fields ...string) *CustomerGroupB
 // Example:
 //
 //	var v []struct {
-//		Name string `json:"name,omitempty"`
+//		UpdateTime time.Time `json:"update_time,omitempty"`
 //	}
 //
 //	client.Customer.Query().
-//		Select(customer.FieldName).
+//		Select(customer.FieldUpdateTime).
 //		Scan(ctx, &v)
 func (_q *CustomerQuery) Select(fields ...string) *CustomerSelect {
 	_q.ctx.Fields = append(_q.ctx.Fields, fields...)

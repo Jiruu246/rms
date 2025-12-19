@@ -7,6 +7,7 @@ import (
 
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/customer"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/google/uuid"
 )
@@ -64,8 +65,17 @@ func init() {
 	categoryDescID := categoryFields[0].Descriptor()
 	// category.DefaultID holds the default value on creation for the id field.
 	category.DefaultID = categoryDescID.Default.(func() uuid.UUID)
+	customerMixin := schema.Customer{}.Mixin()
+	customerMixinFields0 := customerMixin[0].Fields()
+	_ = customerMixinFields0
 	customerFields := schema.Customer{}.Fields()
 	_ = customerFields
+	// customerDescUpdateTime is the schema descriptor for update_time field.
+	customerDescUpdateTime := customerMixinFields0[0].Descriptor()
+	// customer.DefaultUpdateTime holds the default value on creation for the update_time field.
+	customer.DefaultUpdateTime = customerDescUpdateTime.Default.(func() time.Time)
+	// customer.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	customer.UpdateDefaultUpdateTime = customerDescUpdateTime.UpdateDefault.(func() time.Time)
 	// customerDescName is the schema descriptor for name field.
 	customerDescName := customerFields[1].Descriptor()
 	// customer.NameValidator is a validator for the "name" field. It is called by the builders before save.
@@ -96,16 +106,59 @@ func init() {
 	customerDescIsActive := customerFields[4].Descriptor()
 	// customer.DefaultIsActive holds the default value on creation for the is_active field.
 	customer.DefaultIsActive = customerDescIsActive.Default.(bool)
-	// customerDescCreatedAt is the schema descriptor for created_at field.
-	customerDescCreatedAt := customerFields[5].Descriptor()
-	// customer.DefaultCreatedAt holds the default value on creation for the created_at field.
-	customer.DefaultCreatedAt = customerDescCreatedAt.Default.(time.Time)
 	// customerDescPasswordHash is the schema descriptor for password_hash field.
-	customerDescPasswordHash := customerFields[6].Descriptor()
+	customerDescPasswordHash := customerFields[5].Descriptor()
 	// customer.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
 	customer.PasswordHashValidator = customerDescPasswordHash.Validators[0].(func(string) error)
 	// customerDescID is the schema descriptor for id field.
 	customerDescID := customerFields[0].Descriptor()
 	// customer.DefaultID holds the default value on creation for the id field.
 	customer.DefaultID = customerDescID.Default.(func() uuid.UUID)
+	restaurantMixin := schema.Restaurant{}.Mixin()
+	restaurantMixinFields0 := restaurantMixin[0].Fields()
+	_ = restaurantMixinFields0
+	restaurantFields := schema.Restaurant{}.Fields()
+	_ = restaurantFields
+	// restaurantDescUpdateTime is the schema descriptor for update_time field.
+	restaurantDescUpdateTime := restaurantMixinFields0[0].Descriptor()
+	// restaurant.DefaultUpdateTime holds the default value on creation for the update_time field.
+	restaurant.DefaultUpdateTime = restaurantDescUpdateTime.Default.(func() time.Time)
+	// restaurant.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	restaurant.UpdateDefaultUpdateTime = restaurantDescUpdateTime.UpdateDefault.(func() time.Time)
+	// restaurantDescName is the schema descriptor for name field.
+	restaurantDescName := restaurantFields[1].Descriptor()
+	// restaurant.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	restaurant.NameValidator = restaurantDescName.Validators[0].(func(string) error)
+	// restaurantDescPhone is the schema descriptor for phone field.
+	restaurantDescPhone := restaurantFields[3].Descriptor()
+	// restaurant.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
+	restaurant.PhoneValidator = restaurantDescPhone.Validators[0].(func(string) error)
+	// restaurantDescEmail is the schema descriptor for email field.
+	restaurantDescEmail := restaurantFields[4].Descriptor()
+	// restaurant.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	restaurant.EmailValidator = restaurantDescEmail.Validators[0].(func(string) error)
+	// restaurantDescAddress is the schema descriptor for address field.
+	restaurantDescAddress := restaurantFields[5].Descriptor()
+	// restaurant.AddressValidator is a validator for the "address" field. It is called by the builders before save.
+	restaurant.AddressValidator = restaurantDescAddress.Validators[0].(func(string) error)
+	// restaurantDescCity is the schema descriptor for city field.
+	restaurantDescCity := restaurantFields[6].Descriptor()
+	// restaurant.CityValidator is a validator for the "city" field. It is called by the builders before save.
+	restaurant.CityValidator = restaurantDescCity.Validators[0].(func(string) error)
+	// restaurantDescState is the schema descriptor for state field.
+	restaurantDescState := restaurantFields[7].Descriptor()
+	// restaurant.StateValidator is a validator for the "state" field. It is called by the builders before save.
+	restaurant.StateValidator = restaurantDescState.Validators[0].(func(string) error)
+	// restaurantDescZipCode is the schema descriptor for zip_code field.
+	restaurantDescZipCode := restaurantFields[8].Descriptor()
+	// restaurant.ZipCodeValidator is a validator for the "zip_code" field. It is called by the builders before save.
+	restaurant.ZipCodeValidator = restaurantDescZipCode.Validators[0].(func(string) error)
+	// restaurantDescCountry is the schema descriptor for country field.
+	restaurantDescCountry := restaurantFields[9].Descriptor()
+	// restaurant.CountryValidator is a validator for the "country" field. It is called by the builders before save.
+	restaurant.CountryValidator = restaurantDescCountry.Validators[0].(func(string) error)
+	// restaurantDescID is the schema descriptor for id field.
+	restaurantDescID := restaurantFields[0].Descriptor()
+	// restaurant.DefaultID holds the default value on creation for the id field.
+	restaurant.DefaultID = restaurantDescID.Default.(func() uuid.UUID)
 }

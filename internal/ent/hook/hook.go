@@ -33,6 +33,18 @@ func (f CustomerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CustomerMutation", m)
 }
 
+// The RestaurantFunc type is an adapter to allow the use of ordinary
+// function as Restaurant mutator.
+type RestaurantFunc func(context.Context, *ent.RestaurantMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f RestaurantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.RestaurantMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RestaurantMutation", m)
+}
+
 // Condition is a hook condition function.
 type Condition func(context.Context, ent.Mutation) bool
 

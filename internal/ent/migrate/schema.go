@@ -23,6 +23,22 @@ var (
 		Columns:    CategoriesColumns,
 		PrimaryKey: []*schema.Column{CategoriesColumns[0]},
 	}
+	// CustomersColumns holds the columns for the "customers" table.
+	CustomersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "phone_number", Type: field.TypeString, Default: ""},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "password_hash", Type: field.TypeString},
+	}
+	// CustomersTable holds the schema information for the "customers" table.
+	CustomersTable = &schema.Table{
+		Name:       "customers",
+		Columns:    CustomersColumns,
+		PrimaryKey: []*schema.Column{CustomersColumns[0]},
+	}
 	// RestaurantsColumns holds the columns for the "restaurants" table.
 	RestaurantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -51,6 +67,7 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
+		CustomersTable,
 		RestaurantsTable,
 	}
 )

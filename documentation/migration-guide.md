@@ -39,12 +39,14 @@ This project uses [Go Ent](https://entgo.io/) for ORM and database schema manage
    go generate ./internal/ent
    ```
 
-3. **Apply Changes**:
+4. **Apply Changes**:
    ```bash
    make migrate-up
    # or
    go run ./cmd/migraete apply
    ```
+
+   This command will open a connection to the database, and execute the migration. It drops columns and indexes that are no longer defined in the schema and apply all pending schema changes to the database
 
 ### Scenario 2: Branch Switching (different Schema)
 

@@ -6,16 +6,26 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path"
+	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/suite"
 )
 
 const restaurantAPIBase = "/api/restaurants"
 
+type RestaurantTestSuite struct {
+	IntegrationTestSuite
+}
+
+func TestRestaurantTestSuite(t *testing.T) {
+	suite.Run(t, new(RestaurantTestSuite))
+}
+
 // TestRestaurantAPI tests the restaurant API endpoints
-func (s *IntegrationTestSuite) TestCreateRestaurant() {
+func (s *RestaurantTestSuite) TestCreateRestaurant() {
 	tests := []struct {
 		testName string
 		body     any
@@ -71,7 +81,8 @@ func (s *IntegrationTestSuite) TestCreateRestaurant() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
 			tt.validate(w)
@@ -79,7 +90,7 @@ func (s *IntegrationTestSuite) TestCreateRestaurant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestGetRestaurant() {
+func (s *RestaurantTestSuite) TestGetRestaurant() {
 	initialRestaurant1, err := s.client.Restaurant.Create().
 		SetName("Initial Restaurant 1").
 		SetDescription("Initial Description 1").
@@ -170,7 +181,8 @@ func (s *IntegrationTestSuite) TestGetRestaurant() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
 			tt.validate(w)
@@ -178,7 +190,7 @@ func (s *IntegrationTestSuite) TestGetRestaurant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestUpdateRestaurant() {
+func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 	initialRestaurant1, err := s.client.Restaurant.Create().
 		SetName("Initial Restaurant 1").
 		SetDescription("Initial Description 1").
@@ -260,7 +272,8 @@ func (s *IntegrationTestSuite) TestUpdateRestaurant() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
 			tt.validate(w)
@@ -268,7 +281,7 @@ func (s *IntegrationTestSuite) TestUpdateRestaurant() {
 	}
 }
 
-func (s *IntegrationTestSuite) TestDeleteRestaurant() {
+func (s *RestaurantTestSuite) TestDeleteRestaurant() {
 	initialRestaurant, err := s.client.Restaurant.Create().
 		SetName("Restaurant To Delete").
 		SetDescription("This restaurant will be deleted").
@@ -302,14 +315,15 @@ func (s *IntegrationTestSuite) TestDeleteRestaurant() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})
 	}
 }
 
 // TestRestaurantValidation tests input validation
-func (s *IntegrationTestSuite) TestRestaurantValidation() {
+func (s *RestaurantTestSuite) TestRestaurantValidation() {
 	tests := []struct {
 		testName string
 		method   string
@@ -374,7 +388,8 @@ func (s *IntegrationTestSuite) TestRestaurantValidation() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			s.server.Engine().ServeHTTP(w, req)
+			server := s.CreateServer()
+			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})
 	}

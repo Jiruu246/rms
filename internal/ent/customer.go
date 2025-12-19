@@ -18,6 +18,8 @@ type Customer struct {
 	config `json:"-"`
 	// ID of the ent.
 	ID uuid.UUID `json:"id,omitempty"`
+	// UpdateTime holds the value of the "update_time" field.
+	UpdateTime time.Time `json:"update_time,omitempty"`
 	// Customer name
 	Name string `json:"name,omitempty"`
 	// Customer email
@@ -26,8 +28,6 @@ type Customer struct {
 	PhoneNumber string `json:"phone_number,omitempty"`
 	// Whether the customer is active
 	IsActive bool `json:"is_active,omitempty"`
-	// Creation timestamp
-	CreatedAt time.Time `json:"created_at,omitempty"`
 	// Hashed password for authentication
 	PasswordHash string `json:"password_hash,omitempty"`
 	selectValues sql.SelectValues
@@ -42,7 +42,7 @@ func (*Customer) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullBool)
 		case customer.FieldName, customer.FieldEmail, customer.FieldPhoneNumber, customer.FieldPasswordHash:
 			values[i] = new(sql.NullString)
-		case customer.FieldCreatedAt:
+		case customer.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
 		case customer.FieldID:
 			values[i] = new(uuid.UUID)
@@ -67,6 +67,12 @@ func (_m *Customer) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				_m.ID = *value
 			}
+		case customer.FieldUpdateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field update_time", values[i])
+			} else if value.Valid {
+				_m.UpdateTime = value.Time
+			}
 		case customer.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
@@ -90,12 +96,6 @@ func (_m *Customer) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field is_active", values[i])
 			} else if value.Valid {
 				_m.IsActive = value.Bool
-			}
-		case customer.FieldCreatedAt:
-			if value, ok := values[i].(*sql.NullTime); !ok {
-				return fmt.Errorf("unexpected type %T for field created_at", values[i])
-			} else if value.Valid {
-				_m.CreatedAt = value.Time
 			}
 		case customer.FieldPasswordHash:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -139,6 +139,9 @@ func (_m *Customer) String() string {
 	var builder strings.Builder
 	builder.WriteString("Customer(")
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
+	builder.WriteString("update_time=")
+	builder.WriteString(_m.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)
 	builder.WriteString(", ")
@@ -150,9 +153,6 @@ func (_m *Customer) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
-	builder.WriteString(", ")
-	builder.WriteString("created_at=")
-	builder.WriteString(_m.CreatedAt.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("password_hash=")
 	builder.WriteString(_m.PasswordHash)

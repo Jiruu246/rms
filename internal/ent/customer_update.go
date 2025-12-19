@@ -6,6 +6,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -24,6 +25,12 @@ type CustomerUpdate struct {
 // Where appends a list predicates to the CustomerUpdate builder.
 func (_u *CustomerUpdate) Where(ps ...predicate.Customer) *CustomerUpdate {
 	_u.mutation.Where(ps...)
+	return _u
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (_u *CustomerUpdate) SetUpdateTime(v time.Time) *CustomerUpdate {
+	_u.mutation.SetUpdateTime(v)
 	return _u
 }
 
@@ -104,6 +111,7 @@ func (_u *CustomerUpdate) Mutation() *CustomerMutation {
 
 // Save executes the query and returns the number of nodes affected by the update operation.
 func (_u *CustomerUpdate) Save(ctx context.Context) (int, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -126,6 +134,14 @@ func (_u *CustomerUpdate) Exec(ctx context.Context) error {
 func (_u *CustomerUpdate) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *CustomerUpdate) defaults() {
+	if _, ok := _u.mutation.UpdateTime(); !ok {
+		v := customer.UpdateDefaultUpdateTime()
+		_u.mutation.SetUpdateTime(v)
 	}
 }
 
@@ -161,6 +177,9 @@ func (_u *CustomerUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			}
 		}
 	}
+	if value, ok := _u.mutation.UpdateTime(); ok {
+		_spec.SetField(customer.FieldUpdateTime, field.TypeTime, value)
+	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(customer.FieldName, field.TypeString, value)
 	}
@@ -194,6 +213,12 @@ type CustomerUpdateOne struct {
 	fields   []string
 	hooks    []Hook
 	mutation *CustomerMutation
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (_u *CustomerUpdateOne) SetUpdateTime(v time.Time) *CustomerUpdateOne {
+	_u.mutation.SetUpdateTime(v)
+	return _u
 }
 
 // SetName sets the "name" field.
@@ -286,6 +311,7 @@ func (_u *CustomerUpdateOne) Select(field string, fields ...string) *CustomerUpd
 
 // Save executes the query and returns the updated Customer entity.
 func (_u *CustomerUpdateOne) Save(ctx context.Context) (*Customer, error) {
+	_u.defaults()
 	return withHooks(ctx, _u.sqlSave, _u.mutation, _u.hooks)
 }
 
@@ -308,6 +334,14 @@ func (_u *CustomerUpdateOne) Exec(ctx context.Context) error {
 func (_u *CustomerUpdateOne) ExecX(ctx context.Context) {
 	if err := _u.Exec(ctx); err != nil {
 		panic(err)
+	}
+}
+
+// defaults sets the default values of the builder before save.
+func (_u *CustomerUpdateOne) defaults() {
+	if _, ok := _u.mutation.UpdateTime(); !ok {
+		v := customer.UpdateDefaultUpdateTime()
+		_u.mutation.SetUpdateTime(v)
 	}
 }
 
@@ -359,6 +393,9 @@ func (_u *CustomerUpdateOne) sqlSave(ctx context.Context) (_node *Customer, err 
 				ps[i](selector)
 			}
 		}
+	}
+	if value, ok := _u.mutation.UpdateTime(); ok {
+		_spec.SetField(customer.FieldUpdateTime, field.TypeTime, value)
 	}
 	if value, ok := _u.mutation.Name(); ok {
 		_spec.SetField(customer.FieldName, field.TypeString, value)

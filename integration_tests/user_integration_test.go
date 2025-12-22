@@ -75,7 +75,7 @@ func (s *UserTestSuite) TestCreateUser() {
 }
 
 func (s *UserTestSuite) TestGetUser() {
-	initialUser, err := s.client.Customer.Create().
+	initialUser, err := s.client.User.Create().
 		SetName("Initial User").
 		SetEmail("initialuser@example.com").
 		SetPasswordHash("someHash").
@@ -140,7 +140,9 @@ func (s *UserTestSuite) TestGetUser() {
 }
 
 func (s *UserTestSuite) TestUpdateUser() {
-	initialUser, err := s.client.Customer.Create().
+	initialUser, err := SetupUser(s.client, s.T().Context())
+	s.Require().NoError(err)
+	_, err = initialUser.Update().
 		SetName("Initial User").
 		SetEmail("initialuser2@example.com").
 		SetPasswordHash("someHash").
@@ -201,7 +203,7 @@ func (s *UserTestSuite) TestUpdateUser() {
 }
 
 func (s *UserTestSuite) TestDeleteUser() {
-	initialUser, err := s.client.Customer.Create().
+	initialUser, err := s.client.User.Create().
 		SetName("User To Delete").
 		SetEmail("deleteuser@example.com").
 		SetPasswordHash("someHash").

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -52,15 +50,9 @@ func (h *UserHandler) Login(c *gin.Context) {
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {
-	claims, ok := c.Get("claims")
-	if !ok {
-		utils.WriteUnauthorized(c.Writer, "unauthorized")
-		return
-	}
+	claims := c.MustGet("claims").(utils.JWTClaims)
 
-	userID := claims.(utils.JWTClaims).UserID
-
-	user, err := h.service.GetProfile(c.Request.Context(), userID)
+	user, err := h.service.GetProfile(c.Request.Context(), claims.UserID)
 	if err != nil {
 		utils.WriteNotFound(c.Writer, "user not found")
 		return
@@ -103,9 +95,9 @@ func (h *UserHandler) DeleteAccount(c *gin.Context) {
 	userID := claims.(utils.JWTClaims).UserID
 
 	if err := h.service.DeleteAccount(c.Request.Context(), userID); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		utils.WriteInternalError(c.Writer, err.Error())
 		return
 	}
 
-	c.JSON(http.StatusNoContent, nil)
+	utils.WriteNoContent(c.Writer)
 }

@@ -45,6 +45,11 @@ func (s *CategoryTestSuite) TestCreateCategory() {
 			body: dto.CreateCategoryRequest{
 				Name:        "Test Category",
 				Description: "A test category description",
+				RestaurantID: func() uuid.UUID {
+					restaurant, err := SetupRestaurant(s.client, s.T().Context())
+					s.Require().NoError(err)
+					return restaurant.ID
+				}(),
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
@@ -81,16 +86,15 @@ func (s *CategoryTestSuite) TestCreateCategory() {
 }
 
 func (s *CategoryTestSuite) TestGetCategory() {
-	initialCategory1, err := s.client.Category.Create().
+	initialCategory1, err := SetupCategory(s.client, s.T().Context())
+	s.Require().NoError(err)
+	_, err = initialCategory1.Update().
 		SetName("Initial Category 1").
 		SetDescription("Initial Description 1").
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
-	_, err = s.client.Category.Create().
-		SetName("Initial Category 2").
-		SetDescription("Initial Description 2").
-		Save(s.T().Context())
+	_, err = SetupCategory(s.client, s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -156,16 +160,16 @@ func (s *CategoryTestSuite) TestGetCategory() {
 }
 
 func (s *CategoryTestSuite) TestUpdateCategory() {
-	initialCategory1, err := s.client.Category.Create().
+	initialCategory1, err := SetupCategory(s.client, s.T().Context())
+	s.Require().NoError(err)
+
+	_, err = initialCategory1.Update().
 		SetName("Initial Category 1").
 		SetDescription("Initial Description 1").
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
-	_, err = s.client.Category.Create().
-		SetName("Initial Category 2").
-		SetDescription("Initial Description 2").
-		Save(s.T().Context())
+	_, err = SetupCategory(s.client, s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -219,10 +223,7 @@ func (s *CategoryTestSuite) TestUpdateCategory() {
 }
 
 func (s *CategoryTestSuite) TestDeleteCategory() {
-	initialCategory, err := s.client.Category.Create().
-		SetName("Category To Delete").
-		SetDescription("This category will be deleted").
-		Save(s.T().Context())
+	initialCategory, err := SetupCategory(s.client, s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {

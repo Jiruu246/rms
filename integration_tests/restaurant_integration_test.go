@@ -9,7 +9,9 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/pkg/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 )
@@ -81,7 +83,17 @@ func (s *RestaurantTestSuite) TestCreateRestaurant() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			user, err := SetupUser(s.client, s.T().Context())
+			s.Require().NoError(err)
+
+			mockMiddlewares := DefaultMiddleware()
+			mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
+				return func(c *gin.Context) {
+					c.Set("claims", utils.JWTClaims{UserID: user.ID})
+					c.Next()
+				}
+			}
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
@@ -91,7 +103,9 @@ func (s *RestaurantTestSuite) TestCreateRestaurant() {
 }
 
 func (s *RestaurantTestSuite) TestGetRestaurant() {
-	initialRestaurant1, err := s.client.Restaurant.Create().
+	initialRestaurant1, err := SetupRestaurant(s.client, s.T().Context())
+	s.Require().NoError(err)
+	initialRestaurant1, err = s.client.Restaurant.UpdateOne(initialRestaurant1).
 		SetName("Initial Restaurant 1").
 		SetDescription("Initial Description 1").
 		SetPhone("+1111111111").
@@ -102,23 +116,11 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 		SetZipCode("11111").
 		SetCountry("Initial Country 1").
 		SetCurrency("USD").
-		SetStatus("active").
+		SetStatus(restaurant.StatusActive).
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
-	_, err = s.client.Restaurant.Create().
-		SetName("Initial Restaurant 2").
-		SetDescription("Initial Description 2").
-		SetPhone("+2222222222").
-		SetEmail("restaurant2@test.com").
-		SetAddress("222 Initial Street").
-		SetCity("Initial City 2").
-		SetState("Initial State 2").
-		SetZipCode("22222").
-		SetCountry("Initial Country 2").
-		SetCurrency("EUR").
-		SetStatus("active").
-		Save(s.T().Context())
+	_, err = SetupRestaurant(s.client, s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -158,7 +160,7 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 				s.Equal("11111", response.Data.ZipCode)
 				s.Equal("Initial Country 1", response.Data.Country)
 				s.Equal("USD", response.Data.Currency)
-				s.Equal("active", response.Data.Status)
+				s.Equal(restaurant.StatusActive.String(), response.Data.Status)
 			},
 		},
 		{
@@ -191,7 +193,9 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 }
 
 func (s *RestaurantTestSuite) TestUpdateRestaurant() {
-	initialRestaurant1, err := s.client.Restaurant.Create().
+	initialRestaurant1, err := SetupRestaurant(s.client, s.T().Context())
+	s.Require().NoError(err)
+	initialRestaurant1, err = s.client.Restaurant.UpdateOne(initialRestaurant1).
 		SetName("Initial Restaurant 1").
 		SetDescription("Initial Description 1").
 		SetPhone("+1111111111").
@@ -202,23 +206,11 @@ func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 		SetZipCode("11111").
 		SetCountry("Initial Country 1").
 		SetCurrency("USD").
-		SetStatus("active").
+		SetStatus(restaurant.StatusActive).
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
-	_, err = s.client.Restaurant.Create().
-		SetName("Initial Restaurant 2").
-		SetDescription("Initial Description 2").
-		SetPhone("+2222222222").
-		SetEmail("restaurant2@test.com").
-		SetAddress("222 Initial Street").
-		SetCity("Initial City 2").
-		SetState("Initial State 2").
-		SetZipCode("22222").
-		SetCountry("Initial Country 2").
-		SetCurrency("EUR").
-		SetStatus("active").
-		Save(s.T().Context())
+	_, err = SetupRestaurant(s.client, s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -282,19 +274,7 @@ func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 }
 
 func (s *RestaurantTestSuite) TestDeleteRestaurant() {
-	initialRestaurant, err := s.client.Restaurant.Create().
-		SetName("Restaurant To Delete").
-		SetDescription("This restaurant will be deleted").
-		SetPhone("+0000000000").
-		SetEmail("delete@restaurant.com").
-		SetAddress("000 Delete Street").
-		SetCity("Delete City").
-		SetState("Delete State").
-		SetZipCode("00000").
-		SetCountry("Delete Country").
-		SetCurrency("USD").
-		SetStatus("active").
-		Save(s.T().Context())
+	initialRestaurant, err := SetupRestaurant(s.client, s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -388,13 +368,18 @@ func (s *RestaurantTestSuite) TestRestaurantValidation() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			user, err := SetupUser(s.client, s.T().Context())
+			s.Require().NoError(err)
+			mockMiddlewares := DefaultMiddleware()
+			mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
+				return func(c *gin.Context) {
+					c.Set("claims", utils.JWTClaims{UserID: user.ID})
+					c.Next()
+				}
+			}
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})
 	}
-}
-
-func ptrString(s string) *string {
-	return &s
 }

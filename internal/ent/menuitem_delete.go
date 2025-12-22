@@ -8,30 +8,30 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Jiruu246/rms/internal/ent/customer"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 )
 
-// CustomerDelete is the builder for deleting a Customer entity.
-type CustomerDelete struct {
+// MenuItemDelete is the builder for deleting a MenuItem entity.
+type MenuItemDelete struct {
 	config
 	hooks    []Hook
-	mutation *CustomerMutation
+	mutation *MenuItemMutation
 }
 
-// Where appends a list predicates to the CustomerDelete builder.
-func (_d *CustomerDelete) Where(ps ...predicate.Customer) *CustomerDelete {
+// Where appends a list predicates to the MenuItemDelete builder.
+func (_d *MenuItemDelete) Where(ps ...predicate.MenuItem) *MenuItemDelete {
 	_d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query and returns how many vertices were deleted.
-func (_d *CustomerDelete) Exec(ctx context.Context) (int, error) {
+func (_d *MenuItemDelete) Exec(ctx context.Context) (int, error) {
 	return withHooks(ctx, _d.sqlExec, _d.mutation, _d.hooks)
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *CustomerDelete) ExecX(ctx context.Context) int {
+func (_d *MenuItemDelete) ExecX(ctx context.Context) int {
 	n, err := _d.Exec(ctx)
 	if err != nil {
 		panic(err)
@@ -39,8 +39,8 @@ func (_d *CustomerDelete) ExecX(ctx context.Context) int {
 	return n
 }
 
-func (_d *CustomerDelete) sqlExec(ctx context.Context) (int, error) {
-	_spec := sqlgraph.NewDeleteSpec(customer.Table, sqlgraph.NewFieldSpec(customer.FieldID, field.TypeUUID))
+func (_d *MenuItemDelete) sqlExec(ctx context.Context) (int, error) {
+	_spec := sqlgraph.NewDeleteSpec(menuitem.Table, sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64))
 	if ps := _d.mutation.predicates; len(ps) > 0 {
 		_spec.Predicate = func(selector *sql.Selector) {
 			for i := range ps {
@@ -56,32 +56,32 @@ func (_d *CustomerDelete) sqlExec(ctx context.Context) (int, error) {
 	return affected, err
 }
 
-// CustomerDeleteOne is the builder for deleting a single Customer entity.
-type CustomerDeleteOne struct {
-	_d *CustomerDelete
+// MenuItemDeleteOne is the builder for deleting a single MenuItem entity.
+type MenuItemDeleteOne struct {
+	_d *MenuItemDelete
 }
 
-// Where appends a list predicates to the CustomerDelete builder.
-func (_d *CustomerDeleteOne) Where(ps ...predicate.Customer) *CustomerDeleteOne {
+// Where appends a list predicates to the MenuItemDelete builder.
+func (_d *MenuItemDeleteOne) Where(ps ...predicate.MenuItem) *MenuItemDeleteOne {
 	_d._d.mutation.Where(ps...)
 	return _d
 }
 
 // Exec executes the deletion query.
-func (_d *CustomerDeleteOne) Exec(ctx context.Context) error {
+func (_d *MenuItemDeleteOne) Exec(ctx context.Context) error {
 	n, err := _d._d.Exec(ctx)
 	switch {
 	case err != nil:
 		return err
 	case n == 0:
-		return &NotFoundError{customer.Label}
+		return &NotFoundError{menuitem.Label}
 	default:
 		return nil
 	}
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_d *CustomerDeleteOne) ExecX(ctx context.Context) {
+func (_d *MenuItemDeleteOne) ExecX(ctx context.Context) {
 	if err := _d.Exec(ctx); err != nil {
 		panic(err)
 	}

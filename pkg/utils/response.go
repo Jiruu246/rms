@@ -74,3 +74,7 @@ func WriteForbidden(w http.ResponseWriter, message string) {
 func WriteUnauthorized(w http.ResponseWriter, message string) {
 	WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", message, nil)
 }
+
+func WriteNoContent(w http.ResponseWriter) {
+	w.WriteHeader(http.StatusNoContent)
+}

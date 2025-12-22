@@ -11,8 +11,12 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
+	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/google/uuid"
 )
 
 // RestaurantUpdate is the builder for updating Restaurant entities.
@@ -246,9 +250,106 @@ func (_u *RestaurantUpdate) SetNillableCurrency(v *string) *RestaurantUpdate {
 	return _u
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *RestaurantUpdate) SetUserID(v uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *RestaurantUpdate) SetNillableUserID(v *uuid.UUID) *RestaurantUpdate {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (_u *RestaurantUpdate) SetUser(v *User) *RestaurantUpdate {
+	return _u.SetUserID(v.ID)
+}
+
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_u *RestaurantUpdate) AddMenuItemIDs(ids ...int64) *RestaurantUpdate {
+	_u.mutation.AddMenuItemIDs(ids...)
+	return _u
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_u *RestaurantUpdate) AddMenuItems(v ...*MenuItem) *RestaurantUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMenuItemIDs(ids...)
+}
+
+// AddCategoryIDs adds the "categories" edge to the Category entity by IDs.
+func (_u *RestaurantUpdate) AddCategoryIDs(ids ...uuid.UUID) *RestaurantUpdate {
+	_u.mutation.AddCategoryIDs(ids...)
+	return _u
+}
+
+// AddCategories adds the "categories" edges to the Category entity.
+func (_u *RestaurantUpdate) AddCategories(v ...*Category) *RestaurantUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the RestaurantMutation object of the builder.
 func (_u *RestaurantUpdate) Mutation() *RestaurantMutation {
 	return _u.mutation
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (_u *RestaurantUpdate) ClearUser() *RestaurantUpdate {
+	_u.mutation.ClearUser()
+	return _u
+}
+
+// ClearMenuItems clears all "menu_items" edges to the MenuItem entity.
+func (_u *RestaurantUpdate) ClearMenuItems() *RestaurantUpdate {
+	_u.mutation.ClearMenuItems()
+	return _u
+}
+
+// RemoveMenuItemIDs removes the "menu_items" edge to MenuItem entities by IDs.
+func (_u *RestaurantUpdate) RemoveMenuItemIDs(ids ...int64) *RestaurantUpdate {
+	_u.mutation.RemoveMenuItemIDs(ids...)
+	return _u
+}
+
+// RemoveMenuItems removes "menu_items" edges to MenuItem entities.
+func (_u *RestaurantUpdate) RemoveMenuItems(v ...*MenuItem) *RestaurantUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMenuItemIDs(ids...)
+}
+
+// ClearCategories clears all "categories" edges to the Category entity.
+func (_u *RestaurantUpdate) ClearCategories() *RestaurantUpdate {
+	_u.mutation.ClearCategories()
+	return _u
+}
+
+// RemoveCategoryIDs removes the "categories" edge to Category entities by IDs.
+func (_u *RestaurantUpdate) RemoveCategoryIDs(ids ...uuid.UUID) *RestaurantUpdate {
+	_u.mutation.RemoveCategoryIDs(ids...)
+	return _u
+}
+
+// RemoveCategories removes "categories" edges to Category entities.
+func (_u *RestaurantUpdate) RemoveCategories(v ...*Category) *RestaurantUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCategoryIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -334,6 +435,9 @@ func (_u *RestaurantUpdate) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Restaurant.status": %w`, err)}
 		}
 	}
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Restaurant.user"`)
+	}
 	return nil
 }
 
@@ -405,6 +509,125 @@ func (_u *RestaurantUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(restaurant.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   restaurant.UserTable,
+			Columns: []string{restaurant.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   restaurant.UserTable,
+			Columns: []string{restaurant.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMenuItemsIDs(); len(nodes) > 0 && !_u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !_u.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -644,9 +867,106 @@ func (_u *RestaurantUpdateOne) SetNillableCurrency(v *string) *RestaurantUpdateO
 	return _u
 }
 
+// SetUserID sets the "user_id" field.
+func (_u *RestaurantUpdateOne) SetUserID(v uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetUserID(v)
+	return _u
+}
+
+// SetNillableUserID sets the "user_id" field if the given value is not nil.
+func (_u *RestaurantUpdateOne) SetNillableUserID(v *uuid.UUID) *RestaurantUpdateOne {
+	if v != nil {
+		_u.SetUserID(*v)
+	}
+	return _u
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (_u *RestaurantUpdateOne) SetUser(v *User) *RestaurantUpdateOne {
+	return _u.SetUserID(v.ID)
+}
+
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_u *RestaurantUpdateOne) AddMenuItemIDs(ids ...int64) *RestaurantUpdateOne {
+	_u.mutation.AddMenuItemIDs(ids...)
+	return _u
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_u *RestaurantUpdateOne) AddMenuItems(v ...*MenuItem) *RestaurantUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMenuItemIDs(ids...)
+}
+
+// AddCategoryIDs adds the "categories" edge to the Category entity by IDs.
+func (_u *RestaurantUpdateOne) AddCategoryIDs(ids ...uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.AddCategoryIDs(ids...)
+	return _u
+}
+
+// AddCategories adds the "categories" edges to the Category entity.
+func (_u *RestaurantUpdateOne) AddCategories(v ...*Category) *RestaurantUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddCategoryIDs(ids...)
+}
+
 // Mutation returns the RestaurantMutation object of the builder.
 func (_u *RestaurantUpdateOne) Mutation() *RestaurantMutation {
 	return _u.mutation
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (_u *RestaurantUpdateOne) ClearUser() *RestaurantUpdateOne {
+	_u.mutation.ClearUser()
+	return _u
+}
+
+// ClearMenuItems clears all "menu_items" edges to the MenuItem entity.
+func (_u *RestaurantUpdateOne) ClearMenuItems() *RestaurantUpdateOne {
+	_u.mutation.ClearMenuItems()
+	return _u
+}
+
+// RemoveMenuItemIDs removes the "menu_items" edge to MenuItem entities by IDs.
+func (_u *RestaurantUpdateOne) RemoveMenuItemIDs(ids ...int64) *RestaurantUpdateOne {
+	_u.mutation.RemoveMenuItemIDs(ids...)
+	return _u
+}
+
+// RemoveMenuItems removes "menu_items" edges to MenuItem entities.
+func (_u *RestaurantUpdateOne) RemoveMenuItems(v ...*MenuItem) *RestaurantUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMenuItemIDs(ids...)
+}
+
+// ClearCategories clears all "categories" edges to the Category entity.
+func (_u *RestaurantUpdateOne) ClearCategories() *RestaurantUpdateOne {
+	_u.mutation.ClearCategories()
+	return _u
+}
+
+// RemoveCategoryIDs removes the "categories" edge to Category entities by IDs.
+func (_u *RestaurantUpdateOne) RemoveCategoryIDs(ids ...uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.RemoveCategoryIDs(ids...)
+	return _u
+}
+
+// RemoveCategories removes "categories" edges to Category entities.
+func (_u *RestaurantUpdateOne) RemoveCategories(v ...*Category) *RestaurantUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveCategoryIDs(ids...)
 }
 
 // Where appends a list predicates to the RestaurantUpdate builder.
@@ -745,6 +1065,9 @@ func (_u *RestaurantUpdateOne) check() error {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Restaurant.status": %w`, err)}
 		}
 	}
+	if _u.mutation.UserCleared() && len(_u.mutation.UserIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Restaurant.user"`)
+	}
 	return nil
 }
 
@@ -833,6 +1156,125 @@ func (_u *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant, 
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(restaurant.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.UserCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   restaurant.UserTable,
+			Columns: []string{restaurant.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   restaurant.UserTable,
+			Columns: []string{restaurant.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMenuItemsIDs(); len(nodes) > 0 && !_u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedCategoriesIDs(); len(nodes) > 0 && !_u.mutation.CategoriesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Restaurant{config: _u.config}
 	_spec.Assign = _node.assignValues

@@ -1,8 +1,6 @@
 package handler
 
 import (
-	"net/http"
-
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -22,6 +20,8 @@ func NewRestaurantHandler(service services.RestaurantService) *RestaurantHandler
 
 // CreateRestaurant handles POST /api/restaurants
 func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	var req dto.CreateRestaurantRequest
 
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
@@ -29,7 +29,12 @@ func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 		return
 	}
 
-	created, err := h.service.Create(c.Request.Context(), &req)
+	data := &dto.CreateRestaurantData{
+		Request: &req,
+		UserID:  claims.UserID,
+	}
+
+	created, err := h.service.Create(c.Request.Context(), data)
 	if err != nil {
 		utils.WriteInternalError(c.Writer, "Failed to create restaurant")
 		return
@@ -105,5 +110,5 @@ func (h *RestaurantHandler) DeleteRestaurant(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusNoContent, nil)
+	utils.WriteNoContent(c.Writer)
 }

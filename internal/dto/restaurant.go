@@ -22,6 +22,11 @@ type CreateRestaurantRequest struct {
 	Currency       string         `json:"currency" validate:"required" binding:"required"`
 }
 
+type CreateRestaurantData struct {
+	Request *CreateRestaurantRequest
+	UserID  uuid.UUID
+}
+
 // UpdateRestaurantRequest represents the request body for updating a restaurant
 // Uses pointers to distinguish between omitted values (nil) and deliberately empty/zero values
 type UpdateRestaurantRequest struct {
@@ -39,6 +44,11 @@ type UpdateRestaurantRequest struct {
 	Status         *string         `json:"status" validate:"omitempty,oneof=active inactive closed"`
 	OperatingHours *map[string]any `json:"operating_hours"`
 	Currency       *string         `json:"currency" validate:"omitempty"`
+}
+
+type UpdateRestaurantData struct {
+	Request *UpdateRestaurantRequest
+	ID      uuid.UUID
 }
 
 // RestaurantResponse represents the response structure for restaurant data

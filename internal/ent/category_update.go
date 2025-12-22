@@ -12,7 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
+	"github.com/google/uuid"
 )
 
 // CategoryUpdate is the builder for updating Category entities.
@@ -97,9 +100,70 @@ func (_u *CategoryUpdate) SetNillableIsActive(v *bool) *CategoryUpdate {
 	return _u
 }
 
+// SetRestaurantID sets the "restaurant_id" field.
+func (_u *CategoryUpdate) SetRestaurantID(v uuid.UUID) *CategoryUpdate {
+	_u.mutation.SetRestaurantID(v)
+	return _u
+}
+
+// SetNillableRestaurantID sets the "restaurant_id" field if the given value is not nil.
+func (_u *CategoryUpdate) SetNillableRestaurantID(v *uuid.UUID) *CategoryUpdate {
+	if v != nil {
+		_u.SetRestaurantID(*v)
+	}
+	return _u
+}
+
+// SetRestaurant sets the "restaurant" edge to the Restaurant entity.
+func (_u *CategoryUpdate) SetRestaurant(v *Restaurant) *CategoryUpdate {
+	return _u.SetRestaurantID(v.ID)
+}
+
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_u *CategoryUpdate) AddMenuItemIDs(ids ...int64) *CategoryUpdate {
+	_u.mutation.AddMenuItemIDs(ids...)
+	return _u
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_u *CategoryUpdate) AddMenuItems(v ...*MenuItem) *CategoryUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMenuItemIDs(ids...)
+}
+
 // Mutation returns the CategoryMutation object of the builder.
 func (_u *CategoryUpdate) Mutation() *CategoryMutation {
 	return _u.mutation
+}
+
+// ClearRestaurant clears the "restaurant" edge to the Restaurant entity.
+func (_u *CategoryUpdate) ClearRestaurant() *CategoryUpdate {
+	_u.mutation.ClearRestaurant()
+	return _u
+}
+
+// ClearMenuItems clears all "menu_items" edges to the MenuItem entity.
+func (_u *CategoryUpdate) ClearMenuItems() *CategoryUpdate {
+	_u.mutation.ClearMenuItems()
+	return _u
+}
+
+// RemoveMenuItemIDs removes the "menu_items" edge to MenuItem entities by IDs.
+func (_u *CategoryUpdate) RemoveMenuItemIDs(ids ...int64) *CategoryUpdate {
+	_u.mutation.RemoveMenuItemIDs(ids...)
+	return _u
+}
+
+// RemoveMenuItems removes "menu_items" edges to MenuItem entities.
+func (_u *CategoryUpdate) RemoveMenuItems(v ...*MenuItem) *CategoryUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMenuItemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -155,6 +219,9 @@ func (_u *CategoryUpdate) check() error {
 			return &ValidationError{Name: "display_order", err: fmt.Errorf(`ent: validator failed for field "Category.display_order": %w`, err)}
 		}
 	}
+	if _u.mutation.RestaurantCleared() && len(_u.mutation.RestaurantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Category.restaurant"`)
+	}
 	return nil
 }
 
@@ -187,6 +254,80 @@ func (_u *CategoryUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(category.FieldIsActive, field.TypeBool, value)
+	}
+	if _u.mutation.RestaurantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   category.RestaurantTable,
+			Columns: []string{category.RestaurantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RestaurantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   category.RestaurantTable,
+			Columns: []string{category.RestaurantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMenuItemsIDs(); len(nodes) > 0 && !_u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
@@ -277,9 +418,70 @@ func (_u *CategoryUpdateOne) SetNillableIsActive(v *bool) *CategoryUpdateOne {
 	return _u
 }
 
+// SetRestaurantID sets the "restaurant_id" field.
+func (_u *CategoryUpdateOne) SetRestaurantID(v uuid.UUID) *CategoryUpdateOne {
+	_u.mutation.SetRestaurantID(v)
+	return _u
+}
+
+// SetNillableRestaurantID sets the "restaurant_id" field if the given value is not nil.
+func (_u *CategoryUpdateOne) SetNillableRestaurantID(v *uuid.UUID) *CategoryUpdateOne {
+	if v != nil {
+		_u.SetRestaurantID(*v)
+	}
+	return _u
+}
+
+// SetRestaurant sets the "restaurant" edge to the Restaurant entity.
+func (_u *CategoryUpdateOne) SetRestaurant(v *Restaurant) *CategoryUpdateOne {
+	return _u.SetRestaurantID(v.ID)
+}
+
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_u *CategoryUpdateOne) AddMenuItemIDs(ids ...int64) *CategoryUpdateOne {
+	_u.mutation.AddMenuItemIDs(ids...)
+	return _u
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_u *CategoryUpdateOne) AddMenuItems(v ...*MenuItem) *CategoryUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMenuItemIDs(ids...)
+}
+
 // Mutation returns the CategoryMutation object of the builder.
 func (_u *CategoryUpdateOne) Mutation() *CategoryMutation {
 	return _u.mutation
+}
+
+// ClearRestaurant clears the "restaurant" edge to the Restaurant entity.
+func (_u *CategoryUpdateOne) ClearRestaurant() *CategoryUpdateOne {
+	_u.mutation.ClearRestaurant()
+	return _u
+}
+
+// ClearMenuItems clears all "menu_items" edges to the MenuItem entity.
+func (_u *CategoryUpdateOne) ClearMenuItems() *CategoryUpdateOne {
+	_u.mutation.ClearMenuItems()
+	return _u
+}
+
+// RemoveMenuItemIDs removes the "menu_items" edge to MenuItem entities by IDs.
+func (_u *CategoryUpdateOne) RemoveMenuItemIDs(ids ...int64) *CategoryUpdateOne {
+	_u.mutation.RemoveMenuItemIDs(ids...)
+	return _u
+}
+
+// RemoveMenuItems removes "menu_items" edges to MenuItem entities.
+func (_u *CategoryUpdateOne) RemoveMenuItems(v ...*MenuItem) *CategoryUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMenuItemIDs(ids...)
 }
 
 // Where appends a list predicates to the CategoryUpdate builder.
@@ -348,6 +550,9 @@ func (_u *CategoryUpdateOne) check() error {
 			return &ValidationError{Name: "display_order", err: fmt.Errorf(`ent: validator failed for field "Category.display_order": %w`, err)}
 		}
 	}
+	if _u.mutation.RestaurantCleared() && len(_u.mutation.RestaurantIDs()) > 0 {
+		return errors.New(`ent: clearing a required unique edge "Category.restaurant"`)
+	}
 	return nil
 }
 
@@ -397,6 +602,80 @@ func (_u *CategoryUpdateOne) sqlSave(ctx context.Context) (_node *Category, err 
 	}
 	if value, ok := _u.mutation.IsActive(); ok {
 		_spec.SetField(category.FieldIsActive, field.TypeBool, value)
+	}
+	if _u.mutation.RestaurantCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   category.RestaurantTable,
+			Columns: []string{category.RestaurantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RestaurantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   category.RestaurantTable,
+			Columns: []string{category.RestaurantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMenuItemsIDs(); len(nodes) > 0 && !_u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
 	_node = &Category{config: _u.config}
 	_spec.Assign = _node.assignValues

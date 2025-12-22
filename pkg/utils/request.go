@@ -14,6 +14,7 @@ func init() {
 	validate = validator.New()
 }
 
+// TODO: Gin has its own binding and validation mechanism.
 // ParseAndValidateRequest parses JSON request body and validates it
 func ParseAndValidateRequest(c *gin.Context, req any) error {
 	// Bind JSON to struct

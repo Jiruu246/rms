@@ -67,16 +67,19 @@ func (s *Server) routes() {
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
 	restaurantRepo := repos.NewEntRestaurantRepository(s.client)
+	menuitemRepo := repos.NewEntMenuItemRepository(s.client)
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
 	userService := services.NewUserService(userRepo)
 	restaurantService := services.NewRestaurantService(restaurantRepo)
+	menuItemService := services.NewMenuItemService(menuitemRepo)
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	userHandler := handler.NewUserHandler(userService)
 	restaurantHandler := handler.NewRestaurantHandler(restaurantService)
+	menuItemHandler := handler.NewMenuItemHandler(menuItemService)
 
 	// API routes
 	api := s.engine.Group("/api")
@@ -117,6 +120,18 @@ func (s *Server) routes() {
 			restaurants.GET("/:id", restaurantHandler.GetRestaurant)
 			restaurants.PUT("/:id", restaurantHandler.UpdateRestaurant)
 			restaurants.DELETE("/:id", restaurantHandler.DeleteRestaurant)
+		}
+
+		menuItems := api.Group("/menu-items")
+		{
+			// Apply JWT middleware to all menu item routes
+			menuItems.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+
+			menuItems.POST("", menuItemHandler.CreateMenuItem)
+			menuItems.GET("", menuItemHandler.GetMenuItems)
+			menuItems.GET("/:id", menuItemHandler.GetMenuItem)
+			menuItems.PUT("/:id", menuItemHandler.UpdateMenuItem)
+			menuItems.DELETE("/:id", menuItemHandler.DeleteMenuItem)
 		}
 	}
 }

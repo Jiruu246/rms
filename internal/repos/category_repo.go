@@ -23,14 +23,12 @@ type categoryRepository struct {
 	client *ent.Client
 }
 
-// NewEntCategoryRepository creates a new Ent-based category repository
 func NewEntCategoryRepository(client *ent.Client) CategoryRepository {
 	return &categoryRepository{
 		client: client,
 	}
 }
 
-// Create creates a new category
 func (r *categoryRepository) Create(ctx context.Context, cat *dto.CreateCategoryRequest) (*dto.Category, error) {
 	created, err := r.client.Category.
 		Create().
@@ -38,6 +36,7 @@ func (r *categoryRepository) Create(ctx context.Context, cat *dto.CreateCategory
 		SetDescription(cat.Description).
 		SetDisplayOrder(cat.DisplayOrder).
 		SetIsActive(cat.IsActive).
+		SetRestaurantID(cat.RestaurantID).
 		Save(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to create category: %w", err)
@@ -52,7 +51,6 @@ func (r *categoryRepository) Create(ctx context.Context, cat *dto.CreateCategory
 	}, nil
 }
 
-// GetByID retrieves a category by ID
 func (r *categoryRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Category, error) {
 	cat, err := r.client.Category.
 		Query().

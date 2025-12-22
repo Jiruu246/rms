@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
 )
 
@@ -83,6 +85,12 @@ func (_c *CategoryCreate) SetNillableIsActive(v *bool) *CategoryCreate {
 	return _c
 }
 
+// SetRestaurantID sets the "restaurant_id" field.
+func (_c *CategoryCreate) SetRestaurantID(v uuid.UUID) *CategoryCreate {
+	_c.mutation.SetRestaurantID(v)
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *CategoryCreate) SetID(v uuid.UUID) *CategoryCreate {
 	_c.mutation.SetID(v)
@@ -95,6 +103,26 @@ func (_c *CategoryCreate) SetNillableID(v *uuid.UUID) *CategoryCreate {
 		_c.SetID(*v)
 	}
 	return _c
+}
+
+// SetRestaurant sets the "restaurant" edge to the Restaurant entity.
+func (_c *CategoryCreate) SetRestaurant(v *Restaurant) *CategoryCreate {
+	return _c.SetRestaurantID(v.ID)
+}
+
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_c *CategoryCreate) AddMenuItemIDs(ids ...int64) *CategoryCreate {
+	_c.mutation.AddMenuItemIDs(ids...)
+	return _c
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_c *CategoryCreate) AddMenuItems(v ...*MenuItem) *CategoryCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMenuItemIDs(ids...)
 }
 
 // Mutation returns the CategoryMutation object of the builder.
@@ -186,6 +214,12 @@ func (_c *CategoryCreate) check() error {
 	if _, ok := _c.mutation.IsActive(); !ok {
 		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Category.is_active"`)}
 	}
+	if _, ok := _c.mutation.RestaurantID(); !ok {
+		return &ValidationError{Name: "restaurant_id", err: errors.New(`ent: missing required field "Category.restaurant_id"`)}
+	}
+	if len(_c.mutation.RestaurantIDs()) == 0 {
+		return &ValidationError{Name: "restaurant", err: errors.New(`ent: missing required edge "Category.restaurant"`)}
+	}
 	return nil
 }
 
@@ -240,6 +274,39 @@ func (_c *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.IsActive(); ok {
 		_spec.SetField(category.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
+	}
+	if nodes := _c.mutation.RestaurantIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   category.RestaurantTable,
+			Columns: []string{category.RestaurantColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.RestaurantID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   category.MenuItemsTable,
+			Columns: []string{category.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

@@ -6,7 +6,7 @@ import (
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
-	"github.com/Jiruu246/rms/internal/ent/customer"
+	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
 )
 
@@ -27,7 +27,7 @@ func NewEntUserRepository(client *ent.Client) *EntUserRepository {
 }
 
 func (r *EntUserRepository) Create(ctx context.Context, req *dto.RegisterUserRequest) (*dto.User, error) {
-	created, err := r.client.Customer.
+	created, err := r.client.User.
 		Create().
 		SetName(req.Name).
 		SetEmail(req.Email).
@@ -46,8 +46,8 @@ func (r *EntUserRepository) Create(ctx context.Context, req *dto.RegisterUserReq
 }
 
 func (r *EntUserRepository) GetByEmail(ctx context.Context, email string) (*dto.User, error) {
-	user, err := r.client.Customer.Query().
-		Where(customer.EmailEQ(email)).
+	user, err := r.client.User.Query().
+		Where(user.EmailEQ(email)).
 		Only(ctx)
 	if err != nil {
 		return nil, err
@@ -62,7 +62,7 @@ func (r *EntUserRepository) GetByEmail(ctx context.Context, email string) (*dto.
 }
 
 func (r *EntUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.User, error) {
-	user, err := r.client.Customer.Get(ctx, id)
+	user, err := r.client.User.Get(ctx, id)
 	if err != nil {
 		return nil, err
 	}
@@ -76,7 +76,7 @@ func (r *EntUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Use
 }
 
 func (r *EntUserRepository) Update(ctx context.Context, id uuid.UUID, user *dto.UpdateUserRequest) (*dto.User, error) {
-	updateBuilder := r.client.Customer.UpdateOneID(id)
+	updateBuilder := r.client.User.UpdateOneID(id)
 
 	hasUpdates := false
 
@@ -108,5 +108,5 @@ func (r *EntUserRepository) Update(ctx context.Context, id uuid.UUID, user *dto.
 }
 
 func (r *EntUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.client.Customer.DeleteOneID(id).Exec(ctx)
+	return r.client.User.DeleteOneID(id).Exec(ctx)
 }

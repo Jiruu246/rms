@@ -16,28 +16,53 @@ var (
 		{Name: "description", Type: field.TypeString, Size: 1000, Default: ""},
 		{Name: "display_order", Type: field.TypeInt, Default: 0},
 		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "restaurant_id", Type: field.TypeUUID},
 	}
 	// CategoriesTable holds the schema information for the "categories" table.
 	CategoriesTable = &schema.Table{
 		Name:       "categories",
 		Columns:    CategoriesColumns,
 		PrimaryKey: []*schema.Column{CategoriesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "categories_restaurants_categories",
+				Columns:    []*schema.Column{CategoriesColumns[6]},
+				RefColumns: []*schema.Column{RestaurantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
-	// CustomersColumns holds the columns for the "customers" table.
-	CustomersColumns = []*schema.Column{
-		{Name: "id", Type: field.TypeUUID},
+	// MenuItemsColumns holds the columns for the "menu_items" table.
+	MenuItemsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt64, Increment: true},
 		{Name: "update_time", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Size: 255},
-		{Name: "email", Type: field.TypeString, Unique: true},
-		{Name: "phone_number", Type: field.TypeString, Default: ""},
-		{Name: "is_active", Type: field.TypeBool, Default: true},
-		{Name: "password_hash", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Size: 1000, Default: ""},
+		{Name: "price", Type: field.TypeFloat64},
+		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "is_available", Type: field.TypeBool, Default: true},
+		{Name: "category_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "restaurant_id", Type: field.TypeUUID},
 	}
-	// CustomersTable holds the schema information for the "customers" table.
-	CustomersTable = &schema.Table{
-		Name:       "customers",
-		Columns:    CustomersColumns,
-		PrimaryKey: []*schema.Column{CustomersColumns[0]},
+	// MenuItemsTable holds the schema information for the "menu_items" table.
+	MenuItemsTable = &schema.Table{
+		Name:       "menu_items",
+		Columns:    MenuItemsColumns,
+		PrimaryKey: []*schema.Column{MenuItemsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "menu_items_categories_menu_items",
+				Columns:    []*schema.Column{MenuItemsColumns[7]},
+				RefColumns: []*schema.Column{CategoriesColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "menu_items_restaurants_menu_items",
+				Columns:    []*schema.Column{MenuItemsColumns[8]},
+				RefColumns: []*schema.Column{RestaurantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
 	}
 	// RestaurantsColumns holds the columns for the "restaurants" table.
 	RestaurantsColumns = []*schema.Column{
@@ -57,20 +82,50 @@ var (
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive", "closed"}, Default: "active"},
 		{Name: "operating_hours", Type: field.TypeJSON, Nullable: true},
 		{Name: "currency", Type: field.TypeString},
+		{Name: "user_id", Type: field.TypeUUID},
 	}
 	// RestaurantsTable holds the schema information for the "restaurants" table.
 	RestaurantsTable = &schema.Table{
 		Name:       "restaurants",
 		Columns:    RestaurantsColumns,
 		PrimaryKey: []*schema.Column{RestaurantsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "restaurants_users_restaurants",
+				Columns:    []*schema.Column{RestaurantsColumns[16]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// UsersColumns holds the columns for the "users" table.
+	UsersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "email", Type: field.TypeString, Unique: true},
+		{Name: "phone_number", Type: field.TypeString, Default: ""},
+		{Name: "is_active", Type: field.TypeBool, Default: true},
+		{Name: "password_hash", Type: field.TypeString},
+	}
+	// UsersTable holds the schema information for the "users" table.
+	UsersTable = &schema.Table{
+		Name:       "users",
+		Columns:    UsersColumns,
+		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
-		CustomersTable,
+		MenuItemsTable,
 		RestaurantsTable,
+		UsersTable,
 	}
 )
 
 func init() {
+	CategoriesTable.ForeignKeys[0].RefTable = RestaurantsTable
+	MenuItemsTable.ForeignKeys[0].RefTable = CategoriesTable
+	MenuItemsTable.ForeignKeys[1].RefTable = RestaurantsTable
+	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
 }

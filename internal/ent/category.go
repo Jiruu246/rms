@@ -10,6 +10,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
 )
 
@@ -27,8 +28,44 @@ type Category struct {
 	// Display order for sorting
 	DisplayOrder int `json:"display_order,omitempty"`
 	// Whether the category is active
-	IsActive     bool `json:"is_active,omitempty"`
+	IsActive bool `json:"is_active,omitempty"`
+	// ID of the restaurant this category belongs to
+	RestaurantID uuid.UUID `json:"restaurant_id,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the CategoryQuery when eager-loading is set.
+	Edges        CategoryEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// CategoryEdges holds the relations/edges for other nodes in the graph.
+type CategoryEdges struct {
+	// Restaurant holds the value of the restaurant edge.
+	Restaurant *Restaurant `json:"restaurant,omitempty"`
+	// MenuItems holds the value of the menu_items edge.
+	MenuItems []*MenuItem `json:"menu_items,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [2]bool
+}
+
+// RestaurantOrErr returns the Restaurant value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e CategoryEdges) RestaurantOrErr() (*Restaurant, error) {
+	if e.Restaurant != nil {
+		return e.Restaurant, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: restaurant.Label}
+	}
+	return nil, &NotLoadedError{edge: "restaurant"}
+}
+
+// MenuItemsOrErr returns the MenuItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e CategoryEdges) MenuItemsOrErr() ([]*MenuItem, error) {
+	if e.loadedTypes[1] {
+		return e.MenuItems, nil
+	}
+	return nil, &NotLoadedError{edge: "menu_items"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -44,7 +81,7 @@ func (*Category) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case category.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
-		case category.FieldID:
+		case category.FieldID, category.FieldRestaurantID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -97,6 +134,12 @@ func (_m *Category) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.IsActive = value.Bool
 			}
+		case category.FieldRestaurantID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field restaurant_id", values[i])
+			} else if value != nil {
+				_m.RestaurantID = *value
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -108,6 +151,16 @@ func (_m *Category) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Category) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryRestaurant queries the "restaurant" edge of the Category entity.
+func (_m *Category) QueryRestaurant() *RestaurantQuery {
+	return NewCategoryClient(_m.config).QueryRestaurant(_m)
+}
+
+// QueryMenuItems queries the "menu_items" edge of the Category entity.
+func (_m *Category) QueryMenuItems() *MenuItemQuery {
+	return NewCategoryClient(_m.config).QueryMenuItems(_m)
 }
 
 // Update returns a builder for updating this Category.
@@ -147,6 +200,9 @@ func (_m *Category) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("is_active=")
 	builder.WriteString(fmt.Sprintf("%v", _m.IsActive))
+	builder.WriteString(", ")
+	builder.WriteString("restaurant_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.RestaurantID))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/google/uuid"
 )
@@ -118,6 +119,11 @@ func CoverImageURL(v string) predicate.Restaurant {
 // Currency applies equality check predicate on the "currency" field. It's identical to CurrencyEQ.
 func Currency(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEQ(FieldCurrency, v))
+}
+
+// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
+func UserID(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldUserID, v))
 }
 
 // UpdateTimeEQ applies the EQ predicate on the "update_time" field.
@@ -998,6 +1004,95 @@ func CurrencyEqualFold(v string) predicate.Restaurant {
 // CurrencyContainsFold applies the ContainsFold predicate on the "currency" field.
 func CurrencyContainsFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldContainsFold(FieldCurrency, v))
+}
+
+// UserIDEQ applies the EQ predicate on the "user_id" field.
+func UserIDEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldUserID, v))
+}
+
+// UserIDNEQ applies the NEQ predicate on the "user_id" field.
+func UserIDNEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNEQ(FieldUserID, v))
+}
+
+// UserIDIn applies the In predicate on the "user_id" field.
+func UserIDIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIn(FieldUserID, vs...))
+}
+
+// UserIDNotIn applies the NotIn predicate on the "user_id" field.
+func UserIDNotIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotIn(FieldUserID, vs...))
+}
+
+// HasUser applies the HasEdge predicate on the "user" edge.
+func HasUser() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, UserTable, UserColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasUserWith applies the HasEdge predicate on the "user" edge with a given conditions (other predicates).
+func HasUserWith(preds ...predicate.User) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := newUserStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasMenuItems applies the HasEdge predicate on the "menu_items" edge.
+func HasMenuItems() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, MenuItemsTable, MenuItemsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasMenuItemsWith applies the HasEdge predicate on the "menu_items" edge with a given conditions (other predicates).
+func HasMenuItemsWith(preds ...predicate.MenuItem) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := newMenuItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCategories applies the HasEdge predicate on the "categories" edge.
+func HasCategories() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CategoriesTable, CategoriesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCategoriesWith applies the HasEdge predicate on the "categories" edge with a given conditions (other predicates).
+func HasCategoriesWith(preds ...predicate.Category) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := newCategoriesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
 }
 
 // And groups predicates with the AND operator between them.

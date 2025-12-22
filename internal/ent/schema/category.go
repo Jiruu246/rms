@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 	"github.com/google/uuid"
@@ -37,9 +38,18 @@ func (Category) Fields() []ent.Field {
 		field.Bool("is_active").
 			Default(true).
 			Comment("Whether the category is active"),
+		field.UUID("restaurant_id", uuid.UUID{}).
+			Comment("ID of the restaurant this category belongs to"),
 	}
 }
 
 func (Category) Edges() []ent.Edge {
-	return nil
+	return []ent.Edge{
+		edge.From("restaurant", Restaurant.Type).
+			Ref("categories").
+			Unique().
+			Required().
+			Field("restaurant_id"),
+		edge.To("menu_items", MenuItem.Type),
+	}
 }

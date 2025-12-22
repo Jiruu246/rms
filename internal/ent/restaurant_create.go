@@ -10,7 +10,10 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
+	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
 )
 
@@ -151,6 +154,12 @@ func (_c *RestaurantCreate) SetCurrency(v string) *RestaurantCreate {
 	return _c
 }
 
+// SetUserID sets the "user_id" field.
+func (_c *RestaurantCreate) SetUserID(v uuid.UUID) *RestaurantCreate {
+	_c.mutation.SetUserID(v)
+	return _c
+}
+
 // SetID sets the "id" field.
 func (_c *RestaurantCreate) SetID(v uuid.UUID) *RestaurantCreate {
 	_c.mutation.SetID(v)
@@ -163,6 +172,41 @@ func (_c *RestaurantCreate) SetNillableID(v *uuid.UUID) *RestaurantCreate {
 		_c.SetID(*v)
 	}
 	return _c
+}
+
+// SetUser sets the "user" edge to the User entity.
+func (_c *RestaurantCreate) SetUser(v *User) *RestaurantCreate {
+	return _c.SetUserID(v.ID)
+}
+
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_c *RestaurantCreate) AddMenuItemIDs(ids ...int64) *RestaurantCreate {
+	_c.mutation.AddMenuItemIDs(ids...)
+	return _c
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_c *RestaurantCreate) AddMenuItems(v ...*MenuItem) *RestaurantCreate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMenuItemIDs(ids...)
+}
+
+// AddCategoryIDs adds the "categories" edge to the Category entity by IDs.
+func (_c *RestaurantCreate) AddCategoryIDs(ids ...uuid.UUID) *RestaurantCreate {
+	_c.mutation.AddCategoryIDs(ids...)
+	return _c
+}
+
+// AddCategories adds the "categories" edges to the Category entity.
+func (_c *RestaurantCreate) AddCategories(v ...*Category) *RestaurantCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddCategoryIDs(ids...)
 }
 
 // Mutation returns the RestaurantMutation object of the builder.
@@ -294,6 +338,12 @@ func (_c *RestaurantCreate) check() error {
 	if _, ok := _c.mutation.Currency(); !ok {
 		return &ValidationError{Name: "currency", err: errors.New(`ent: missing required field "Restaurant.currency"`)}
 	}
+	if _, ok := _c.mutation.UserID(); !ok {
+		return &ValidationError{Name: "user_id", err: errors.New(`ent: missing required field "Restaurant.user_id"`)}
+	}
+	if len(_c.mutation.UserIDs()) == 0 {
+		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Restaurant.user"`)}
+	}
 	return nil
 }
 
@@ -388,6 +438,55 @@ func (_c *RestaurantCreate) createSpec() (*Restaurant, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.Currency(); ok {
 		_spec.SetField(restaurant.FieldCurrency, field.TypeString, value)
 		_node.Currency = value
+	}
+	if nodes := _c.mutation.UserIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: true,
+			Table:   restaurant.UserTable,
+			Columns: []string{restaurant.UserColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_node.UserID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.MenuItemsTable,
+			Columns: []string{restaurant.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.CategoriesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.CategoriesTable,
+			Columns: []string{restaurant.CategoriesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }

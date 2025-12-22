@@ -10,25 +10,26 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
-	"github.com/Jiruu246/rms/internal/ent/customer"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
+	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
 )
 
-// CustomerCreate is the builder for creating a Customer entity.
-type CustomerCreate struct {
+// UserCreate is the builder for creating a User entity.
+type UserCreate struct {
 	config
-	mutation *CustomerMutation
+	mutation *UserMutation
 	hooks    []Hook
 }
 
 // SetUpdateTime sets the "update_time" field.
-func (_c *CustomerCreate) SetUpdateTime(v time.Time) *CustomerCreate {
+func (_c *UserCreate) SetUpdateTime(v time.Time) *UserCreate {
 	_c.mutation.SetUpdateTime(v)
 	return _c
 }
 
 // SetNillableUpdateTime sets the "update_time" field if the given value is not nil.
-func (_c *CustomerCreate) SetNillableUpdateTime(v *time.Time) *CustomerCreate {
+func (_c *UserCreate) SetNillableUpdateTime(v *time.Time) *UserCreate {
 	if v != nil {
 		_c.SetUpdateTime(*v)
 	}
@@ -36,25 +37,25 @@ func (_c *CustomerCreate) SetNillableUpdateTime(v *time.Time) *CustomerCreate {
 }
 
 // SetName sets the "name" field.
-func (_c *CustomerCreate) SetName(v string) *CustomerCreate {
+func (_c *UserCreate) SetName(v string) *UserCreate {
 	_c.mutation.SetName(v)
 	return _c
 }
 
 // SetEmail sets the "email" field.
-func (_c *CustomerCreate) SetEmail(v string) *CustomerCreate {
+func (_c *UserCreate) SetEmail(v string) *UserCreate {
 	_c.mutation.SetEmail(v)
 	return _c
 }
 
 // SetPhoneNumber sets the "phone_number" field.
-func (_c *CustomerCreate) SetPhoneNumber(v string) *CustomerCreate {
+func (_c *UserCreate) SetPhoneNumber(v string) *UserCreate {
 	_c.mutation.SetPhoneNumber(v)
 	return _c
 }
 
 // SetNillablePhoneNumber sets the "phone_number" field if the given value is not nil.
-func (_c *CustomerCreate) SetNillablePhoneNumber(v *string) *CustomerCreate {
+func (_c *UserCreate) SetNillablePhoneNumber(v *string) *UserCreate {
 	if v != nil {
 		_c.SetPhoneNumber(*v)
 	}
@@ -62,13 +63,13 @@ func (_c *CustomerCreate) SetNillablePhoneNumber(v *string) *CustomerCreate {
 }
 
 // SetIsActive sets the "is_active" field.
-func (_c *CustomerCreate) SetIsActive(v bool) *CustomerCreate {
+func (_c *UserCreate) SetIsActive(v bool) *UserCreate {
 	_c.mutation.SetIsActive(v)
 	return _c
 }
 
 // SetNillableIsActive sets the "is_active" field if the given value is not nil.
-func (_c *CustomerCreate) SetNillableIsActive(v *bool) *CustomerCreate {
+func (_c *UserCreate) SetNillableIsActive(v *bool) *UserCreate {
 	if v != nil {
 		_c.SetIsActive(*v)
 	}
@@ -76,38 +77,53 @@ func (_c *CustomerCreate) SetNillableIsActive(v *bool) *CustomerCreate {
 }
 
 // SetPasswordHash sets the "password_hash" field.
-func (_c *CustomerCreate) SetPasswordHash(v string) *CustomerCreate {
+func (_c *UserCreate) SetPasswordHash(v string) *UserCreate {
 	_c.mutation.SetPasswordHash(v)
 	return _c
 }
 
 // SetID sets the "id" field.
-func (_c *CustomerCreate) SetID(v uuid.UUID) *CustomerCreate {
+func (_c *UserCreate) SetID(v uuid.UUID) *UserCreate {
 	_c.mutation.SetID(v)
 	return _c
 }
 
 // SetNillableID sets the "id" field if the given value is not nil.
-func (_c *CustomerCreate) SetNillableID(v *uuid.UUID) *CustomerCreate {
+func (_c *UserCreate) SetNillableID(v *uuid.UUID) *UserCreate {
 	if v != nil {
 		_c.SetID(*v)
 	}
 	return _c
 }
 
-// Mutation returns the CustomerMutation object of the builder.
-func (_c *CustomerCreate) Mutation() *CustomerMutation {
+// AddRestaurantIDs adds the "restaurants" edge to the Restaurant entity by IDs.
+func (_c *UserCreate) AddRestaurantIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddRestaurantIDs(ids...)
+	return _c
+}
+
+// AddRestaurants adds the "restaurants" edges to the Restaurant entity.
+func (_c *UserCreate) AddRestaurants(v ...*Restaurant) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddRestaurantIDs(ids...)
+}
+
+// Mutation returns the UserMutation object of the builder.
+func (_c *UserCreate) Mutation() *UserMutation {
 	return _c.mutation
 }
 
-// Save creates the Customer in the database.
-func (_c *CustomerCreate) Save(ctx context.Context) (*Customer, error) {
+// Save creates the User in the database.
+func (_c *UserCreate) Save(ctx context.Context) (*User, error) {
 	_c.defaults()
 	return withHooks(ctx, _c.sqlSave, _c.mutation, _c.hooks)
 }
 
 // SaveX calls Save and panics if Save returns an error.
-func (_c *CustomerCreate) SaveX(ctx context.Context) *Customer {
+func (_c *UserCreate) SaveX(ctx context.Context) *User {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -116,77 +132,77 @@ func (_c *CustomerCreate) SaveX(ctx context.Context) *Customer {
 }
 
 // Exec executes the query.
-func (_c *CustomerCreate) Exec(ctx context.Context) error {
+func (_c *UserCreate) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *CustomerCreate) ExecX(ctx context.Context) {
+func (_c *UserCreate) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}
 }
 
 // defaults sets the default values of the builder before save.
-func (_c *CustomerCreate) defaults() {
+func (_c *UserCreate) defaults() {
 	if _, ok := _c.mutation.UpdateTime(); !ok {
-		v := customer.DefaultUpdateTime()
+		v := user.DefaultUpdateTime()
 		_c.mutation.SetUpdateTime(v)
 	}
 	if _, ok := _c.mutation.PhoneNumber(); !ok {
-		v := customer.DefaultPhoneNumber
+		v := user.DefaultPhoneNumber
 		_c.mutation.SetPhoneNumber(v)
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
-		v := customer.DefaultIsActive
+		v := user.DefaultIsActive
 		_c.mutation.SetIsActive(v)
 	}
 	if _, ok := _c.mutation.ID(); !ok {
-		v := customer.DefaultID()
+		v := user.DefaultID()
 		_c.mutation.SetID(v)
 	}
 }
 
 // check runs all checks and user-defined validators on the builder.
-func (_c *CustomerCreate) check() error {
+func (_c *UserCreate) check() error {
 	if _, ok := _c.mutation.UpdateTime(); !ok {
-		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Customer.update_time"`)}
+		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "User.update_time"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
-		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Customer.name"`)}
+		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "User.name"`)}
 	}
 	if v, ok := _c.mutation.Name(); ok {
-		if err := customer.NameValidator(v); err != nil {
-			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Customer.name": %w`, err)}
+		if err := user.NameValidator(v); err != nil {
+			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.Email(); !ok {
-		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Customer.email"`)}
+		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "User.email"`)}
 	}
 	if v, ok := _c.mutation.Email(); ok {
-		if err := customer.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Customer.email": %w`, err)}
+		if err := user.EmailValidator(v); err != nil {
+			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
 		}
 	}
 	if _, ok := _c.mutation.PhoneNumber(); !ok {
-		return &ValidationError{Name: "phone_number", err: errors.New(`ent: missing required field "Customer.phone_number"`)}
+		return &ValidationError{Name: "phone_number", err: errors.New(`ent: missing required field "User.phone_number"`)}
 	}
 	if _, ok := _c.mutation.IsActive(); !ok {
-		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "Customer.is_active"`)}
+		return &ValidationError{Name: "is_active", err: errors.New(`ent: missing required field "User.is_active"`)}
 	}
 	if _, ok := _c.mutation.PasswordHash(); !ok {
-		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "Customer.password_hash"`)}
+		return &ValidationError{Name: "password_hash", err: errors.New(`ent: missing required field "User.password_hash"`)}
 	}
 	if v, ok := _c.mutation.PasswordHash(); ok {
-		if err := customer.PasswordHashValidator(v); err != nil {
-			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "Customer.password_hash": %w`, err)}
+		if err := user.PasswordHashValidator(v); err != nil {
+			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
 		}
 	}
 	return nil
 }
 
-func (_c *CustomerCreate) sqlSave(ctx context.Context) (*Customer, error) {
+func (_c *UserCreate) sqlSave(ctx context.Context) (*User, error) {
 	if err := _c.check(); err != nil {
 		return nil, err
 	}
@@ -209,63 +225,79 @@ func (_c *CustomerCreate) sqlSave(ctx context.Context) (*Customer, error) {
 	return _node, nil
 }
 
-func (_c *CustomerCreate) createSpec() (*Customer, *sqlgraph.CreateSpec) {
+func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	var (
-		_node = &Customer{config: _c.config}
-		_spec = sqlgraph.NewCreateSpec(customer.Table, sqlgraph.NewFieldSpec(customer.FieldID, field.TypeUUID))
+		_node = &User{config: _c.config}
+		_spec = sqlgraph.NewCreateSpec(user.Table, sqlgraph.NewFieldSpec(user.FieldID, field.TypeUUID))
 	)
 	if id, ok := _c.mutation.ID(); ok {
 		_node.ID = id
 		_spec.ID.Value = &id
 	}
 	if value, ok := _c.mutation.UpdateTime(); ok {
-		_spec.SetField(customer.FieldUpdateTime, field.TypeTime, value)
+		_spec.SetField(user.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = value
 	}
 	if value, ok := _c.mutation.Name(); ok {
-		_spec.SetField(customer.FieldName, field.TypeString, value)
+		_spec.SetField(user.FieldName, field.TypeString, value)
 		_node.Name = value
 	}
 	if value, ok := _c.mutation.Email(); ok {
-		_spec.SetField(customer.FieldEmail, field.TypeString, value)
+		_spec.SetField(user.FieldEmail, field.TypeString, value)
 		_node.Email = value
 	}
 	if value, ok := _c.mutation.PhoneNumber(); ok {
-		_spec.SetField(customer.FieldPhoneNumber, field.TypeString, value)
+		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 		_node.PhoneNumber = value
 	}
 	if value, ok := _c.mutation.IsActive(); ok {
-		_spec.SetField(customer.FieldIsActive, field.TypeBool, value)
+		_spec.SetField(user.FieldIsActive, field.TypeBool, value)
 		_node.IsActive = value
 	}
 	if value, ok := _c.mutation.PasswordHash(); ok {
-		_spec.SetField(customer.FieldPasswordHash, field.TypeString, value)
+		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
 		_node.PasswordHash = value
+	}
+	if nodes := _c.mutation.RestaurantsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RestaurantsTable,
+			Columns: []string{user.RestaurantsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec
 }
 
-// CustomerCreateBulk is the builder for creating many Customer entities in bulk.
-type CustomerCreateBulk struct {
+// UserCreateBulk is the builder for creating many User entities in bulk.
+type UserCreateBulk struct {
 	config
 	err      error
-	builders []*CustomerCreate
+	builders []*UserCreate
 }
 
-// Save creates the Customer entities in the database.
-func (_c *CustomerCreateBulk) Save(ctx context.Context) ([]*Customer, error) {
+// Save creates the User entities in the database.
+func (_c *UserCreateBulk) Save(ctx context.Context) ([]*User, error) {
 	if _c.err != nil {
 		return nil, _c.err
 	}
 	specs := make([]*sqlgraph.CreateSpec, len(_c.builders))
-	nodes := make([]*Customer, len(_c.builders))
+	nodes := make([]*User, len(_c.builders))
 	mutators := make([]Mutator, len(_c.builders))
 	for i := range _c.builders {
 		func(i int, root context.Context) {
 			builder := _c.builders[i]
 			builder.defaults()
 			var mut Mutator = MutateFunc(func(ctx context.Context, m Mutation) (Value, error) {
-				mutation, ok := m.(*CustomerMutation)
+				mutation, ok := m.(*UserMutation)
 				if !ok {
 					return nil, fmt.Errorf("unexpected mutation type %T", m)
 				}
@@ -308,7 +340,7 @@ func (_c *CustomerCreateBulk) Save(ctx context.Context) ([]*Customer, error) {
 }
 
 // SaveX is like Save, but panics if an error occurs.
-func (_c *CustomerCreateBulk) SaveX(ctx context.Context) []*Customer {
+func (_c *UserCreateBulk) SaveX(ctx context.Context) []*User {
 	v, err := _c.Save(ctx)
 	if err != nil {
 		panic(err)
@@ -317,13 +349,13 @@ func (_c *CustomerCreateBulk) SaveX(ctx context.Context) []*Customer {
 }
 
 // Exec executes the query.
-func (_c *CustomerCreateBulk) Exec(ctx context.Context) error {
+func (_c *UserCreateBulk) Exec(ctx context.Context) error {
 	_, err := _c.Save(ctx)
 	return err
 }
 
 // ExecX is like Exec, but panics if an error occurs.
-func (_c *CustomerCreateBulk) ExecX(ctx context.Context) {
+func (_c *UserCreateBulk) ExecX(ctx context.Context) {
 	if err := _c.Exec(ctx); err != nil {
 		panic(err)
 	}

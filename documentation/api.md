@@ -68,9 +68,8 @@ PUT    /api/v1/restaurants/:id/settings    [JWT: Owner, Manager]
 | Method | Endpoint | Description |
 |--------|----------|-------------|
 | `POST` | `/api/menu-items` | Create a new menu item |
-| `GET` | `/api/menu-items` | Get all menu items (with optional filters) |
+| `GET` | `/api/menu-items` | Get all menu items for a restaurantId |
 | `GET` | `/api/menu-items/{id}` | Get a specific menu item |
-| `PUT` | `/api/menu-items/{id}` | Update a menu item (full update) |
 | `PATCH` | `/api/menu-items/{id}` | Partial update a menu item |
 | `DELETE` | `/api/menu-items/{id}` | Delete a menu item |
 

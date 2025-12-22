@@ -2,23 +2,23 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 	"entgo.io/ent/schema/mixin"
 	"github.com/google/uuid"
 )
 
-type Customer struct {
+type User struct {
 	ent.Schema
 }
 
-func (Customer) Mixin() []ent.Mixin {
+func (User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.UpdateTime{},
 	}
 }
 
-// Fields of the Customer.
-func (Customer) Fields() []ent.Field {
+func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.UUID("id", uuid.New()).
 			Default(uuid.New).
@@ -43,7 +43,8 @@ func (Customer) Fields() []ent.Field {
 	}
 }
 
-// Edges of the Customer.
-func (Customer) Edges() []ent.Edge {
-	return nil
+func (User) Edges() []ent.Edge {
+	return []ent.Edge{
+		edge.To("restaurants", Restaurant.Type),
+	}
 }

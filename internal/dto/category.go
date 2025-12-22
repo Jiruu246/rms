@@ -14,10 +14,11 @@ type Category struct {
 
 // CreateCategoryRequest represents the request body for creating a category
 type CreateCategoryRequest struct {
-	Name         string `json:"name" validate:"required,min=1,max=255" binding:"required"`
-	Description  string `json:"description" validate:"max=1000"`
-	DisplayOrder int    `json:"display_order" validate:"min=0"`
-	IsActive     bool   `json:"is_active"`
+	Name         string    `json:"name" validate:"required,min=1,max=255" binding:"required"`
+	Description  string    `json:"description" validate:"max=1000"`
+	DisplayOrder int       `json:"display_order" validate:"min=0"`
+	IsActive     bool      `json:"is_active"`
+	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required" binding:"required"`
 }
 
 // UpdateCategoryRequest represents the request body for updating a category

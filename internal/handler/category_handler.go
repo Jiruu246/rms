@@ -1,7 +1,6 @@
 package handler
 
 import (
-	"net/http"
 	"strings"
 
 	"github.com/Jiruu246/rms/internal/dto"
@@ -108,8 +107,7 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		return
 	}
 
-	// Return success with no data for DELETE operations
-	utils.WriteResponse[any](c.Writer, http.StatusNoContent, nil)
+	utils.WriteNoContent(c.Writer)
 }
 
 // GetCategories handles GET /api/categories

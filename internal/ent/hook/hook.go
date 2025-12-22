@@ -21,16 +21,16 @@ func (f CategoryFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CategoryMutation", m)
 }
 
-// The CustomerFunc type is an adapter to allow the use of ordinary
-// function as Customer mutator.
-type CustomerFunc func(context.Context, *ent.CustomerMutation) (ent.Value, error)
+// The MenuItemFunc type is an adapter to allow the use of ordinary
+// function as MenuItem mutator.
+type MenuItemFunc func(context.Context, *ent.MenuItemMutation) (ent.Value, error)
 
 // Mutate calls f(ctx, m).
-func (f CustomerFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
-	if mv, ok := m.(*ent.CustomerMutation); ok {
+func (f MenuItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.MenuItemMutation); ok {
 		return f(ctx, mv)
 	}
-	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.CustomerMutation", m)
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MenuItemMutation", m)
 }
 
 // The RestaurantFunc type is an adapter to allow the use of ordinary
@@ -43,6 +43,18 @@ func (f RestaurantFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, 
 		return f(ctx, mv)
 	}
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.RestaurantMutation", m)
+}
+
+// The UserFunc type is an adapter to allow the use of ordinary
+// function as User mutator.
+type UserFunc func(context.Context, *ent.UserMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f UserFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.UserMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.UserMutation", m)
 }
 
 // Condition is a hook condition function.

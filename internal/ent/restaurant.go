@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
+	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
 )
 
@@ -48,8 +49,55 @@ type Restaurant struct {
 	// OperatingHours holds the value of the "operating_hours" field.
 	OperatingHours map[string]interface{} `json:"operating_hours,omitempty"`
 	// Currency holds the value of the "currency" field.
-	Currency     string `json:"currency,omitempty"`
+	Currency string `json:"currency,omitempty"`
+	// UserID holds the value of the "user_id" field.
+	UserID uuid.UUID `json:"user_id,omitempty"`
+	// Edges holds the relations/edges for other nodes in the graph.
+	// The values are being populated by the RestaurantQuery when eager-loading is set.
+	Edges        RestaurantEdges `json:"edges"`
 	selectValues sql.SelectValues
+}
+
+// RestaurantEdges holds the relations/edges for other nodes in the graph.
+type RestaurantEdges struct {
+	// User holds the value of the user edge.
+	User *User `json:"user,omitempty"`
+	// MenuItems holds the value of the menu_items edge.
+	MenuItems []*MenuItem `json:"menu_items,omitempty"`
+	// Categories holds the value of the categories edge.
+	Categories []*Category `json:"categories,omitempty"`
+	// loadedTypes holds the information for reporting if a
+	// type was loaded (or requested) in eager-loading or not.
+	loadedTypes [3]bool
+}
+
+// UserOrErr returns the User value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RestaurantEdges) UserOrErr() (*User, error) {
+	if e.User != nil {
+		return e.User, nil
+	} else if e.loadedTypes[0] {
+		return nil, &NotFoundError{label: user.Label}
+	}
+	return nil, &NotLoadedError{edge: "user"}
+}
+
+// MenuItemsOrErr returns the MenuItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e RestaurantEdges) MenuItemsOrErr() ([]*MenuItem, error) {
+	if e.loadedTypes[1] {
+		return e.MenuItems, nil
+	}
+	return nil, &NotLoadedError{edge: "menu_items"}
+}
+
+// CategoriesOrErr returns the Categories value or an error if the edge
+// was not loaded in eager-loading.
+func (e RestaurantEdges) CategoriesOrErr() ([]*Category, error) {
+	if e.loadedTypes[2] {
+		return e.Categories, nil
+	}
+	return nil, &NotLoadedError{edge: "categories"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -63,7 +111,7 @@ func (*Restaurant) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullString)
 		case restaurant.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
-		case restaurant.FieldID:
+		case restaurant.FieldID, restaurant.FieldUserID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -178,6 +226,12 @@ func (_m *Restaurant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Currency = value.String
 			}
+		case restaurant.FieldUserID:
+			if value, ok := values[i].(*uuid.UUID); !ok {
+				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+			} else if value != nil {
+				_m.UserID = *value
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -189,6 +243,21 @@ func (_m *Restaurant) assignValues(columns []string, values []any) error {
 // This includes values selected through modifiers, order, etc.
 func (_m *Restaurant) Value(name string) (ent.Value, error) {
 	return _m.selectValues.Get(name)
+}
+
+// QueryUser queries the "user" edge of the Restaurant entity.
+func (_m *Restaurant) QueryUser() *UserQuery {
+	return NewRestaurantClient(_m.config).QueryUser(_m)
+}
+
+// QueryMenuItems queries the "menu_items" edge of the Restaurant entity.
+func (_m *Restaurant) QueryMenuItems() *MenuItemQuery {
+	return NewRestaurantClient(_m.config).QueryMenuItems(_m)
+}
+
+// QueryCategories queries the "categories" edge of the Restaurant entity.
+func (_m *Restaurant) QueryCategories() *CategoryQuery {
+	return NewRestaurantClient(_m.config).QueryCategories(_m)
 }
 
 // Update returns a builder for updating this Restaurant.
@@ -258,6 +327,9 @@ func (_m *Restaurant) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("currency=")
 	builder.WriteString(_m.Currency)
+	builder.WriteString(", ")
+	builder.WriteString("user_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
 	builder.WriteByte(')')
 	return builder.String()
 }

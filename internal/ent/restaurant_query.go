@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -11,18 +12,24 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
+	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
 )
 
 // RestaurantQuery is the builder for querying Restaurant entities.
 type RestaurantQuery struct {
 	config
-	ctx        *QueryContext
-	order      []restaurant.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Restaurant
+	ctx            *QueryContext
+	order          []restaurant.OrderOption
+	inters         []Interceptor
+	predicates     []predicate.Restaurant
+	withUser       *UserQuery
+	withMenuItems  *MenuItemQuery
+	withCategories *CategoryQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -57,6 +64,72 @@ func (_q *RestaurantQuery) Unique(unique bool) *RestaurantQuery {
 func (_q *RestaurantQuery) Order(o ...restaurant.OrderOption) *RestaurantQuery {
 	_q.order = append(_q.order, o...)
 	return _q
+}
+
+// QueryUser chains the current query on the "user" edge.
+func (_q *RestaurantQuery) QueryUser() *UserQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, restaurant.UserTable, restaurant.UserColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMenuItems chains the current query on the "menu_items" edge.
+func (_q *RestaurantQuery) QueryMenuItems() *MenuItemQuery {
+	query := (&MenuItemClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(menuitem.Table, menuitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.MenuItemsTable, restaurant.MenuItemsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCategories chains the current query on the "categories" edge.
+func (_q *RestaurantQuery) QueryCategories() *CategoryQuery {
+	query := (&CategoryClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(category.Table, category.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.CategoriesTable, restaurant.CategoriesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
 }
 
 // First returns the first Restaurant entity from the query.
@@ -246,15 +319,51 @@ func (_q *RestaurantQuery) Clone() *RestaurantQuery {
 		return nil
 	}
 	return &RestaurantQuery{
-		config:     _q.config,
-		ctx:        _q.ctx.Clone(),
-		order:      append([]restaurant.OrderOption{}, _q.order...),
-		inters:     append([]Interceptor{}, _q.inters...),
-		predicates: append([]predicate.Restaurant{}, _q.predicates...),
+		config:         _q.config,
+		ctx:            _q.ctx.Clone(),
+		order:          append([]restaurant.OrderOption{}, _q.order...),
+		inters:         append([]Interceptor{}, _q.inters...),
+		predicates:     append([]predicate.Restaurant{}, _q.predicates...),
+		withUser:       _q.withUser.Clone(),
+		withMenuItems:  _q.withMenuItems.Clone(),
+		withCategories: _q.withCategories.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
 	}
+}
+
+// WithUser tells the query-builder to eager-load the nodes that are connected to
+// the "user" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RestaurantQuery) WithUser(opts ...func(*UserQuery)) *RestaurantQuery {
+	query := (&UserClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUser = query
+	return _q
+}
+
+// WithMenuItems tells the query-builder to eager-load the nodes that are connected to
+// the "menu_items" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RestaurantQuery) WithMenuItems(opts ...func(*MenuItemQuery)) *RestaurantQuery {
+	query := (&MenuItemClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMenuItems = query
+	return _q
+}
+
+// WithCategories tells the query-builder to eager-load the nodes that are connected to
+// the "categories" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RestaurantQuery) WithCategories(opts ...func(*CategoryQuery)) *RestaurantQuery {
+	query := (&CategoryClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withCategories = query
+	return _q
 }
 
 // GroupBy is used to group vertices by one or more fields/columns.
@@ -333,8 +442,13 @@ func (_q *RestaurantQuery) prepareQuery(ctx context.Context) error {
 
 func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Restaurant, error) {
 	var (
-		nodes = []*Restaurant{}
-		_spec = _q.querySpec()
+		nodes       = []*Restaurant{}
+		_spec       = _q.querySpec()
+		loadedTypes = [3]bool{
+			_q.withUser != nil,
+			_q.withMenuItems != nil,
+			_q.withCategories != nil,
+		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Restaurant).scanValues(nil, columns)
@@ -342,6 +456,7 @@ func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	_spec.Assign = func(columns []string, values []any) error {
 		node := &Restaurant{config: _q.config}
 		nodes = append(nodes, node)
+		node.Edges.loadedTypes = loadedTypes
 		return node.assignValues(columns, values)
 	}
 	for i := range hooks {
@@ -353,7 +468,117 @@ func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	if len(nodes) == 0 {
 		return nodes, nil
 	}
+	if query := _q.withUser; query != nil {
+		if err := _q.loadUser(ctx, query, nodes, nil,
+			func(n *Restaurant, e *User) { n.Edges.User = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMenuItems; query != nil {
+		if err := _q.loadMenuItems(ctx, query, nodes,
+			func(n *Restaurant) { n.Edges.MenuItems = []*MenuItem{} },
+			func(n *Restaurant, e *MenuItem) { n.Edges.MenuItems = append(n.Edges.MenuItems, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withCategories; query != nil {
+		if err := _q.loadCategories(ctx, query, nodes,
+			func(n *Restaurant) { n.Edges.Categories = []*Category{} },
+			func(n *Restaurant, e *Category) { n.Edges.Categories = append(n.Edges.Categories, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
+}
+
+func (_q *RestaurantQuery) loadUser(ctx context.Context, query *UserQuery, nodes []*Restaurant, init func(*Restaurant), assign func(*Restaurant, *User)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Restaurant)
+	for i := range nodes {
+		fk := nodes[i].UserID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(user.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *RestaurantQuery) loadMenuItems(ctx context.Context, query *MenuItemQuery, nodes []*Restaurant, init func(*Restaurant), assign func(*Restaurant, *MenuItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Restaurant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(menuitem.FieldRestaurantID)
+	}
+	query.Where(predicate.MenuItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(restaurant.MenuItemsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RestaurantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "restaurant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *RestaurantQuery) loadCategories(ctx context.Context, query *CategoryQuery, nodes []*Restaurant, init func(*Restaurant), assign func(*Restaurant, *Category)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Restaurant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(category.FieldRestaurantID)
+	}
+	query.Where(predicate.Category(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(restaurant.CategoriesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RestaurantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "restaurant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
 }
 
 func (_q *RestaurantQuery) sqlCount(ctx context.Context) (int, error) {
@@ -380,6 +605,9 @@ func (_q *RestaurantQuery) querySpec() *sqlgraph.QuerySpec {
 			if fields[i] != restaurant.FieldID {
 				_spec.Node.Columns = append(_spec.Node.Columns, fields[i])
 			}
+		}
+		if _q.withUser != nil {
+			_spec.Node.AddColumnOnce(restaurant.FieldUserID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

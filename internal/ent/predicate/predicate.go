@@ -9,8 +9,11 @@ import (
 // Category is the predicate function for category builders.
 type Category func(*sql.Selector)
 
-// Customer is the predicate function for customer builders.
-type Customer func(*sql.Selector)
+// MenuItem is the predicate function for menuitem builders.
+type MenuItem func(*sql.Selector)
 
 // Restaurant is the predicate function for restaurant builders.
 type Restaurant func(*sql.Selector)
+
+// User is the predicate function for user builders.
+type User func(*sql.Selector)

@@ -6,9 +6,10 @@ import (
 	"time"
 
 	"github.com/Jiruu246/rms/internal/ent/category"
-	"github.com/Jiruu246/rms/internal/ent/customer"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
+	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
 )
 
@@ -65,22 +66,22 @@ func init() {
 	categoryDescID := categoryFields[0].Descriptor()
 	// category.DefaultID holds the default value on creation for the id field.
 	category.DefaultID = categoryDescID.Default.(func() uuid.UUID)
-	customerMixin := schema.Customer{}.Mixin()
-	customerMixinFields0 := customerMixin[0].Fields()
-	_ = customerMixinFields0
-	customerFields := schema.Customer{}.Fields()
-	_ = customerFields
-	// customerDescUpdateTime is the schema descriptor for update_time field.
-	customerDescUpdateTime := customerMixinFields0[0].Descriptor()
-	// customer.DefaultUpdateTime holds the default value on creation for the update_time field.
-	customer.DefaultUpdateTime = customerDescUpdateTime.Default.(func() time.Time)
-	// customer.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
-	customer.UpdateDefaultUpdateTime = customerDescUpdateTime.UpdateDefault.(func() time.Time)
-	// customerDescName is the schema descriptor for name field.
-	customerDescName := customerFields[1].Descriptor()
-	// customer.NameValidator is a validator for the "name" field. It is called by the builders before save.
-	customer.NameValidator = func() func(string) error {
-		validators := customerDescName.Validators
+	menuitemMixin := schema.MenuItem{}.Mixin()
+	menuitemMixinFields0 := menuitemMixin[0].Fields()
+	_ = menuitemMixinFields0
+	menuitemFields := schema.MenuItem{}.Fields()
+	_ = menuitemFields
+	// menuitemDescUpdateTime is the schema descriptor for update_time field.
+	menuitemDescUpdateTime := menuitemMixinFields0[0].Descriptor()
+	// menuitem.DefaultUpdateTime holds the default value on creation for the update_time field.
+	menuitem.DefaultUpdateTime = menuitemDescUpdateTime.Default.(func() time.Time)
+	// menuitem.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	menuitem.UpdateDefaultUpdateTime = menuitemDescUpdateTime.UpdateDefault.(func() time.Time)
+	// menuitemDescName is the schema descriptor for name field.
+	menuitemDescName := menuitemFields[1].Descriptor()
+	// menuitem.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	menuitem.NameValidator = func() func(string) error {
+		validators := menuitemDescName.Validators
 		fns := [...]func(string) error{
 			validators[0].(func(string) error),
 			validators[1].(func(string) error),
@@ -94,26 +95,24 @@ func init() {
 			return nil
 		}
 	}()
-	// customerDescEmail is the schema descriptor for email field.
-	customerDescEmail := customerFields[2].Descriptor()
-	// customer.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	customer.EmailValidator = customerDescEmail.Validators[0].(func(string) error)
-	// customerDescPhoneNumber is the schema descriptor for phone_number field.
-	customerDescPhoneNumber := customerFields[3].Descriptor()
-	// customer.DefaultPhoneNumber holds the default value on creation for the phone_number field.
-	customer.DefaultPhoneNumber = customerDescPhoneNumber.Default.(string)
-	// customerDescIsActive is the schema descriptor for is_active field.
-	customerDescIsActive := customerFields[4].Descriptor()
-	// customer.DefaultIsActive holds the default value on creation for the is_active field.
-	customer.DefaultIsActive = customerDescIsActive.Default.(bool)
-	// customerDescPasswordHash is the schema descriptor for password_hash field.
-	customerDescPasswordHash := customerFields[5].Descriptor()
-	// customer.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
-	customer.PasswordHashValidator = customerDescPasswordHash.Validators[0].(func(string) error)
-	// customerDescID is the schema descriptor for id field.
-	customerDescID := customerFields[0].Descriptor()
-	// customer.DefaultID holds the default value on creation for the id field.
-	customer.DefaultID = customerDescID.Default.(func() uuid.UUID)
+	// menuitemDescDescription is the schema descriptor for description field.
+	menuitemDescDescription := menuitemFields[2].Descriptor()
+	// menuitem.DefaultDescription holds the default value on creation for the description field.
+	menuitem.DefaultDescription = menuitemDescDescription.Default.(string)
+	// menuitem.DescriptionValidator is a validator for the "description" field. It is called by the builders before save.
+	menuitem.DescriptionValidator = menuitemDescDescription.Validators[0].(func(string) error)
+	// menuitemDescPrice is the schema descriptor for price field.
+	menuitemDescPrice := menuitemFields[3].Descriptor()
+	// menuitem.PriceValidator is a validator for the "price" field. It is called by the builders before save.
+	menuitem.PriceValidator = menuitemDescPrice.Validators[0].(func(float64) error)
+	// menuitemDescIsAvailable is the schema descriptor for is_available field.
+	menuitemDescIsAvailable := menuitemFields[5].Descriptor()
+	// menuitem.DefaultIsAvailable holds the default value on creation for the is_available field.
+	menuitem.DefaultIsAvailable = menuitemDescIsAvailable.Default.(bool)
+	// menuitemDescID is the schema descriptor for id field.
+	menuitemDescID := menuitemFields[0].Descriptor()
+	// menuitem.IDValidator is a validator for the "id" field. It is called by the builders before save.
+	menuitem.IDValidator = menuitemDescID.Validators[0].(func(int64) error)
 	restaurantMixin := schema.Restaurant{}.Mixin()
 	restaurantMixinFields0 := restaurantMixin[0].Fields()
 	_ = restaurantMixinFields0
@@ -161,4 +160,53 @@ func init() {
 	restaurantDescID := restaurantFields[0].Descriptor()
 	// restaurant.DefaultID holds the default value on creation for the id field.
 	restaurant.DefaultID = restaurantDescID.Default.(func() uuid.UUID)
+	userMixin := schema.User{}.Mixin()
+	userMixinFields0 := userMixin[0].Fields()
+	_ = userMixinFields0
+	userFields := schema.User{}.Fields()
+	_ = userFields
+	// userDescUpdateTime is the schema descriptor for update_time field.
+	userDescUpdateTime := userMixinFields0[0].Descriptor()
+	// user.DefaultUpdateTime holds the default value on creation for the update_time field.
+	user.DefaultUpdateTime = userDescUpdateTime.Default.(func() time.Time)
+	// user.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	user.UpdateDefaultUpdateTime = userDescUpdateTime.UpdateDefault.(func() time.Time)
+	// userDescName is the schema descriptor for name field.
+	userDescName := userFields[1].Descriptor()
+	// user.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	user.NameValidator = func() func(string) error {
+		validators := userDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userDescEmail is the schema descriptor for email field.
+	userDescEmail := userFields[2].Descriptor()
+	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
+	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
+	// userDescPhoneNumber is the schema descriptor for phone_number field.
+	userDescPhoneNumber := userFields[3].Descriptor()
+	// user.DefaultPhoneNumber holds the default value on creation for the phone_number field.
+	user.DefaultPhoneNumber = userDescPhoneNumber.Default.(string)
+	// userDescIsActive is the schema descriptor for is_active field.
+	userDescIsActive := userFields[4].Descriptor()
+	// user.DefaultIsActive holds the default value on creation for the is_active field.
+	user.DefaultIsActive = userDescIsActive.Default.(bool)
+	// userDescPasswordHash is the schema descriptor for password_hash field.
+	userDescPasswordHash := userFields[5].Descriptor()
+	// user.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
+	user.PasswordHashValidator = userDescPasswordHash.Validators[0].(func(string) error)
+	// userDescID is the schema descriptor for id field.
+	userDescID := userFields[0].Descriptor()
+	// user.DefaultID holds the default value on creation for the id field.
+	user.DefaultID = userDescID.Default.(func() uuid.UUID)
 }

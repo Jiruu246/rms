@@ -54,6 +54,8 @@ const (
 	EdgeMenuItems = "menu_items"
 	// EdgeCategories holds the string denoting the categories edge name in mutations.
 	EdgeCategories = "categories"
+	// EdgeModifiers holds the string denoting the modifiers edge name in mutations.
+	EdgeModifiers = "modifiers"
 	// Table holds the table name of the restaurant in the database.
 	Table = "restaurants"
 	// UserTable is the table that holds the user relation/edge.
@@ -77,6 +79,13 @@ const (
 	CategoriesInverseTable = "categories"
 	// CategoriesColumn is the table column denoting the categories relation/edge.
 	CategoriesColumn = "restaurant_id"
+	// ModifiersTable is the table that holds the modifiers relation/edge.
+	ModifiersTable = "modifiers"
+	// ModifiersInverseTable is the table name for the Modifier entity.
+	// It exists in this package in order to avoid circular dependency with the "modifier" package.
+	ModifiersInverseTable = "modifiers"
+	// ModifiersColumn is the table column denoting the modifiers relation/edge.
+	ModifiersColumn = "restaurant_id"
 )
 
 // Columns holds all SQL columns for restaurant fields.
@@ -279,6 +288,20 @@ func ByCategories(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCategoriesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByModifiersCount orders the results by modifiers count.
+func ByModifiersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModifiersStep(), opts...)
+	}
+}
+
+// ByModifiers orders the results by modifiers terms.
+func ByModifiers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModifiersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -298,5 +321,12 @@ func newCategoriesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CategoriesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, CategoriesTable, CategoriesColumn),
+	)
+}
+func newModifiersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModifiersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ModifiersTable, ModifiersColumn),
 	)
 }

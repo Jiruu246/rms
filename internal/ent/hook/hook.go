@@ -33,6 +33,30 @@ func (f MenuItemFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, er
 	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.MenuItemMutation", m)
 }
 
+// The ModifierFunc type is an adapter to allow the use of ordinary
+// function as Modifier mutator.
+type ModifierFunc func(context.Context, *ent.ModifierMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModifierFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModifierMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModifierMutation", m)
+}
+
+// The ModifierOptionFunc type is an adapter to allow the use of ordinary
+// function as ModifierOption mutator.
+type ModifierOptionFunc func(context.Context, *ent.ModifierOptionMutation) (ent.Value, error)
+
+// Mutate calls f(ctx, m).
+func (f ModifierOptionFunc) Mutate(ctx context.Context, m ent.Mutation) (ent.Value, error) {
+	if mv, ok := m.(*ent.ModifierOptionMutation); ok {
+		return f(ctx, mv)
+	}
+	return nil, fmt.Errorf("unexpected mutation type %T. expect *ent.ModifierOptionMutation", m)
+}
+
 // The RestaurantFunc type is an adapter to allow the use of ordinary
 // function as Restaurant mutator.
 type RestaurantFunc func(context.Context, *ent.RestaurantMutation) (ent.Value, error)

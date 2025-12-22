@@ -50,5 +50,6 @@ func (Restaurant) Edges() []ent.Edge {
 			Field("user_id"),
 		edge.To("menu_items", MenuItem.Type),
 		edge.To("categories", Category.Type),
+		edge.To("modifiers", Modifier.Type),
 	}
 }

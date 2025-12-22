@@ -6,7 +6,7 @@
 - [Restaurant Management API](#restaurant-management)
 - [Menu Items API](#menu-items-api)
 - [Categories API](#categories-api)
-- [Addons API](#addons-api)
+- [modifiers API](#modifiers-api)
 - [Table API](#table-api)
 - [Order API](#order-api)
 - [Payment API](#payment-api)
@@ -103,18 +103,25 @@ PUT    /api/v1/restaurants/:id/settings    [JWT: Owner, Manager]
 
 ---
 
-## Addons API
+## Modifiers API
 
 ### Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
-| `POST` | `/api/addons` | Create a new addon |
-| `GET` | `/api/addons` | Get all addons |
-| `GET` | `/api/addons/{id}` | Get a specific addon |
-| `PUT` | `/api/addons/{id}` | Update an addon |
-| `PATCH` | `/api/addons/{id}` | Partial update an addon |
-| `DELETE` | `/api/addons/{id}` | Delete an addon |
+| `POST` | `/api/modifiers` | Create a new modifier |
+| `GET` | `/api/modifiers` | Get all modifiers |
+| `GET` | `/api/modifiers/{id}` | Get a specific modifier |
+| `PATCH` | `/api/modifiers/{id}` | Partial update a modifier |
+| `DELETE` | `/api/modifiers/{id}` | Delete a modifier |
+
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/modifiers/options` | Create a new modifier option |
+| `GET` | `/api/modifiers/options` | Get all modifiers |
+| `GET` | `/api/modifiers/options/{id}` | Get a specific modifier |
+| `PATCH` | `/api/modifiers/options/{id}` | Partial update a modifier |
+| `DELETE` | `/api/modifiers/options/{id}` | Delete a modifier |
 
 ---
 

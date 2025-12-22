@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -299,6 +300,21 @@ func (_u *RestaurantUpdate) AddCategories(v ...*Category) *RestaurantUpdate {
 	return _u.AddCategoryIDs(ids...)
 }
 
+// AddModifierIDs adds the "modifiers" edge to the Modifier entity by IDs.
+func (_u *RestaurantUpdate) AddModifierIDs(ids ...uuid.UUID) *RestaurantUpdate {
+	_u.mutation.AddModifierIDs(ids...)
+	return _u
+}
+
+// AddModifiers adds the "modifiers" edges to the Modifier entity.
+func (_u *RestaurantUpdate) AddModifiers(v ...*Modifier) *RestaurantUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModifierIDs(ids...)
+}
+
 // Mutation returns the RestaurantMutation object of the builder.
 func (_u *RestaurantUpdate) Mutation() *RestaurantMutation {
 	return _u.mutation
@@ -350,6 +366,27 @@ func (_u *RestaurantUpdate) RemoveCategories(v ...*Category) *RestaurantUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveCategoryIDs(ids...)
+}
+
+// ClearModifiers clears all "modifiers" edges to the Modifier entity.
+func (_u *RestaurantUpdate) ClearModifiers() *RestaurantUpdate {
+	_u.mutation.ClearModifiers()
+	return _u
+}
+
+// RemoveModifierIDs removes the "modifiers" edge to Modifier entities by IDs.
+func (_u *RestaurantUpdate) RemoveModifierIDs(ids ...uuid.UUID) *RestaurantUpdate {
+	_u.mutation.RemoveModifierIDs(ids...)
+	return _u
+}
+
+// RemoveModifiers removes "modifiers" edges to Modifier entities.
+func (_u *RestaurantUpdate) RemoveModifiers(v ...*Modifier) *RestaurantUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModifierIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -622,6 +659,51 @@ func (_u *RestaurantUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModifiersIDs(); len(nodes) > 0 && !_u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModifiersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -916,6 +998,21 @@ func (_u *RestaurantUpdateOne) AddCategories(v ...*Category) *RestaurantUpdateOn
 	return _u.AddCategoryIDs(ids...)
 }
 
+// AddModifierIDs adds the "modifiers" edge to the Modifier entity by IDs.
+func (_u *RestaurantUpdateOne) AddModifierIDs(ids ...uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.AddModifierIDs(ids...)
+	return _u
+}
+
+// AddModifiers adds the "modifiers" edges to the Modifier entity.
+func (_u *RestaurantUpdateOne) AddModifiers(v ...*Modifier) *RestaurantUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModifierIDs(ids...)
+}
+
 // Mutation returns the RestaurantMutation object of the builder.
 func (_u *RestaurantUpdateOne) Mutation() *RestaurantMutation {
 	return _u.mutation
@@ -967,6 +1064,27 @@ func (_u *RestaurantUpdateOne) RemoveCategories(v ...*Category) *RestaurantUpdat
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveCategoryIDs(ids...)
+}
+
+// ClearModifiers clears all "modifiers" edges to the Modifier entity.
+func (_u *RestaurantUpdateOne) ClearModifiers() *RestaurantUpdateOne {
+	_u.mutation.ClearModifiers()
+	return _u
+}
+
+// RemoveModifierIDs removes the "modifiers" edge to Modifier entities by IDs.
+func (_u *RestaurantUpdateOne) RemoveModifierIDs(ids ...uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.RemoveModifierIDs(ids...)
+	return _u
+}
+
+// RemoveModifiers removes "modifiers" edges to Modifier entities.
+func (_u *RestaurantUpdateOne) RemoveModifiers(v ...*Modifier) *RestaurantUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModifierIDs(ids...)
 }
 
 // Where appends a list predicates to the RestaurantUpdate builder.
@@ -1269,6 +1387,51 @@ func (_u *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant, 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModifiersIDs(); len(nodes) > 0 && !_u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModifiersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

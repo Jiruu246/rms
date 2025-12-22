@@ -70,6 +70,38 @@ func CreateMenuItem(client *ent.Client, ctx context.Context) (*ent.MenuItem, err
 	return menuitem, nil
 }
 
+func CreateModifier(client *ent.Client, ctx context.Context) (*ent.Modifier, error) {
+	restaurant, err := SetupRestaurant(client, ctx)
+
+	if err != nil {
+		return nil, err
+	}
+	modifier, err := client.Modifier.Create().
+		SetName("Test Modifier").
+		SetRestaurant(restaurant).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return modifier, nil
+}
+
+func CreateModifierOption(client *ent.Client, ctx context.Context) (*ent.ModifierOption, error) {
+	modifier, err := CreateModifier(client, ctx)
+	if err != nil {
+		return nil, err
+	}
+	modifierOption, err := client.ModifierOption.Create().
+		SetName("Test Modifier Option").
+		SetPrice(1.99).
+		SetModifier(modifier).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return modifierOption, nil
+}
+
 func ptrString(s string) *string {
 	return &s
 }

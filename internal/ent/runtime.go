@@ -7,6 +7,8 @@ import (
 
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
+	"github.com/Jiruu246/rms/internal/ent/modifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -113,6 +115,98 @@ func init() {
 	menuitemDescID := menuitemFields[0].Descriptor()
 	// menuitem.IDValidator is a validator for the "id" field. It is called by the builders before save.
 	menuitem.IDValidator = menuitemDescID.Validators[0].(func(int64) error)
+	modifierMixin := schema.Modifier{}.Mixin()
+	modifierMixinFields0 := modifierMixin[0].Fields()
+	_ = modifierMixinFields0
+	modifierFields := schema.Modifier{}.Fields()
+	_ = modifierFields
+	// modifierDescUpdateTime is the schema descriptor for update_time field.
+	modifierDescUpdateTime := modifierMixinFields0[0].Descriptor()
+	// modifier.DefaultUpdateTime holds the default value on creation for the update_time field.
+	modifier.DefaultUpdateTime = modifierDescUpdateTime.Default.(func() time.Time)
+	// modifier.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	modifier.UpdateDefaultUpdateTime = modifierDescUpdateTime.UpdateDefault.(func() time.Time)
+	// modifierDescName is the schema descriptor for name field.
+	modifierDescName := modifierFields[1].Descriptor()
+	// modifier.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	modifier.NameValidator = func() func(string) error {
+		validators := modifierDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// modifierDescRequired is the schema descriptor for required field.
+	modifierDescRequired := modifierFields[2].Descriptor()
+	// modifier.DefaultRequired holds the default value on creation for the required field.
+	modifier.DefaultRequired = modifierDescRequired.Default.(bool)
+	// modifierDescMultiSelect is the schema descriptor for multi_select field.
+	modifierDescMultiSelect := modifierFields[3].Descriptor()
+	// modifier.DefaultMultiSelect holds the default value on creation for the multi_select field.
+	modifier.DefaultMultiSelect = modifierDescMultiSelect.Default.(bool)
+	// modifierDescMax is the schema descriptor for max field.
+	modifierDescMax := modifierFields[4].Descriptor()
+	// modifier.DefaultMax holds the default value on creation for the max field.
+	modifier.DefaultMax = modifierDescMax.Default.(int)
+	// modifier.MaxValidator is a validator for the "max" field. It is called by the builders before save.
+	modifier.MaxValidator = modifierDescMax.Validators[0].(func(int) error)
+	// modifierDescID is the schema descriptor for id field.
+	modifierDescID := modifierFields[0].Descriptor()
+	// modifier.DefaultID holds the default value on creation for the id field.
+	modifier.DefaultID = modifierDescID.Default.(func() uuid.UUID)
+	modifieroptionMixin := schema.ModifierOption{}.Mixin()
+	modifieroptionMixinFields0 := modifieroptionMixin[0].Fields()
+	_ = modifieroptionMixinFields0
+	modifieroptionFields := schema.ModifierOption{}.Fields()
+	_ = modifieroptionFields
+	// modifieroptionDescUpdateTime is the schema descriptor for update_time field.
+	modifieroptionDescUpdateTime := modifieroptionMixinFields0[0].Descriptor()
+	// modifieroption.DefaultUpdateTime holds the default value on creation for the update_time field.
+	modifieroption.DefaultUpdateTime = modifieroptionDescUpdateTime.Default.(func() time.Time)
+	// modifieroption.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	modifieroption.UpdateDefaultUpdateTime = modifieroptionDescUpdateTime.UpdateDefault.(func() time.Time)
+	// modifieroptionDescName is the schema descriptor for name field.
+	modifieroptionDescName := modifieroptionFields[1].Descriptor()
+	// modifieroption.NameValidator is a validator for the "name" field. It is called by the builders before save.
+	modifieroption.NameValidator = func() func(string) error {
+		validators := modifieroptionDescName.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(name string) error {
+			for _, fn := range fns {
+				if err := fn(name); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// modifieroptionDescPrice is the schema descriptor for price field.
+	modifieroptionDescPrice := modifieroptionFields[2].Descriptor()
+	// modifieroption.DefaultPrice holds the default value on creation for the price field.
+	modifieroption.DefaultPrice = modifieroptionDescPrice.Default.(float64)
+	// modifieroptionDescAvailable is the schema descriptor for available field.
+	modifieroptionDescAvailable := modifieroptionFields[4].Descriptor()
+	// modifieroption.DefaultAvailable holds the default value on creation for the available field.
+	modifieroption.DefaultAvailable = modifieroptionDescAvailable.Default.(bool)
+	// modifieroptionDescPreSelect is the schema descriptor for pre_select field.
+	modifieroptionDescPreSelect := modifieroptionFields[5].Descriptor()
+	// modifieroption.DefaultPreSelect holds the default value on creation for the pre_select field.
+	modifieroption.DefaultPreSelect = modifieroptionDescPreSelect.Default.(bool)
+	// modifieroptionDescID is the schema descriptor for id field.
+	modifieroptionDescID := modifieroptionFields[0].Descriptor()
+	// modifieroption.DefaultID holds the default value on creation for the id field.
+	modifieroption.DefaultID = modifieroptionDescID.Default.(func() uuid.UUID)
 	restaurantMixin := schema.Restaurant{}.Mixin()
 	restaurantMixinFields0 := restaurantMixin[0].Fields()
 	_ = restaurantMixinFields0

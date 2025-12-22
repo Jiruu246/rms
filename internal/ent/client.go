@@ -18,6 +18,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
+	"github.com/Jiruu246/rms/internal/ent/modifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
 )
@@ -31,6 +33,10 @@ type Client struct {
 	Category *CategoryClient
 	// MenuItem is the client for interacting with the MenuItem builders.
 	MenuItem *MenuItemClient
+	// Modifier is the client for interacting with the Modifier builders.
+	Modifier *ModifierClient
+	// ModifierOption is the client for interacting with the ModifierOption builders.
+	ModifierOption *ModifierOptionClient
 	// Restaurant is the client for interacting with the Restaurant builders.
 	Restaurant *RestaurantClient
 	// User is the client for interacting with the User builders.
@@ -48,6 +54,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Category = NewCategoryClient(c.config)
 	c.MenuItem = NewMenuItemClient(c.config)
+	c.Modifier = NewModifierClient(c.config)
+	c.ModifierOption = NewModifierOptionClient(c.config)
 	c.Restaurant = NewRestaurantClient(c.config)
 	c.User = NewUserClient(c.config)
 }
@@ -140,12 +148,14 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		Category:   NewCategoryClient(cfg),
-		MenuItem:   NewMenuItemClient(cfg),
-		Restaurant: NewRestaurantClient(cfg),
-		User:       NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Category:       NewCategoryClient(cfg),
+		MenuItem:       NewMenuItemClient(cfg),
+		Modifier:       NewModifierClient(cfg),
+		ModifierOption: NewModifierOptionClient(cfg),
+		Restaurant:     NewRestaurantClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -163,12 +173,14 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:        ctx,
-		config:     cfg,
-		Category:   NewCategoryClient(cfg),
-		MenuItem:   NewMenuItemClient(cfg),
-		Restaurant: NewRestaurantClient(cfg),
-		User:       NewUserClient(cfg),
+		ctx:            ctx,
+		config:         cfg,
+		Category:       NewCategoryClient(cfg),
+		MenuItem:       NewMenuItemClient(cfg),
+		Modifier:       NewModifierClient(cfg),
+		ModifierOption: NewModifierOptionClient(cfg),
+		Restaurant:     NewRestaurantClient(cfg),
+		User:           NewUserClient(cfg),
 	}, nil
 }
 
@@ -197,19 +209,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Category.Use(hooks...)
-	c.MenuItem.Use(hooks...)
-	c.Restaurant.Use(hooks...)
-	c.User.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Category, c.MenuItem, c.Modifier, c.ModifierOption, c.Restaurant, c.User,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Category.Intercept(interceptors...)
-	c.MenuItem.Intercept(interceptors...)
-	c.Restaurant.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Category, c.MenuItem, c.Modifier, c.ModifierOption, c.Restaurant, c.User,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -219,6 +233,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Category.mutate(ctx, m)
 	case *MenuItemMutation:
 		return c.MenuItem.mutate(ctx, m)
+	case *ModifierMutation:
+		return c.Modifier.mutate(ctx, m)
+	case *ModifierOptionMutation:
+		return c.ModifierOption.mutate(ctx, m)
 	case *RestaurantMutation:
 		return c.Restaurant.mutate(ctx, m)
 	case *UserMutation:
@@ -558,6 +576,320 @@ func (c *MenuItemClient) mutate(ctx context.Context, m *MenuItemMutation) (Value
 	}
 }
 
+// ModifierClient is a client for the Modifier schema.
+type ModifierClient struct {
+	config
+}
+
+// NewModifierClient returns a client for the Modifier from the given config.
+func NewModifierClient(c config) *ModifierClient {
+	return &ModifierClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `modifier.Hooks(f(g(h())))`.
+func (c *ModifierClient) Use(hooks ...Hook) {
+	c.hooks.Modifier = append(c.hooks.Modifier, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `modifier.Intercept(f(g(h())))`.
+func (c *ModifierClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Modifier = append(c.inters.Modifier, interceptors...)
+}
+
+// Create returns a builder for creating a Modifier entity.
+func (c *ModifierClient) Create() *ModifierCreate {
+	mutation := newModifierMutation(c.config, OpCreate)
+	return &ModifierCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Modifier entities.
+func (c *ModifierClient) CreateBulk(builders ...*ModifierCreate) *ModifierCreateBulk {
+	return &ModifierCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModifierClient) MapCreateBulk(slice any, setFunc func(*ModifierCreate, int)) *ModifierCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModifierCreateBulk{err: fmt.Errorf("calling to ModifierClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModifierCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModifierCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Modifier.
+func (c *ModifierClient) Update() *ModifierUpdate {
+	mutation := newModifierMutation(c.config, OpUpdate)
+	return &ModifierUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModifierClient) UpdateOne(_m *Modifier) *ModifierUpdateOne {
+	mutation := newModifierMutation(c.config, OpUpdateOne, withModifier(_m))
+	return &ModifierUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModifierClient) UpdateOneID(id uuid.UUID) *ModifierUpdateOne {
+	mutation := newModifierMutation(c.config, OpUpdateOne, withModifierID(id))
+	return &ModifierUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Modifier.
+func (c *ModifierClient) Delete() *ModifierDelete {
+	mutation := newModifierMutation(c.config, OpDelete)
+	return &ModifierDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModifierClient) DeleteOne(_m *Modifier) *ModifierDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModifierClient) DeleteOneID(id uuid.UUID) *ModifierDeleteOne {
+	builder := c.Delete().Where(modifier.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModifierDeleteOne{builder}
+}
+
+// Query returns a query builder for Modifier.
+func (c *ModifierClient) Query() *ModifierQuery {
+	return &ModifierQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModifier},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Modifier entity by its id.
+func (c *ModifierClient) Get(ctx context.Context, id uuid.UUID) (*Modifier, error) {
+	return c.Query().Where(modifier.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModifierClient) GetX(ctx context.Context, id uuid.UUID) *Modifier {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryRestaurant queries the restaurant edge of a Modifier.
+func (c *ModifierClient) QueryRestaurant(_m *Modifier) *RestaurantQuery {
+	query := (&RestaurantClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modifier.Table, modifier.FieldID, id),
+			sqlgraph.To(restaurant.Table, restaurant.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, modifier.RestaurantTable, modifier.RestaurantColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryModifierOptions queries the modifier_options edge of a Modifier.
+func (c *ModifierClient) QueryModifierOptions(_m *Modifier) *ModifierOptionQuery {
+	query := (&ModifierOptionClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modifier.Table, modifier.FieldID, id),
+			sqlgraph.To(modifieroption.Table, modifieroption.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, modifier.ModifierOptionsTable, modifier.ModifierOptionsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ModifierClient) Hooks() []Hook {
+	return c.hooks.Modifier
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModifierClient) Interceptors() []Interceptor {
+	return c.inters.Modifier
+}
+
+func (c *ModifierClient) mutate(ctx context.Context, m *ModifierMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModifierCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModifierUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModifierUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModifierDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Modifier mutation op: %q", m.Op())
+	}
+}
+
+// ModifierOptionClient is a client for the ModifierOption schema.
+type ModifierOptionClient struct {
+	config
+}
+
+// NewModifierOptionClient returns a client for the ModifierOption from the given config.
+func NewModifierOptionClient(c config) *ModifierOptionClient {
+	return &ModifierOptionClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `modifieroption.Hooks(f(g(h())))`.
+func (c *ModifierOptionClient) Use(hooks ...Hook) {
+	c.hooks.ModifierOption = append(c.hooks.ModifierOption, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `modifieroption.Intercept(f(g(h())))`.
+func (c *ModifierOptionClient) Intercept(interceptors ...Interceptor) {
+	c.inters.ModifierOption = append(c.inters.ModifierOption, interceptors...)
+}
+
+// Create returns a builder for creating a ModifierOption entity.
+func (c *ModifierOptionClient) Create() *ModifierOptionCreate {
+	mutation := newModifierOptionMutation(c.config, OpCreate)
+	return &ModifierOptionCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of ModifierOption entities.
+func (c *ModifierOptionClient) CreateBulk(builders ...*ModifierOptionCreate) *ModifierOptionCreateBulk {
+	return &ModifierOptionCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *ModifierOptionClient) MapCreateBulk(slice any, setFunc func(*ModifierOptionCreate, int)) *ModifierOptionCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &ModifierOptionCreateBulk{err: fmt.Errorf("calling to ModifierOptionClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*ModifierOptionCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &ModifierOptionCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for ModifierOption.
+func (c *ModifierOptionClient) Update() *ModifierOptionUpdate {
+	mutation := newModifierOptionMutation(c.config, OpUpdate)
+	return &ModifierOptionUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *ModifierOptionClient) UpdateOne(_m *ModifierOption) *ModifierOptionUpdateOne {
+	mutation := newModifierOptionMutation(c.config, OpUpdateOne, withModifierOption(_m))
+	return &ModifierOptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *ModifierOptionClient) UpdateOneID(id uuid.UUID) *ModifierOptionUpdateOne {
+	mutation := newModifierOptionMutation(c.config, OpUpdateOne, withModifierOptionID(id))
+	return &ModifierOptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for ModifierOption.
+func (c *ModifierOptionClient) Delete() *ModifierOptionDelete {
+	mutation := newModifierOptionMutation(c.config, OpDelete)
+	return &ModifierOptionDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *ModifierOptionClient) DeleteOne(_m *ModifierOption) *ModifierOptionDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *ModifierOptionClient) DeleteOneID(id uuid.UUID) *ModifierOptionDeleteOne {
+	builder := c.Delete().Where(modifieroption.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &ModifierOptionDeleteOne{builder}
+}
+
+// Query returns a query builder for ModifierOption.
+func (c *ModifierOptionClient) Query() *ModifierOptionQuery {
+	return &ModifierOptionQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeModifierOption},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a ModifierOption entity by its id.
+func (c *ModifierOptionClient) Get(ctx context.Context, id uuid.UUID) (*ModifierOption, error) {
+	return c.Query().Where(modifieroption.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *ModifierOptionClient) GetX(ctx context.Context, id uuid.UUID) *ModifierOption {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryModifier queries the modifier edge of a ModifierOption.
+func (c *ModifierOptionClient) QueryModifier(_m *ModifierOption) *ModifierQuery {
+	query := (&ModifierClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modifieroption.Table, modifieroption.FieldID, id),
+			sqlgraph.To(modifier.Table, modifier.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, modifieroption.ModifierTable, modifieroption.ModifierColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *ModifierOptionClient) Hooks() []Hook {
+	return c.hooks.ModifierOption
+}
+
+// Interceptors returns the client interceptors.
+func (c *ModifierOptionClient) Interceptors() []Interceptor {
+	return c.inters.ModifierOption
+}
+
+func (c *ModifierOptionClient) mutate(ctx context.Context, m *ModifierOptionMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&ModifierOptionCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&ModifierOptionUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&ModifierOptionUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&ModifierOptionDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown ModifierOption mutation op: %q", m.Op())
+	}
+}
+
 // RestaurantClient is a client for the Restaurant schema.
 type RestaurantClient struct {
 	config
@@ -707,6 +1039,22 @@ func (c *RestaurantClient) QueryCategories(_m *Restaurant) *CategoryQuery {
 			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
 			sqlgraph.To(category.Table, category.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.CategoriesTable, restaurant.CategoriesColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryModifiers queries the modifiers edge of a Restaurant.
+func (c *RestaurantClient) QueryModifiers(_m *Restaurant) *ModifierQuery {
+	query := (&ModifierClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
+			sqlgraph.To(modifier.Table, modifier.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.ModifiersTable, restaurant.ModifiersColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -891,9 +1239,9 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Category, MenuItem, Restaurant, User []ent.Hook
+		Category, MenuItem, Modifier, ModifierOption, Restaurant, User []ent.Hook
 	}
 	inters struct {
-		Category, MenuItem, Restaurant, User []ent.Interceptor
+		Category, MenuItem, Modifier, ModifierOption, Restaurant, User []ent.Interceptor
 	}
 )

@@ -68,18 +68,24 @@ func (s *Server) routes() {
 	userRepo := repos.NewEntUserRepository(s.client)
 	restaurantRepo := repos.NewEntRestaurantRepository(s.client)
 	menuitemRepo := repos.NewEntMenuItemRepository(s.client)
+	modifierRepo := repos.NewEntModifierRepository(s.client)
+	modifierOptionRepo := repos.NewEntModifierOptionRepository(s.client)
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
 	userService := services.NewUserService(userRepo)
 	restaurantService := services.NewRestaurantService(restaurantRepo)
 	menuItemService := services.NewMenuItemService(menuitemRepo)
+	modifierService := services.NewModifierService(modifierRepo)
+	modifierOptionService := services.NewModifierOptionService(modifierOptionRepo)
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
 	userHandler := handler.NewUserHandler(userService)
 	restaurantHandler := handler.NewRestaurantHandler(restaurantService)
 	menuItemHandler := handler.NewMenuItemHandler(menuItemService)
+	modifierHandler := handler.NewModifierHandler(modifierService)
+	modifierOptionHandler := handler.NewModifierOptionHandler(modifierOptionService)
 
 	// API routes
 	api := s.engine.Group("/api")
@@ -132,6 +138,28 @@ func (s *Server) routes() {
 			menuItems.GET("/:id", menuItemHandler.GetMenuItem)
 			menuItems.PUT("/:id", menuItemHandler.UpdateMenuItem)
 			menuItems.DELETE("/:id", menuItemHandler.DeleteMenuItem)
+		}
+
+		modifiers := api.Group("/modifiers")
+		{
+			// Apply JWT middleware to all modifier routes
+			modifiers.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+
+			modifiers.POST("", modifierHandler.CreateModifier)
+			modifiers.GET("", modifierHandler.GetAllModifiers)
+			modifiers.GET(":id", modifierHandler.GetModifier)
+			modifiers.PATCH(":id", modifierHandler.UpdateModifier)
+			modifiers.DELETE(":id", modifierHandler.DeleteModifier)
+
+			// Modifier options endpoints
+			options := modifiers.Group("/options")
+			{
+				options.POST("", modifierOptionHandler.CreateModifierOption)
+				options.GET("", modifierOptionHandler.GetAllModifierOptions)
+				options.GET(":id", modifierOptionHandler.GetModifierOption)
+				options.PATCH(":id", modifierOptionHandler.UpdateModifierOption)
+				options.DELETE(":id", modifierOptionHandler.DeleteModifierOption)
+			}
 		}
 	}
 }

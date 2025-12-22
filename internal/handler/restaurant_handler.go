@@ -72,7 +72,7 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, restaurants)
 }
 
-// UpdateRestaurant handles PUT /api/restaurants/{id}
+// UpdateRestaurant handles PATCH /api/restaurants/{id}
 func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)

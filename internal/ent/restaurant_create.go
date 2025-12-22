@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
@@ -207,6 +208,21 @@ func (_c *RestaurantCreate) AddCategories(v ...*Category) *RestaurantCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddCategoryIDs(ids...)
+}
+
+// AddModifierIDs adds the "modifiers" edge to the Modifier entity by IDs.
+func (_c *RestaurantCreate) AddModifierIDs(ids ...uuid.UUID) *RestaurantCreate {
+	_c.mutation.AddModifierIDs(ids...)
+	return _c
+}
+
+// AddModifiers adds the "modifiers" edges to the Modifier entity.
+func (_c *RestaurantCreate) AddModifiers(v ...*Modifier) *RestaurantCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddModifierIDs(ids...)
 }
 
 // Mutation returns the RestaurantMutation object of the builder.
@@ -481,6 +497,22 @@ func (_c *RestaurantCreate) createSpec() (*Restaurant, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.ModifiersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   restaurant.ModifiersTable,
+			Columns: []string{restaurant.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

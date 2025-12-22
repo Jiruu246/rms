@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
+	"github.com/Jiruu246/rms/internal/ent/modifieroption"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -28,10 +30,12 @@ const (
 	OpUpdateOne = ent.OpUpdateOne
 
 	// Node types.
-	TypeCategory   = "Category"
-	TypeMenuItem   = "MenuItem"
-	TypeRestaurant = "Restaurant"
-	TypeUser       = "User"
+	TypeCategory       = "Category"
+	TypeMenuItem       = "MenuItem"
+	TypeModifier       = "Modifier"
+	TypeModifierOption = "ModifierOption"
+	TypeRestaurant     = "Restaurant"
+	TypeUser           = "User"
 )
 
 // CategoryMutation represents an operation that mutates the Category nodes in the graph.
@@ -1698,6 +1702,1551 @@ func (m *MenuItemMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown MenuItem edge %s", name)
 }
 
+// ModifierMutation represents an operation that mutates the Modifier nodes in the graph.
+type ModifierMutation struct {
+	config
+	op                      Op
+	typ                     string
+	id                      *uuid.UUID
+	update_time             *time.Time
+	name                    *string
+	required                *bool
+	multi_select            *bool
+	max                     *int
+	addmax                  *int
+	clearedFields           map[string]struct{}
+	restaurant              *uuid.UUID
+	clearedrestaurant       bool
+	modifier_options        map[uuid.UUID]struct{}
+	removedmodifier_options map[uuid.UUID]struct{}
+	clearedmodifier_options bool
+	done                    bool
+	oldValue                func(context.Context) (*Modifier, error)
+	predicates              []predicate.Modifier
+}
+
+var _ ent.Mutation = (*ModifierMutation)(nil)
+
+// modifierOption allows management of the mutation configuration using functional options.
+type modifierOption func(*ModifierMutation)
+
+// newModifierMutation creates new mutation for the Modifier entity.
+func newModifierMutation(c config, op Op, opts ...modifierOption) *ModifierMutation {
+	m := &ModifierMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModifier,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModifierID sets the ID field of the mutation.
+func withModifierID(id uuid.UUID) modifierOption {
+	return func(m *ModifierMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Modifier
+		)
+		m.oldValue = func(ctx context.Context) (*Modifier, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Modifier.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModifier sets the old Modifier of the mutation.
+func withModifier(node *Modifier) modifierOption {
+	return func(m *ModifierMutation) {
+		m.oldValue = func(context.Context) (*Modifier, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModifierMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModifierMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Modifier entities.
+func (m *ModifierMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModifierMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModifierMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Modifier.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *ModifierMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *ModifierMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the Modifier entity.
+// If the Modifier object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *ModifierMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetName sets the "name" field.
+func (m *ModifierMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ModifierMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Modifier entity.
+// If the Modifier object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ModifierMutation) ResetName() {
+	m.name = nil
+}
+
+// SetRequired sets the "required" field.
+func (m *ModifierMutation) SetRequired(b bool) {
+	m.required = &b
+}
+
+// Required returns the value of the "required" field in the mutation.
+func (m *ModifierMutation) Required() (r bool, exists bool) {
+	v := m.required
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRequired returns the old "required" field's value of the Modifier entity.
+// If the Modifier object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierMutation) OldRequired(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRequired is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRequired requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRequired: %w", err)
+	}
+	return oldValue.Required, nil
+}
+
+// ResetRequired resets all changes to the "required" field.
+func (m *ModifierMutation) ResetRequired() {
+	m.required = nil
+}
+
+// SetMultiSelect sets the "multi_select" field.
+func (m *ModifierMutation) SetMultiSelect(b bool) {
+	m.multi_select = &b
+}
+
+// MultiSelect returns the value of the "multi_select" field in the mutation.
+func (m *ModifierMutation) MultiSelect() (r bool, exists bool) {
+	v := m.multi_select
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMultiSelect returns the old "multi_select" field's value of the Modifier entity.
+// If the Modifier object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierMutation) OldMultiSelect(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMultiSelect is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMultiSelect requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMultiSelect: %w", err)
+	}
+	return oldValue.MultiSelect, nil
+}
+
+// ResetMultiSelect resets all changes to the "multi_select" field.
+func (m *ModifierMutation) ResetMultiSelect() {
+	m.multi_select = nil
+}
+
+// SetMax sets the "max" field.
+func (m *ModifierMutation) SetMax(i int) {
+	m.max = &i
+	m.addmax = nil
+}
+
+// Max returns the value of the "max" field in the mutation.
+func (m *ModifierMutation) Max() (r int, exists bool) {
+	v := m.max
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldMax returns the old "max" field's value of the Modifier entity.
+// If the Modifier object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierMutation) OldMax(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldMax is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldMax requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldMax: %w", err)
+	}
+	return oldValue.Max, nil
+}
+
+// AddMax adds i to the "max" field.
+func (m *ModifierMutation) AddMax(i int) {
+	if m.addmax != nil {
+		*m.addmax += i
+	} else {
+		m.addmax = &i
+	}
+}
+
+// AddedMax returns the value that was added to the "max" field in this mutation.
+func (m *ModifierMutation) AddedMax() (r int, exists bool) {
+	v := m.addmax
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetMax resets all changes to the "max" field.
+func (m *ModifierMutation) ResetMax() {
+	m.max = nil
+	m.addmax = nil
+}
+
+// SetRestaurantID sets the "restaurant_id" field.
+func (m *ModifierMutation) SetRestaurantID(u uuid.UUID) {
+	m.restaurant = &u
+}
+
+// RestaurantID returns the value of the "restaurant_id" field in the mutation.
+func (m *ModifierMutation) RestaurantID() (r uuid.UUID, exists bool) {
+	v := m.restaurant
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldRestaurantID returns the old "restaurant_id" field's value of the Modifier entity.
+// If the Modifier object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierMutation) OldRestaurantID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldRestaurantID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldRestaurantID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldRestaurantID: %w", err)
+	}
+	return oldValue.RestaurantID, nil
+}
+
+// ResetRestaurantID resets all changes to the "restaurant_id" field.
+func (m *ModifierMutation) ResetRestaurantID() {
+	m.restaurant = nil
+}
+
+// ClearRestaurant clears the "restaurant" edge to the Restaurant entity.
+func (m *ModifierMutation) ClearRestaurant() {
+	m.clearedrestaurant = true
+	m.clearedFields[modifier.FieldRestaurantID] = struct{}{}
+}
+
+// RestaurantCleared reports if the "restaurant" edge to the Restaurant entity was cleared.
+func (m *ModifierMutation) RestaurantCleared() bool {
+	return m.clearedrestaurant
+}
+
+// RestaurantIDs returns the "restaurant" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// RestaurantID instead. It exists only for internal usage by the builders.
+func (m *ModifierMutation) RestaurantIDs() (ids []uuid.UUID) {
+	if id := m.restaurant; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetRestaurant resets all changes to the "restaurant" edge.
+func (m *ModifierMutation) ResetRestaurant() {
+	m.restaurant = nil
+	m.clearedrestaurant = false
+}
+
+// AddModifierOptionIDs adds the "modifier_options" edge to the ModifierOption entity by ids.
+func (m *ModifierMutation) AddModifierOptionIDs(ids ...uuid.UUID) {
+	if m.modifier_options == nil {
+		m.modifier_options = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.modifier_options[ids[i]] = struct{}{}
+	}
+}
+
+// ClearModifierOptions clears the "modifier_options" edge to the ModifierOption entity.
+func (m *ModifierMutation) ClearModifierOptions() {
+	m.clearedmodifier_options = true
+}
+
+// ModifierOptionsCleared reports if the "modifier_options" edge to the ModifierOption entity was cleared.
+func (m *ModifierMutation) ModifierOptionsCleared() bool {
+	return m.clearedmodifier_options
+}
+
+// RemoveModifierOptionIDs removes the "modifier_options" edge to the ModifierOption entity by IDs.
+func (m *ModifierMutation) RemoveModifierOptionIDs(ids ...uuid.UUID) {
+	if m.removedmodifier_options == nil {
+		m.removedmodifier_options = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.modifier_options, ids[i])
+		m.removedmodifier_options[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedModifierOptions returns the removed IDs of the "modifier_options" edge to the ModifierOption entity.
+func (m *ModifierMutation) RemovedModifierOptionsIDs() (ids []uuid.UUID) {
+	for id := range m.removedmodifier_options {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ModifierOptionsIDs returns the "modifier_options" edge IDs in the mutation.
+func (m *ModifierMutation) ModifierOptionsIDs() (ids []uuid.UUID) {
+	for id := range m.modifier_options {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetModifierOptions resets all changes to the "modifier_options" edge.
+func (m *ModifierMutation) ResetModifierOptions() {
+	m.modifier_options = nil
+	m.clearedmodifier_options = false
+	m.removedmodifier_options = nil
+}
+
+// Where appends a list predicates to the ModifierMutation builder.
+func (m *ModifierMutation) Where(ps ...predicate.Modifier) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModifierMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModifierMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Modifier, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModifierMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModifierMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Modifier).
+func (m *ModifierMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModifierMutation) Fields() []string {
+	fields := make([]string, 0, 6)
+	if m.update_time != nil {
+		fields = append(fields, modifier.FieldUpdateTime)
+	}
+	if m.name != nil {
+		fields = append(fields, modifier.FieldName)
+	}
+	if m.required != nil {
+		fields = append(fields, modifier.FieldRequired)
+	}
+	if m.multi_select != nil {
+		fields = append(fields, modifier.FieldMultiSelect)
+	}
+	if m.max != nil {
+		fields = append(fields, modifier.FieldMax)
+	}
+	if m.restaurant != nil {
+		fields = append(fields, modifier.FieldRestaurantID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModifierMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modifier.FieldUpdateTime:
+		return m.UpdateTime()
+	case modifier.FieldName:
+		return m.Name()
+	case modifier.FieldRequired:
+		return m.Required()
+	case modifier.FieldMultiSelect:
+		return m.MultiSelect()
+	case modifier.FieldMax:
+		return m.Max()
+	case modifier.FieldRestaurantID:
+		return m.RestaurantID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModifierMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case modifier.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case modifier.FieldName:
+		return m.OldName(ctx)
+	case modifier.FieldRequired:
+		return m.OldRequired(ctx)
+	case modifier.FieldMultiSelect:
+		return m.OldMultiSelect(ctx)
+	case modifier.FieldMax:
+		return m.OldMax(ctx)
+	case modifier.FieldRestaurantID:
+		return m.OldRestaurantID(ctx)
+	}
+	return nil, fmt.Errorf("unknown Modifier field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModifierMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modifier.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case modifier.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case modifier.FieldRequired:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRequired(v)
+		return nil
+	case modifier.FieldMultiSelect:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMultiSelect(v)
+		return nil
+	case modifier.FieldMax:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetMax(v)
+		return nil
+	case modifier.FieldRestaurantID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetRestaurantID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Modifier field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModifierMutation) AddedFields() []string {
+	var fields []string
+	if m.addmax != nil {
+		fields = append(fields, modifier.FieldMax)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModifierMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case modifier.FieldMax:
+		return m.AddedMax()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModifierMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case modifier.FieldMax:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddMax(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Modifier numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModifierMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModifierMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModifierMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Modifier nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModifierMutation) ResetField(name string) error {
+	switch name {
+	case modifier.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case modifier.FieldName:
+		m.ResetName()
+		return nil
+	case modifier.FieldRequired:
+		m.ResetRequired()
+		return nil
+	case modifier.FieldMultiSelect:
+		m.ResetMultiSelect()
+		return nil
+	case modifier.FieldMax:
+		m.ResetMax()
+		return nil
+	case modifier.FieldRestaurantID:
+		m.ResetRestaurantID()
+		return nil
+	}
+	return fmt.Errorf("unknown Modifier field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModifierMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.restaurant != nil {
+		edges = append(edges, modifier.EdgeRestaurant)
+	}
+	if m.modifier_options != nil {
+		edges = append(edges, modifier.EdgeModifierOptions)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModifierMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modifier.EdgeRestaurant:
+		if id := m.restaurant; id != nil {
+			return []ent.Value{*id}
+		}
+	case modifier.EdgeModifierOptions:
+		ids := make([]ent.Value, 0, len(m.modifier_options))
+		for id := range m.modifier_options {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModifierMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedmodifier_options != nil {
+		edges = append(edges, modifier.EdgeModifierOptions)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModifierMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case modifier.EdgeModifierOptions:
+		ids := make([]ent.Value, 0, len(m.removedmodifier_options))
+		for id := range m.removedmodifier_options {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModifierMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedrestaurant {
+		edges = append(edges, modifier.EdgeRestaurant)
+	}
+	if m.clearedmodifier_options {
+		edges = append(edges, modifier.EdgeModifierOptions)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModifierMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modifier.EdgeRestaurant:
+		return m.clearedrestaurant
+	case modifier.EdgeModifierOptions:
+		return m.clearedmodifier_options
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModifierMutation) ClearEdge(name string) error {
+	switch name {
+	case modifier.EdgeRestaurant:
+		m.ClearRestaurant()
+		return nil
+	}
+	return fmt.Errorf("unknown Modifier unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModifierMutation) ResetEdge(name string) error {
+	switch name {
+	case modifier.EdgeRestaurant:
+		m.ResetRestaurant()
+		return nil
+	case modifier.EdgeModifierOptions:
+		m.ResetModifierOptions()
+		return nil
+	}
+	return fmt.Errorf("unknown Modifier edge %s", name)
+}
+
+// ModifierOptionMutation represents an operation that mutates the ModifierOption nodes in the graph.
+type ModifierOptionMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	update_time     *time.Time
+	name            *string
+	price           *float64
+	addprice        *float64
+	image_url       *string
+	available       *bool
+	pre_select      *bool
+	clearedFields   map[string]struct{}
+	modifier        *uuid.UUID
+	clearedmodifier bool
+	done            bool
+	oldValue        func(context.Context) (*ModifierOption, error)
+	predicates      []predicate.ModifierOption
+}
+
+var _ ent.Mutation = (*ModifierOptionMutation)(nil)
+
+// modifieroptionOption allows management of the mutation configuration using functional options.
+type modifieroptionOption func(*ModifierOptionMutation)
+
+// newModifierOptionMutation creates new mutation for the ModifierOption entity.
+func newModifierOptionMutation(c config, op Op, opts ...modifieroptionOption) *ModifierOptionMutation {
+	m := &ModifierOptionMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeModifierOption,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withModifierOptionID sets the ID field of the mutation.
+func withModifierOptionID(id uuid.UUID) modifieroptionOption {
+	return func(m *ModifierOptionMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *ModifierOption
+		)
+		m.oldValue = func(ctx context.Context) (*ModifierOption, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().ModifierOption.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withModifierOption sets the old ModifierOption of the mutation.
+func withModifierOption(node *ModifierOption) modifieroptionOption {
+	return func(m *ModifierOptionMutation) {
+		m.oldValue = func(context.Context) (*ModifierOption, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m ModifierOptionMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m ModifierOptionMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of ModifierOption entities.
+func (m *ModifierOptionMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *ModifierOptionMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *ModifierOptionMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().ModifierOption.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *ModifierOptionMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *ModifierOptionMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *ModifierOptionMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetName sets the "name" field.
+func (m *ModifierOptionMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *ModifierOptionMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *ModifierOptionMutation) ResetName() {
+	m.name = nil
+}
+
+// SetPrice sets the "price" field.
+func (m *ModifierOptionMutation) SetPrice(f float64) {
+	m.price = &f
+	m.addprice = nil
+}
+
+// Price returns the value of the "price" field in the mutation.
+func (m *ModifierOptionMutation) Price() (r float64, exists bool) {
+	v := m.price
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPrice returns the old "price" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldPrice(ctx context.Context) (v float64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPrice is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPrice requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPrice: %w", err)
+	}
+	return oldValue.Price, nil
+}
+
+// AddPrice adds f to the "price" field.
+func (m *ModifierOptionMutation) AddPrice(f float64) {
+	if m.addprice != nil {
+		*m.addprice += f
+	} else {
+		m.addprice = &f
+	}
+}
+
+// AddedPrice returns the value that was added to the "price" field in this mutation.
+func (m *ModifierOptionMutation) AddedPrice() (r float64, exists bool) {
+	v := m.addprice
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetPrice resets all changes to the "price" field.
+func (m *ModifierOptionMutation) ResetPrice() {
+	m.price = nil
+	m.addprice = nil
+}
+
+// SetImageURL sets the "image_url" field.
+func (m *ModifierOptionMutation) SetImageURL(s string) {
+	m.image_url = &s
+}
+
+// ImageURL returns the value of the "image_url" field in the mutation.
+func (m *ModifierOptionMutation) ImageURL() (r string, exists bool) {
+	v := m.image_url
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldImageURL returns the old "image_url" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldImageURL(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldImageURL is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldImageURL requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldImageURL: %w", err)
+	}
+	return oldValue.ImageURL, nil
+}
+
+// ClearImageURL clears the value of the "image_url" field.
+func (m *ModifierOptionMutation) ClearImageURL() {
+	m.image_url = nil
+	m.clearedFields[modifieroption.FieldImageURL] = struct{}{}
+}
+
+// ImageURLCleared returns if the "image_url" field was cleared in this mutation.
+func (m *ModifierOptionMutation) ImageURLCleared() bool {
+	_, ok := m.clearedFields[modifieroption.FieldImageURL]
+	return ok
+}
+
+// ResetImageURL resets all changes to the "image_url" field.
+func (m *ModifierOptionMutation) ResetImageURL() {
+	m.image_url = nil
+	delete(m.clearedFields, modifieroption.FieldImageURL)
+}
+
+// SetAvailable sets the "available" field.
+func (m *ModifierOptionMutation) SetAvailable(b bool) {
+	m.available = &b
+}
+
+// Available returns the value of the "available" field in the mutation.
+func (m *ModifierOptionMutation) Available() (r bool, exists bool) {
+	v := m.available
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldAvailable returns the old "available" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldAvailable(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldAvailable is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldAvailable requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldAvailable: %w", err)
+	}
+	return oldValue.Available, nil
+}
+
+// ResetAvailable resets all changes to the "available" field.
+func (m *ModifierOptionMutation) ResetAvailable() {
+	m.available = nil
+}
+
+// SetPreSelect sets the "pre_select" field.
+func (m *ModifierOptionMutation) SetPreSelect(b bool) {
+	m.pre_select = &b
+}
+
+// PreSelect returns the value of the "pre_select" field in the mutation.
+func (m *ModifierOptionMutation) PreSelect() (r bool, exists bool) {
+	v := m.pre_select
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPreSelect returns the old "pre_select" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldPreSelect(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPreSelect is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPreSelect requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPreSelect: %w", err)
+	}
+	return oldValue.PreSelect, nil
+}
+
+// ResetPreSelect resets all changes to the "pre_select" field.
+func (m *ModifierOptionMutation) ResetPreSelect() {
+	m.pre_select = nil
+}
+
+// SetModifierID sets the "modifier_id" field.
+func (m *ModifierOptionMutation) SetModifierID(u uuid.UUID) {
+	m.modifier = &u
+}
+
+// ModifierID returns the value of the "modifier_id" field in the mutation.
+func (m *ModifierOptionMutation) ModifierID() (r uuid.UUID, exists bool) {
+	v := m.modifier
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldModifierID returns the old "modifier_id" field's value of the ModifierOption entity.
+// If the ModifierOption object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ModifierOptionMutation) OldModifierID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldModifierID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldModifierID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldModifierID: %w", err)
+	}
+	return oldValue.ModifierID, nil
+}
+
+// ResetModifierID resets all changes to the "modifier_id" field.
+func (m *ModifierOptionMutation) ResetModifierID() {
+	m.modifier = nil
+}
+
+// ClearModifier clears the "modifier" edge to the Modifier entity.
+func (m *ModifierOptionMutation) ClearModifier() {
+	m.clearedmodifier = true
+	m.clearedFields[modifieroption.FieldModifierID] = struct{}{}
+}
+
+// ModifierCleared reports if the "modifier" edge to the Modifier entity was cleared.
+func (m *ModifierOptionMutation) ModifierCleared() bool {
+	return m.clearedmodifier
+}
+
+// ModifierIDs returns the "modifier" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ModifierID instead. It exists only for internal usage by the builders.
+func (m *ModifierOptionMutation) ModifierIDs() (ids []uuid.UUID) {
+	if id := m.modifier; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetModifier resets all changes to the "modifier" edge.
+func (m *ModifierOptionMutation) ResetModifier() {
+	m.modifier = nil
+	m.clearedmodifier = false
+}
+
+// Where appends a list predicates to the ModifierOptionMutation builder.
+func (m *ModifierOptionMutation) Where(ps ...predicate.ModifierOption) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the ModifierOptionMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *ModifierOptionMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.ModifierOption, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *ModifierOptionMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *ModifierOptionMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (ModifierOption).
+func (m *ModifierOptionMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *ModifierOptionMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.update_time != nil {
+		fields = append(fields, modifieroption.FieldUpdateTime)
+	}
+	if m.name != nil {
+		fields = append(fields, modifieroption.FieldName)
+	}
+	if m.price != nil {
+		fields = append(fields, modifieroption.FieldPrice)
+	}
+	if m.image_url != nil {
+		fields = append(fields, modifieroption.FieldImageURL)
+	}
+	if m.available != nil {
+		fields = append(fields, modifieroption.FieldAvailable)
+	}
+	if m.pre_select != nil {
+		fields = append(fields, modifieroption.FieldPreSelect)
+	}
+	if m.modifier != nil {
+		fields = append(fields, modifieroption.FieldModifierID)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *ModifierOptionMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case modifieroption.FieldUpdateTime:
+		return m.UpdateTime()
+	case modifieroption.FieldName:
+		return m.Name()
+	case modifieroption.FieldPrice:
+		return m.Price()
+	case modifieroption.FieldImageURL:
+		return m.ImageURL()
+	case modifieroption.FieldAvailable:
+		return m.Available()
+	case modifieroption.FieldPreSelect:
+		return m.PreSelect()
+	case modifieroption.FieldModifierID:
+		return m.ModifierID()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *ModifierOptionMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case modifieroption.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case modifieroption.FieldName:
+		return m.OldName(ctx)
+	case modifieroption.FieldPrice:
+		return m.OldPrice(ctx)
+	case modifieroption.FieldImageURL:
+		return m.OldImageURL(ctx)
+	case modifieroption.FieldAvailable:
+		return m.OldAvailable(ctx)
+	case modifieroption.FieldPreSelect:
+		return m.OldPreSelect(ctx)
+	case modifieroption.FieldModifierID:
+		return m.OldModifierID(ctx)
+	}
+	return nil, fmt.Errorf("unknown ModifierOption field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModifierOptionMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case modifieroption.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case modifieroption.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	case modifieroption.FieldPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPrice(v)
+		return nil
+	case modifieroption.FieldImageURL:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetImageURL(v)
+		return nil
+	case modifieroption.FieldAvailable:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetAvailable(v)
+		return nil
+	case modifieroption.FieldPreSelect:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPreSelect(v)
+		return nil
+	case modifieroption.FieldModifierID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetModifierID(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModifierOption field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *ModifierOptionMutation) AddedFields() []string {
+	var fields []string
+	if m.addprice != nil {
+		fields = append(fields, modifieroption.FieldPrice)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *ModifierOptionMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case modifieroption.FieldPrice:
+		return m.AddedPrice()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *ModifierOptionMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case modifieroption.FieldPrice:
+		v, ok := value.(float64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddPrice(v)
+		return nil
+	}
+	return fmt.Errorf("unknown ModifierOption numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *ModifierOptionMutation) ClearedFields() []string {
+	var fields []string
+	if m.FieldCleared(modifieroption.FieldImageURL) {
+		fields = append(fields, modifieroption.FieldImageURL)
+	}
+	return fields
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *ModifierOptionMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *ModifierOptionMutation) ClearField(name string) error {
+	switch name {
+	case modifieroption.FieldImageURL:
+		m.ClearImageURL()
+		return nil
+	}
+	return fmt.Errorf("unknown ModifierOption nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *ModifierOptionMutation) ResetField(name string) error {
+	switch name {
+	case modifieroption.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case modifieroption.FieldName:
+		m.ResetName()
+		return nil
+	case modifieroption.FieldPrice:
+		m.ResetPrice()
+		return nil
+	case modifieroption.FieldImageURL:
+		m.ResetImageURL()
+		return nil
+	case modifieroption.FieldAvailable:
+		m.ResetAvailable()
+		return nil
+	case modifieroption.FieldPreSelect:
+		m.ResetPreSelect()
+		return nil
+	case modifieroption.FieldModifierID:
+		m.ResetModifierID()
+		return nil
+	}
+	return fmt.Errorf("unknown ModifierOption field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *ModifierOptionMutation) AddedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.modifier != nil {
+		edges = append(edges, modifieroption.EdgeModifier)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *ModifierOptionMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case modifieroption.EdgeModifier:
+		if id := m.modifier; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *ModifierOptionMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 1)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *ModifierOptionMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *ModifierOptionMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 1)
+	if m.clearedmodifier {
+		edges = append(edges, modifieroption.EdgeModifier)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *ModifierOptionMutation) EdgeCleared(name string) bool {
+	switch name {
+	case modifieroption.EdgeModifier:
+		return m.clearedmodifier
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *ModifierOptionMutation) ClearEdge(name string) error {
+	switch name {
+	case modifieroption.EdgeModifier:
+		m.ClearModifier()
+		return nil
+	}
+	return fmt.Errorf("unknown ModifierOption unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *ModifierOptionMutation) ResetEdge(name string) error {
+	switch name {
+	case modifieroption.EdgeModifier:
+		m.ResetModifier()
+		return nil
+	}
+	return fmt.Errorf("unknown ModifierOption edge %s", name)
+}
+
 // RestaurantMutation represents an operation that mutates the Restaurant nodes in the graph.
 type RestaurantMutation struct {
 	config
@@ -1728,6 +3277,9 @@ type RestaurantMutation struct {
 	categories        map[uuid.UUID]struct{}
 	removedcategories map[uuid.UUID]struct{}
 	clearedcategories bool
+	modifiers         map[uuid.UUID]struct{}
+	removedmodifiers  map[uuid.UUID]struct{}
+	clearedmodifiers  bool
 	done              bool
 	oldValue          func(context.Context) (*Restaurant, error)
 	predicates        []predicate.Restaurant
@@ -2600,6 +4152,60 @@ func (m *RestaurantMutation) ResetCategories() {
 	m.removedcategories = nil
 }
 
+// AddModifierIDs adds the "modifiers" edge to the Modifier entity by ids.
+func (m *RestaurantMutation) AddModifierIDs(ids ...uuid.UUID) {
+	if m.modifiers == nil {
+		m.modifiers = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.modifiers[ids[i]] = struct{}{}
+	}
+}
+
+// ClearModifiers clears the "modifiers" edge to the Modifier entity.
+func (m *RestaurantMutation) ClearModifiers() {
+	m.clearedmodifiers = true
+}
+
+// ModifiersCleared reports if the "modifiers" edge to the Modifier entity was cleared.
+func (m *RestaurantMutation) ModifiersCleared() bool {
+	return m.clearedmodifiers
+}
+
+// RemoveModifierIDs removes the "modifiers" edge to the Modifier entity by IDs.
+func (m *RestaurantMutation) RemoveModifierIDs(ids ...uuid.UUID) {
+	if m.removedmodifiers == nil {
+		m.removedmodifiers = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.modifiers, ids[i])
+		m.removedmodifiers[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedModifiers returns the removed IDs of the "modifiers" edge to the Modifier entity.
+func (m *RestaurantMutation) RemovedModifiersIDs() (ids []uuid.UUID) {
+	for id := range m.removedmodifiers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ModifiersIDs returns the "modifiers" edge IDs in the mutation.
+func (m *RestaurantMutation) ModifiersIDs() (ids []uuid.UUID) {
+	for id := range m.modifiers {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetModifiers resets all changes to the "modifiers" edge.
+func (m *RestaurantMutation) ResetModifiers() {
+	m.modifiers = nil
+	m.clearedmodifiers = false
+	m.removedmodifiers = nil
+}
+
 // Where appends a list predicates to the RestaurantMutation builder.
 func (m *RestaurantMutation) Where(ps ...predicate.Restaurant) {
 	m.predicates = append(m.predicates, ps...)
@@ -3015,7 +4621,7 @@ func (m *RestaurantMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RestaurantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.user != nil {
 		edges = append(edges, restaurant.EdgeUser)
 	}
@@ -3024,6 +4630,9 @@ func (m *RestaurantMutation) AddedEdges() []string {
 	}
 	if m.categories != nil {
 		edges = append(edges, restaurant.EdgeCategories)
+	}
+	if m.modifiers != nil {
+		edges = append(edges, restaurant.EdgeModifiers)
 	}
 	return edges
 }
@@ -3048,18 +4657,27 @@ func (m *RestaurantMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case restaurant.EdgeModifiers:
+		ids := make([]ent.Value, 0, len(m.modifiers))
+		for id := range m.modifiers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RestaurantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedmenu_items != nil {
 		edges = append(edges, restaurant.EdgeMenuItems)
 	}
 	if m.removedcategories != nil {
 		edges = append(edges, restaurant.EdgeCategories)
+	}
+	if m.removedmodifiers != nil {
+		edges = append(edges, restaurant.EdgeModifiers)
 	}
 	return edges
 }
@@ -3080,13 +4698,19 @@ func (m *RestaurantMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case restaurant.EdgeModifiers:
+		ids := make([]ent.Value, 0, len(m.removedmodifiers))
+		for id := range m.removedmodifiers {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RestaurantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.cleareduser {
 		edges = append(edges, restaurant.EdgeUser)
 	}
@@ -3095,6 +4719,9 @@ func (m *RestaurantMutation) ClearedEdges() []string {
 	}
 	if m.clearedcategories {
 		edges = append(edges, restaurant.EdgeCategories)
+	}
+	if m.clearedmodifiers {
+		edges = append(edges, restaurant.EdgeModifiers)
 	}
 	return edges
 }
@@ -3109,6 +4736,8 @@ func (m *RestaurantMutation) EdgeCleared(name string) bool {
 		return m.clearedmenu_items
 	case restaurant.EdgeCategories:
 		return m.clearedcategories
+	case restaurant.EdgeModifiers:
+		return m.clearedmodifiers
 	}
 	return false
 }
@@ -3136,6 +4765,9 @@ func (m *RestaurantMutation) ResetEdge(name string) error {
 		return nil
 	case restaurant.EdgeCategories:
 		m.ResetCategories()
+		return nil
+	case restaurant.EdgeModifiers:
+		m.ResetModifiers()
 		return nil
 	}
 	return fmt.Errorf("unknown Restaurant edge %s", name)

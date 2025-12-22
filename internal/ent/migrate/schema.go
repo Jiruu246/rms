@@ -64,6 +64,55 @@ var (
 			},
 		},
 	}
+	// ModifiersColumns holds the columns for the "modifiers" table.
+	ModifiersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "required", Type: field.TypeBool, Default: false},
+		{Name: "multi_select", Type: field.TypeBool, Default: false},
+		{Name: "max", Type: field.TypeInt, Default: 1},
+		{Name: "restaurant_id", Type: field.TypeUUID},
+	}
+	// ModifiersTable holds the schema information for the "modifiers" table.
+	ModifiersTable = &schema.Table{
+		Name:       "modifiers",
+		Columns:    ModifiersColumns,
+		PrimaryKey: []*schema.Column{ModifiersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modifiers_restaurants_modifiers",
+				Columns:    []*schema.Column{ModifiersColumns[6]},
+				RefColumns: []*schema.Column{RestaurantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// ModifierOptionsColumns holds the columns for the "modifier_options" table.
+	ModifierOptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "name", Type: field.TypeString, Size: 255},
+		{Name: "price", Type: field.TypeFloat64, Default: 0},
+		{Name: "image_url", Type: field.TypeString, Nullable: true},
+		{Name: "available", Type: field.TypeBool, Default: true},
+		{Name: "pre_select", Type: field.TypeBool, Default: false},
+		{Name: "modifier_id", Type: field.TypeUUID},
+	}
+	// ModifierOptionsTable holds the schema information for the "modifier_options" table.
+	ModifierOptionsTable = &schema.Table{
+		Name:       "modifier_options",
+		Columns:    ModifierOptionsColumns,
+		PrimaryKey: []*schema.Column{ModifierOptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "modifier_options_modifiers_modifier_options",
+				Columns:    []*schema.Column{ModifierOptionsColumns[7]},
+				RefColumns: []*schema.Column{ModifiersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// RestaurantsColumns holds the columns for the "restaurants" table.
 	RestaurantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -118,6 +167,8 @@ var (
 	Tables = []*schema.Table{
 		CategoriesTable,
 		MenuItemsTable,
+		ModifiersTable,
+		ModifierOptionsTable,
 		RestaurantsTable,
 		UsersTable,
 	}
@@ -127,5 +178,7 @@ func init() {
 	CategoriesTable.ForeignKeys[0].RefTable = RestaurantsTable
 	MenuItemsTable.ForeignKeys[0].RefTable = CategoriesTable
 	MenuItemsTable.ForeignKeys[1].RefTable = RestaurantsTable
+	ModifiersTable.ForeignKeys[0].RefTable = RestaurantsTable
+	ModifierOptionsTable.ForeignKeys[0].RefTable = ModifiersTable
 	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
 }

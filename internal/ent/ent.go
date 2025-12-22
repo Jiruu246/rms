@@ -14,6 +14,8 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
+	"github.com/Jiruu246/rms/internal/ent/modifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
 )
@@ -76,10 +78,12 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			category.Table:   category.ValidColumn,
-			menuitem.Table:   menuitem.ValidColumn,
-			restaurant.Table: restaurant.ValidColumn,
-			user.Table:       user.ValidColumn,
+			category.Table:       category.ValidColumn,
+			menuitem.Table:       menuitem.ValidColumn,
+			modifier.Table:       modifier.ValidColumn,
+			modifieroption.Table: modifieroption.ValidColumn,
+			restaurant.Table:     restaurant.ValidColumn,
+			user.Table:           user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

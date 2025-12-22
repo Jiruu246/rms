@@ -12,6 +12,12 @@ type Category func(*sql.Selector)
 // MenuItem is the predicate function for menuitem builders.
 type MenuItem func(*sql.Selector)
 
+// Modifier is the predicate function for modifier builders.
+type Modifier func(*sql.Selector)
+
+// ModifierOption is the predicate function for modifieroption builders.
+type ModifierOption func(*sql.Selector)
+
 // Restaurant is the predicate function for restaurant builders.
 type Restaurant func(*sql.Selector)
 

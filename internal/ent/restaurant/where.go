@@ -1095,6 +1095,29 @@ func HasCategoriesWith(preds ...predicate.Category) predicate.Restaurant {
 	})
 }
 
+// HasModifiers applies the HasEdge predicate on the "modifiers" edge.
+func HasModifiers() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ModifiersTable, ModifiersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModifiersWith applies the HasEdge predicate on the "modifiers" edge with a given conditions (other predicates).
+func HasModifiersWith(preds ...predicate.Modifier) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := newModifiersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Restaurant) predicate.Restaurant {
 	return predicate.Restaurant(sql.AndPredicates(predicates...))

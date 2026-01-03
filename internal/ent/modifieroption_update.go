@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
+	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/google/uuid"
 )
@@ -138,6 +139,21 @@ func (_u *ModifierOptionUpdate) SetModifier(v *Modifier) *ModifierOptionUpdate {
 	return _u.SetModifierID(v.ID)
 }
 
+// AddOrderItemModifierOptionIDs adds the "order_item_modifier_options" edge to the OrderItemModifierOption entity by IDs.
+func (_u *ModifierOptionUpdate) AddOrderItemModifierOptionIDs(ids ...int) *ModifierOptionUpdate {
+	_u.mutation.AddOrderItemModifierOptionIDs(ids...)
+	return _u
+}
+
+// AddOrderItemModifierOptions adds the "order_item_modifier_options" edges to the OrderItemModifierOption entity.
+func (_u *ModifierOptionUpdate) AddOrderItemModifierOptions(v ...*OrderItemModifierOption) *ModifierOptionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrderItemModifierOptionIDs(ids...)
+}
+
 // Mutation returns the ModifierOptionMutation object of the builder.
 func (_u *ModifierOptionUpdate) Mutation() *ModifierOptionMutation {
 	return _u.mutation
@@ -147,6 +163,27 @@ func (_u *ModifierOptionUpdate) Mutation() *ModifierOptionMutation {
 func (_u *ModifierOptionUpdate) ClearModifier() *ModifierOptionUpdate {
 	_u.mutation.ClearModifier()
 	return _u
+}
+
+// ClearOrderItemModifierOptions clears all "order_item_modifier_options" edges to the OrderItemModifierOption entity.
+func (_u *ModifierOptionUpdate) ClearOrderItemModifierOptions() *ModifierOptionUpdate {
+	_u.mutation.ClearOrderItemModifierOptions()
+	return _u
+}
+
+// RemoveOrderItemModifierOptionIDs removes the "order_item_modifier_options" edge to OrderItemModifierOption entities by IDs.
+func (_u *ModifierOptionUpdate) RemoveOrderItemModifierOptionIDs(ids ...int) *ModifierOptionUpdate {
+	_u.mutation.RemoveOrderItemModifierOptionIDs(ids...)
+	return _u
+}
+
+// RemoveOrderItemModifierOptions removes "order_item_modifier_options" edges to OrderItemModifierOption entities.
+func (_u *ModifierOptionUpdate) RemoveOrderItemModifierOptions(v ...*OrderItemModifierOption) *ModifierOptionUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrderItemModifierOptionIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -256,6 +293,51 @@ func (_u *ModifierOptionUpdate) sqlSave(ctx context.Context) (_node int, err err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrderItemModifierOptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrderItemModifierOptionsIDs(); len(nodes) > 0 && !_u.mutation.OrderItemModifierOptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrderItemModifierOptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -391,6 +473,21 @@ func (_u *ModifierOptionUpdateOne) SetModifier(v *Modifier) *ModifierOptionUpdat
 	return _u.SetModifierID(v.ID)
 }
 
+// AddOrderItemModifierOptionIDs adds the "order_item_modifier_options" edge to the OrderItemModifierOption entity by IDs.
+func (_u *ModifierOptionUpdateOne) AddOrderItemModifierOptionIDs(ids ...int) *ModifierOptionUpdateOne {
+	_u.mutation.AddOrderItemModifierOptionIDs(ids...)
+	return _u
+}
+
+// AddOrderItemModifierOptions adds the "order_item_modifier_options" edges to the OrderItemModifierOption entity.
+func (_u *ModifierOptionUpdateOne) AddOrderItemModifierOptions(v ...*OrderItemModifierOption) *ModifierOptionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrderItemModifierOptionIDs(ids...)
+}
+
 // Mutation returns the ModifierOptionMutation object of the builder.
 func (_u *ModifierOptionUpdateOne) Mutation() *ModifierOptionMutation {
 	return _u.mutation
@@ -400,6 +497,27 @@ func (_u *ModifierOptionUpdateOne) Mutation() *ModifierOptionMutation {
 func (_u *ModifierOptionUpdateOne) ClearModifier() *ModifierOptionUpdateOne {
 	_u.mutation.ClearModifier()
 	return _u
+}
+
+// ClearOrderItemModifierOptions clears all "order_item_modifier_options" edges to the OrderItemModifierOption entity.
+func (_u *ModifierOptionUpdateOne) ClearOrderItemModifierOptions() *ModifierOptionUpdateOne {
+	_u.mutation.ClearOrderItemModifierOptions()
+	return _u
+}
+
+// RemoveOrderItemModifierOptionIDs removes the "order_item_modifier_options" edge to OrderItemModifierOption entities by IDs.
+func (_u *ModifierOptionUpdateOne) RemoveOrderItemModifierOptionIDs(ids ...int) *ModifierOptionUpdateOne {
+	_u.mutation.RemoveOrderItemModifierOptionIDs(ids...)
+	return _u
+}
+
+// RemoveOrderItemModifierOptions removes "order_item_modifier_options" edges to OrderItemModifierOption entities.
+func (_u *ModifierOptionUpdateOne) RemoveOrderItemModifierOptions(v ...*OrderItemModifierOption) *ModifierOptionUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrderItemModifierOptionIDs(ids...)
 }
 
 // Where appends a list predicates to the ModifierOptionUpdate builder.
@@ -539,6 +657,51 @@ func (_u *ModifierOptionUpdateOne) sqlSave(ctx context.Context) (_node *Modifier
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrderItemModifierOptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrderItemModifierOptionsIDs(); len(nodes) > 0 && !_u.mutation.OrderItemModifierOptionsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrderItemModifierOptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

@@ -486,6 +486,7 @@ func (_q *CategoryQuery) loadMenuItems(ctx context.Context, query *MenuItemQuery
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(menuitem.FieldCategoryID)
 	}

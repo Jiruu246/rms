@@ -8,10 +8,10 @@ import (
 )
 
 type MenuItemService interface {
-	Create(ctx context.Context, req *dto.CreateMenuItemRequest) (*dto.MenuItemResponse, error)
-	GetAll(ctx context.Context) ([]*dto.MenuItemResponse, error)
-	GetByID(ctx context.Context, id int64) (*dto.MenuItemResponse, error)
-	Update(ctx context.Context, id int64, req *dto.UpdateMenuItemRequest) (*dto.MenuItemResponse, error)
+	Create(ctx context.Context, req *dto.CreateMenuItemRequest) (*dto.MenuItem, error)
+	GetAll(ctx context.Context) ([]*dto.MenuItem, error)
+	GetByID(ctx context.Context, id int64) (*dto.MenuItem, error)
+	Update(ctx context.Context, id int64, req *dto.UpdateMenuItemRequest) (*dto.MenuItem, error)
 	Delete(ctx context.Context, id int64) error
 }
 
@@ -23,19 +23,19 @@ func NewMenuItemService(repo repos.MenuItemRepository) MenuItemService {
 	return &menuItemService{repo: repo}
 }
 
-func (s *menuItemService) Create(ctx context.Context, req *dto.CreateMenuItemRequest) (*dto.MenuItemResponse, error) {
+func (s *menuItemService) Create(ctx context.Context, req *dto.CreateMenuItemRequest) (*dto.MenuItem, error) {
 	return s.repo.Create(ctx, req)
 }
 
-func (s *menuItemService) GetAll(ctx context.Context) ([]*dto.MenuItemResponse, error) {
+func (s *menuItemService) GetAll(ctx context.Context) ([]*dto.MenuItem, error) {
 	return s.repo.GetAll(ctx)
 }
 
-func (s *menuItemService) GetByID(ctx context.Context, id int64) (*dto.MenuItemResponse, error) {
+func (s *menuItemService) GetByID(ctx context.Context, id int64) (*dto.MenuItem, error) {
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *menuItemService) Update(ctx context.Context, id int64, req *dto.UpdateMenuItemRequest) (*dto.MenuItemResponse, error) {
+func (s *menuItemService) Update(ctx context.Context, id int64, req *dto.UpdateMenuItemRequest) (*dto.MenuItem, error) {
 	return s.repo.Update(ctx, id, req)
 }
 

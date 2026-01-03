@@ -42,6 +42,7 @@ var (
 		{Name: "image_url", Type: field.TypeString, Nullable: true},
 		{Name: "is_available", Type: field.TypeBool, Default: true},
 		{Name: "category_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "modifier_menu_items", Type: field.TypeUUID, Nullable: true},
 		{Name: "restaurant_id", Type: field.TypeUUID},
 	}
 	// MenuItemsTable holds the schema information for the "menu_items" table.
@@ -57,8 +58,14 @@ var (
 				OnDelete:   schema.SetNull,
 			},
 			{
-				Symbol:     "menu_items_restaurants_menu_items",
+				Symbol:     "menu_items_modifiers_menu_items",
 				Columns:    []*schema.Column{MenuItemsColumns[8]},
+				RefColumns: []*schema.Column{ModifiersColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "menu_items_restaurants_menu_items",
+				Columns:    []*schema.Column{MenuItemsColumns[9]},
 				RefColumns: []*schema.Column{RestaurantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -72,6 +79,7 @@ var (
 		{Name: "required", Type: field.TypeBool, Default: false},
 		{Name: "multi_select", Type: field.TypeBool, Default: false},
 		{Name: "max", Type: field.TypeInt, Default: 1},
+		{Name: "menu_item_modifiers", Type: field.TypeInt64, Nullable: true},
 		{Name: "restaurant_id", Type: field.TypeUUID},
 	}
 	// ModifiersTable holds the schema information for the "modifiers" table.
@@ -81,8 +89,14 @@ var (
 		PrimaryKey: []*schema.Column{ModifiersColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
 			{
-				Symbol:     "modifiers_restaurants_modifiers",
+				Symbol:     "modifiers_menu_items_modifiers",
 				Columns:    []*schema.Column{ModifiersColumns[6]},
+				RefColumns: []*schema.Column{MenuItemsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "modifiers_restaurants_modifiers",
+				Columns:    []*schema.Column{ModifiersColumns[7]},
 				RefColumns: []*schema.Column{RestaurantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},
@@ -110,6 +124,95 @@ var (
 				Columns:    []*schema.Column{ModifierOptionsColumns[7]},
 				RefColumns: []*schema.Column{ModifiersColumns[0]},
 				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// OrdersColumns holds the columns for the "orders" table.
+	OrdersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "order_type", Type: field.TypeEnum, Enums: []string{"DINE_IN", "TAKEOUT", "DELIVERY"}},
+		{Name: "order_status", Type: field.TypeEnum, Enums: []string{"OPEN", "CONFIRMED", "COMPLETED", "CANCELLED"}, Default: "OPEN"},
+		{Name: "payment_status", Type: field.TypeEnum, Enums: []string{"UNPAID", "PENDING", "PAID", "REFUNDED"}, Default: "UNPAID"},
+		{Name: "restaurant_id", Type: field.TypeUUID},
+	}
+	// OrdersTable holds the schema information for the "orders" table.
+	OrdersTable = &schema.Table{
+		Name:       "orders",
+		Columns:    OrdersColumns,
+		PrimaryKey: []*schema.Column{OrdersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "orders_restaurants_orders",
+				Columns:    []*schema.Column{OrdersColumns[5]},
+				RefColumns: []*schema.Column{RestaurantsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// OrderItemsColumns holds the columns for the "order_items" table.
+	OrderItemsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "quantity", Type: field.TypeInt, Default: 1},
+		{Name: "special_instructions", Type: field.TypeString, Nullable: true},
+		{Name: "item_name", Type: field.TypeString},
+		{Name: "item_price", Type: field.TypeFloat64},
+		{Name: "menu_item_id", Type: field.TypeInt64},
+		{Name: "order_id", Type: field.TypeUUID},
+	}
+	// OrderItemsTable holds the schema information for the "order_items" table.
+	OrderItemsTable = &schema.Table{
+		Name:       "order_items",
+		Columns:    OrderItemsColumns,
+		PrimaryKey: []*schema.Column{OrderItemsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "order_items_menu_items_order_items",
+				Columns:    []*schema.Column{OrderItemsColumns[5]},
+				RefColumns: []*schema.Column{MenuItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "order_items_orders_order_items",
+				Columns:    []*schema.Column{OrderItemsColumns[6]},
+				RefColumns: []*schema.Column{OrdersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
+	// OrderItemModifierOptionsColumns holds the columns for the "order_item_modifier_options" table.
+	OrderItemModifierOptionsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "quantity", Type: field.TypeInt, Default: 1},
+		{Name: "option_name", Type: field.TypeString},
+		{Name: "option_price", Type: field.TypeFloat64},
+		{Name: "modifier_option_id", Type: field.TypeUUID},
+		{Name: "order_item_id", Type: field.TypeUUID},
+	}
+	// OrderItemModifierOptionsTable holds the schema information for the "order_item_modifier_options" table.
+	OrderItemModifierOptionsTable = &schema.Table{
+		Name:       "order_item_modifier_options",
+		Columns:    OrderItemModifierOptionsColumns,
+		PrimaryKey: []*schema.Column{OrderItemModifierOptionsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "order_item_modifier_options_modifier_options_order_item_modifier_options",
+				Columns:    []*schema.Column{OrderItemModifierOptionsColumns[4]},
+				RefColumns: []*schema.Column{ModifierOptionsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "order_item_modifier_options_order_items_order_item_modifier_options",
+				Columns:    []*schema.Column{OrderItemModifierOptionsColumns[5]},
+				RefColumns: []*schema.Column{OrderItemsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "orderitemmodifieroption_order_item_id_modifier_option_id",
+				Unique:  true,
+				Columns: []*schema.Column{OrderItemModifierOptionsColumns[5], OrderItemModifierOptionsColumns[4]},
 			},
 		},
 	}
@@ -169,6 +272,9 @@ var (
 		MenuItemsTable,
 		ModifiersTable,
 		ModifierOptionsTable,
+		OrdersTable,
+		OrderItemsTable,
+		OrderItemModifierOptionsTable,
 		RestaurantsTable,
 		UsersTable,
 	}
@@ -177,8 +283,15 @@ var (
 func init() {
 	CategoriesTable.ForeignKeys[0].RefTable = RestaurantsTable
 	MenuItemsTable.ForeignKeys[0].RefTable = CategoriesTable
-	MenuItemsTable.ForeignKeys[1].RefTable = RestaurantsTable
-	ModifiersTable.ForeignKeys[0].RefTable = RestaurantsTable
+	MenuItemsTable.ForeignKeys[1].RefTable = ModifiersTable
+	MenuItemsTable.ForeignKeys[2].RefTable = RestaurantsTable
+	ModifiersTable.ForeignKeys[0].RefTable = MenuItemsTable
+	ModifiersTable.ForeignKeys[1].RefTable = RestaurantsTable
 	ModifierOptionsTable.ForeignKeys[0].RefTable = ModifiersTable
+	OrdersTable.ForeignKeys[0].RefTable = RestaurantsTable
+	OrderItemsTable.ForeignKeys[0].RefTable = MenuItemsTable
+	OrderItemsTable.ForeignKeys[1].RefTable = OrdersTable
+	OrderItemModifierOptionsTable.ForeignKeys[0].RefTable = ModifierOptionsTable
+	OrderItemModifierOptionsTable.ForeignKeys[1].RefTable = OrderItemsTable
 	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
 }

@@ -18,6 +18,15 @@ type Modifier func(*sql.Selector)
 // ModifierOption is the predicate function for modifieroption builders.
 type ModifierOption func(*sql.Selector)
 
+// Order is the predicate function for order builders.
+type Order func(*sql.Selector)
+
+// OrderItem is the predicate function for orderitem builders.
+type OrderItem func(*sql.Selector)
+
+// OrderItemModifierOption is the predicate function for orderitemmodifieroption builders.
+type OrderItemModifierOption func(*sql.Selector)
+
 // Restaurant is the predicate function for restaurant builders.
 type Restaurant func(*sql.Selector)
 

@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
+	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/google/uuid"
 )
 
@@ -121,6 +122,21 @@ func (_c *ModifierOptionCreate) SetNillableID(v *uuid.UUID) *ModifierOptionCreat
 // SetModifier sets the "modifier" edge to the Modifier entity.
 func (_c *ModifierOptionCreate) SetModifier(v *Modifier) *ModifierOptionCreate {
 	return _c.SetModifierID(v.ID)
+}
+
+// AddOrderItemModifierOptionIDs adds the "order_item_modifier_options" edge to the OrderItemModifierOption entity by IDs.
+func (_c *ModifierOptionCreate) AddOrderItemModifierOptionIDs(ids ...int) *ModifierOptionCreate {
+	_c.mutation.AddOrderItemModifierOptionIDs(ids...)
+	return _c
+}
+
+// AddOrderItemModifierOptions adds the "order_item_modifier_options" edges to the OrderItemModifierOption entity.
+func (_c *ModifierOptionCreate) AddOrderItemModifierOptions(v ...*OrderItemModifierOption) *ModifierOptionCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddOrderItemModifierOptionIDs(ids...)
 }
 
 // Mutation returns the ModifierOptionMutation object of the builder.
@@ -282,6 +298,22 @@ func (_c *ModifierOptionCreate) createSpec() (*ModifierOption, *sqlgraph.CreateS
 			edge.Target.Nodes = append(edge.Target.Nodes, k)
 		}
 		_node.ModifierID = nodes[0]
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.OrderItemModifierOptionsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifieroption.OrderItemModifierOptionsTable,
+			Columns: []string{modifieroption.OrderItemModifierOptionsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitemmodifieroption.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
 		_spec.Edges = append(_spec.Edges, edge)
 	}
 	return _node, _spec

@@ -48,7 +48,7 @@ func (s *ModifierOptionTestSuite) TestCreateModifierOption() {
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.ModifierOptionResponse]
+				var response utils.APIResponse[dto.ModifierOption]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal("Test Modifier Option", response.Data.Name)
@@ -110,7 +110,7 @@ func (s *ModifierOptionTestSuite) TestGetModifierOption() {
 			url:      path.Join(modifierOptionAPIBase, initialOption.ID.String()),
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.ModifierOptionResponse]
+				var response utils.APIResponse[dto.ModifierOption]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal(initialOption.ID, response.Data.ID)
@@ -158,7 +158,7 @@ func (s *ModifierOptionTestSuite) TestUpdateModifierOption() {
 			},
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var updatedOption utils.APIResponse[dto.ModifierOptionResponse]
+				var updatedOption utils.APIResponse[dto.ModifierOption]
 				err := json.Unmarshal(w.Body.Bytes(), &updatedOption)
 				s.Require().NoError(err)
 				s.Equal(initialOption.ID, updatedOption.Data.ID)

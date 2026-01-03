@@ -50,5 +50,6 @@ func (Modifier) Edges() []ent.Edge {
 			Required().
 			Field("restaurant_id"),
 		edge.To("modifier_options", ModifierOption.Type),
+		edge.To("menu_items", MenuItem.Type),
 	}
 }

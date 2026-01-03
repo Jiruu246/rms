@@ -9,6 +9,9 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
+	"github.com/Jiruu246/rms/internal/ent/order"
+	"github.com/Jiruu246/rms/internal/ent/orderitem"
+	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -207,6 +210,49 @@ func init() {
 	modifieroptionDescID := modifieroptionFields[0].Descriptor()
 	// modifieroption.DefaultID holds the default value on creation for the id field.
 	modifieroption.DefaultID = modifieroptionDescID.Default.(func() uuid.UUID)
+	orderMixin := schema.Order{}.Mixin()
+	orderMixinFields0 := orderMixin[0].Fields()
+	_ = orderMixinFields0
+	orderFields := schema.Order{}.Fields()
+	_ = orderFields
+	// orderDescUpdateTime is the schema descriptor for update_time field.
+	orderDescUpdateTime := orderMixinFields0[0].Descriptor()
+	// order.DefaultUpdateTime holds the default value on creation for the update_time field.
+	order.DefaultUpdateTime = orderDescUpdateTime.Default.(func() time.Time)
+	// order.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	order.UpdateDefaultUpdateTime = orderDescUpdateTime.UpdateDefault.(func() time.Time)
+	// orderDescID is the schema descriptor for id field.
+	orderDescID := orderFields[0].Descriptor()
+	// order.DefaultID holds the default value on creation for the id field.
+	order.DefaultID = orderDescID.Default.(func() uuid.UUID)
+	orderitemFields := schema.OrderItem{}.Fields()
+	_ = orderitemFields
+	// orderitemDescQuantity is the schema descriptor for quantity field.
+	orderitemDescQuantity := orderitemFields[1].Descriptor()
+	// orderitem.DefaultQuantity holds the default value on creation for the quantity field.
+	orderitem.DefaultQuantity = orderitemDescQuantity.Default.(int)
+	// orderitem.QuantityValidator is a validator for the "quantity" field. It is called by the builders before save.
+	orderitem.QuantityValidator = orderitemDescQuantity.Validators[0].(func(int) error)
+	// orderitemDescItemName is the schema descriptor for item_name field.
+	orderitemDescItemName := orderitemFields[3].Descriptor()
+	// orderitem.ItemNameValidator is a validator for the "item_name" field. It is called by the builders before save.
+	orderitem.ItemNameValidator = orderitemDescItemName.Validators[0].(func(string) error)
+	// orderitemDescID is the schema descriptor for id field.
+	orderitemDescID := orderitemFields[0].Descriptor()
+	// orderitem.DefaultID holds the default value on creation for the id field.
+	orderitem.DefaultID = orderitemDescID.Default.(func() uuid.UUID)
+	orderitemmodifieroptionFields := schema.OrderItemModifierOption{}.Fields()
+	_ = orderitemmodifieroptionFields
+	// orderitemmodifieroptionDescQuantity is the schema descriptor for quantity field.
+	orderitemmodifieroptionDescQuantity := orderitemmodifieroptionFields[2].Descriptor()
+	// orderitemmodifieroption.DefaultQuantity holds the default value on creation for the quantity field.
+	orderitemmodifieroption.DefaultQuantity = orderitemmodifieroptionDescQuantity.Default.(int)
+	// orderitemmodifieroption.QuantityValidator is a validator for the "quantity" field. It is called by the builders before save.
+	orderitemmodifieroption.QuantityValidator = orderitemmodifieroptionDescQuantity.Validators[0].(func(int) error)
+	// orderitemmodifieroptionDescOptionName is the schema descriptor for option_name field.
+	orderitemmodifieroptionDescOptionName := orderitemmodifieroptionFields[3].Descriptor()
+	// orderitemmodifieroption.OptionNameValidator is a validator for the "option_name" field. It is called by the builders before save.
+	orderitemmodifieroption.OptionNameValidator = orderitemmodifieroptionDescOptionName.Validators[0].(func(string) error)
 	restaurantMixin := schema.Restaurant{}.Mixin()
 	restaurantMixinFields0 := restaurantMixin[0].Fields()
 	_ = restaurantMixinFields0

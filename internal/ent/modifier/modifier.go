@@ -31,6 +31,8 @@ const (
 	EdgeRestaurant = "restaurant"
 	// EdgeModifierOptions holds the string denoting the modifier_options edge name in mutations.
 	EdgeModifierOptions = "modifier_options"
+	// EdgeMenuItems holds the string denoting the menu_items edge name in mutations.
+	EdgeMenuItems = "menu_items"
 	// Table holds the table name of the modifier in the database.
 	Table = "modifiers"
 	// RestaurantTable is the table that holds the restaurant relation/edge.
@@ -47,6 +49,13 @@ const (
 	ModifierOptionsInverseTable = "modifier_options"
 	// ModifierOptionsColumn is the table column denoting the modifier_options relation/edge.
 	ModifierOptionsColumn = "modifier_id"
+	// MenuItemsTable is the table that holds the menu_items relation/edge.
+	MenuItemsTable = "menu_items"
+	// MenuItemsInverseTable is the table name for the MenuItem entity.
+	// It exists in this package in order to avoid circular dependency with the "menuitem" package.
+	MenuItemsInverseTable = "menu_items"
+	// MenuItemsColumn is the table column denoting the menu_items relation/edge.
+	MenuItemsColumn = "modifier_menu_items"
 )
 
 // Columns holds all SQL columns for modifier fields.
@@ -60,10 +69,21 @@ var Columns = []string{
 	FieldRestaurantID,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "modifiers"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"menu_item_modifiers",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -147,6 +167,20 @@ func ByModifierOptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newModifierOptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMenuItemsCount orders the results by menu_items count.
+func ByMenuItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMenuItemsStep(), opts...)
+	}
+}
+
+// ByMenuItems orders the results by menu_items terms.
+func ByMenuItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMenuItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRestaurantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -159,5 +193,12 @@ func newModifierOptionsStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ModifierOptionsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ModifierOptionsTable, ModifierOptionsColumn),
+	)
+}
+func newMenuItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MenuItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MenuItemsTable, MenuItemsColumn),
 	)
 }

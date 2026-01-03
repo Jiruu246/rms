@@ -11,6 +11,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
@@ -134,6 +135,21 @@ func (_u *ModifierUpdate) AddModifierOptions(v ...*ModifierOption) *ModifierUpda
 	return _u.AddModifierOptionIDs(ids...)
 }
 
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_u *ModifierUpdate) AddMenuItemIDs(ids ...int64) *ModifierUpdate {
+	_u.mutation.AddMenuItemIDs(ids...)
+	return _u
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_u *ModifierUpdate) AddMenuItems(v ...*MenuItem) *ModifierUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMenuItemIDs(ids...)
+}
+
 // Mutation returns the ModifierMutation object of the builder.
 func (_u *ModifierUpdate) Mutation() *ModifierMutation {
 	return _u.mutation
@@ -164,6 +180,27 @@ func (_u *ModifierUpdate) RemoveModifierOptions(v ...*ModifierOption) *ModifierU
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveModifierOptionIDs(ids...)
+}
+
+// ClearMenuItems clears all "menu_items" edges to the MenuItem entity.
+func (_u *ModifierUpdate) ClearMenuItems() *ModifierUpdate {
+	_u.mutation.ClearMenuItems()
+	return _u
+}
+
+// RemoveMenuItemIDs removes the "menu_items" edge to MenuItem entities by IDs.
+func (_u *ModifierUpdate) RemoveMenuItemIDs(ids ...int64) *ModifierUpdate {
+	_u.mutation.RemoveMenuItemIDs(ids...)
+	return _u
+}
+
+// RemoveMenuItems removes "menu_items" edges to MenuItem entities.
+func (_u *ModifierUpdate) RemoveMenuItems(v ...*MenuItem) *ModifierUpdate {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMenuItemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -324,6 +361,51 @@ func (_u *ModifierUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifier.MenuItemsTable,
+			Columns: []string{modifier.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMenuItemsIDs(); len(nodes) > 0 && !_u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifier.MenuItemsTable,
+			Columns: []string{modifier.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifier.MenuItemsTable,
+			Columns: []string{modifier.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{modifier.Label}
@@ -447,6 +529,21 @@ func (_u *ModifierUpdateOne) AddModifierOptions(v ...*ModifierOption) *ModifierU
 	return _u.AddModifierOptionIDs(ids...)
 }
 
+// AddMenuItemIDs adds the "menu_items" edge to the MenuItem entity by IDs.
+func (_u *ModifierUpdateOne) AddMenuItemIDs(ids ...int64) *ModifierUpdateOne {
+	_u.mutation.AddMenuItemIDs(ids...)
+	return _u
+}
+
+// AddMenuItems adds the "menu_items" edges to the MenuItem entity.
+func (_u *ModifierUpdateOne) AddMenuItems(v ...*MenuItem) *ModifierUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMenuItemIDs(ids...)
+}
+
 // Mutation returns the ModifierMutation object of the builder.
 func (_u *ModifierUpdateOne) Mutation() *ModifierMutation {
 	return _u.mutation
@@ -477,6 +574,27 @@ func (_u *ModifierUpdateOne) RemoveModifierOptions(v ...*ModifierOption) *Modifi
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveModifierOptionIDs(ids...)
+}
+
+// ClearMenuItems clears all "menu_items" edges to the MenuItem entity.
+func (_u *ModifierUpdateOne) ClearMenuItems() *ModifierUpdateOne {
+	_u.mutation.ClearMenuItems()
+	return _u
+}
+
+// RemoveMenuItemIDs removes the "menu_items" edge to MenuItem entities by IDs.
+func (_u *ModifierUpdateOne) RemoveMenuItemIDs(ids ...int64) *ModifierUpdateOne {
+	_u.mutation.RemoveMenuItemIDs(ids...)
+	return _u
+}
+
+// RemoveMenuItems removes "menu_items" edges to MenuItem entities.
+func (_u *ModifierUpdateOne) RemoveMenuItems(v ...*MenuItem) *ModifierUpdateOne {
+	ids := make([]int64, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMenuItemIDs(ids...)
 }
 
 // Where appends a list predicates to the ModifierUpdate builder.
@@ -660,6 +778,51 @@ func (_u *ModifierUpdateOne) sqlSave(ctx context.Context) (_node *Modifier, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(modifieroption.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifier.MenuItemsTable,
+			Columns: []string{modifier.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMenuItemsIDs(); len(nodes) > 0 && !_u.mutation.MenuItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifier.MenuItemsTable,
+			Columns: []string{modifier.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MenuItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   modifier.MenuItemsTable,
+			Columns: []string{modifier.MenuItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(menuitem.FieldID, field.TypeInt64),
 			},
 		}
 		for _, k := range nodes {

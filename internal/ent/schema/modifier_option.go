@@ -51,5 +51,6 @@ func (ModifierOption) Edges() []ent.Edge {
 			Unique().
 			Required().
 			Field("modifier_id"),
+		edge.To("order_item_modifier_options", OrderItemModifierOption.Type),
 	}
 }

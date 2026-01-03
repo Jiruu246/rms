@@ -43,9 +43,11 @@ type ModifierOption struct {
 type ModifierOptionEdges struct {
 	// Modifier holds the value of the modifier edge.
 	Modifier *Modifier `json:"modifier,omitempty"`
+	// OrderItemModifierOptions holds the value of the order_item_modifier_options edge.
+	OrderItemModifierOptions []*OrderItemModifierOption `json:"order_item_modifier_options,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [1]bool
+	loadedTypes [2]bool
 }
 
 // ModifierOrErr returns the Modifier value or an error if the edge
@@ -57,6 +59,15 @@ func (e ModifierOptionEdges) ModifierOrErr() (*Modifier, error) {
 		return nil, &NotFoundError{label: modifier.Label}
 	}
 	return nil, &NotLoadedError{edge: "modifier"}
+}
+
+// OrderItemModifierOptionsOrErr returns the OrderItemModifierOptions value or an error if the edge
+// was not loaded in eager-loading.
+func (e ModifierOptionEdges) OrderItemModifierOptionsOrErr() ([]*OrderItemModifierOption, error) {
+	if e.loadedTypes[1] {
+		return e.OrderItemModifierOptions, nil
+	}
+	return nil, &NotLoadedError{edge: "order_item_modifier_options"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -153,6 +164,11 @@ func (_m *ModifierOption) Value(name string) (ent.Value, error) {
 // QueryModifier queries the "modifier" edge of the ModifierOption entity.
 func (_m *ModifierOption) QueryModifier() *ModifierQuery {
 	return NewModifierOptionClient(_m.config).QueryModifier(_m)
+}
+
+// QueryOrderItemModifierOptions queries the "order_item_modifier_options" edge of the ModifierOption entity.
+func (_m *ModifierOption) QueryOrderItemModifierOptions() *OrderItemModifierOptionQuery {
+	return NewModifierOptionClient(_m.config).QueryOrderItemModifierOptions(_m)
 }
 
 // Update returns a builder for updating this ModifierOption.

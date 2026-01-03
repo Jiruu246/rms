@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/Jiruu246/rms/internal/ent"
+	"github.com/Jiruu246/rms/internal/ent/order"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
 )
@@ -57,6 +58,10 @@ func CreateMenuItem(client *ent.Client, ctx context.Context) (*ent.MenuItem, err
 		return nil, err
 	}
 
+	return CreateMenuItemForRestaurant(client, ctx, restaurant)
+}
+
+func CreateMenuItemForRestaurant(client *ent.Client, ctx context.Context, restaurant *ent.Restaurant) (*ent.MenuItem, error) {
 	menuitem, err := client.MenuItem.Create().
 		SetName("Test Menu Item").
 		SetDescription("A test menu item description").
@@ -72,13 +77,34 @@ func CreateMenuItem(client *ent.Client, ctx context.Context) (*ent.MenuItem, err
 
 func CreateModifier(client *ent.Client, ctx context.Context) (*ent.Modifier, error) {
 	restaurant, err := SetupRestaurant(client, ctx)
-
 	if err != nil {
 		return nil, err
 	}
+
+	return CreateModifierForRestaurant(client, ctx, restaurant)
+}
+
+func CreateModifierForRestaurant(client *ent.Client, ctx context.Context, restaurant *ent.Restaurant) (*ent.Modifier, error) {
 	modifier, err := client.Modifier.Create().
 		SetName("Test Modifier").
 		SetRestaurant(restaurant).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return modifier, nil
+}
+
+func CreateModifierForItem(client *ent.Client, ctx context.Context, menuItem *ent.MenuItem) (*ent.Modifier, error) {
+	modifier, err := client.Modifier.Create().
+		SetName("Test Modifier").
+		SetRestaurantID(menuItem.RestaurantID).
+		Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+	_, err = client.MenuItem.UpdateOne(menuItem).
+		AddModifiers(modifier).
 		Save(ctx)
 	if err != nil {
 		return nil, err
@@ -91,6 +117,11 @@ func CreateModifierOption(client *ent.Client, ctx context.Context) (*ent.Modifie
 	if err != nil {
 		return nil, err
 	}
+
+	return CreateModifierOptionForModifier(client, ctx, modifier)
+}
+
+func CreateModifierOptionForModifier(client *ent.Client, ctx context.Context, modifier *ent.Modifier) (*ent.ModifierOption, error) {
 	modifierOption, err := client.ModifierOption.Create().
 		SetName("Test Modifier Option").
 		SetPrice(1.99).
@@ -100,6 +131,18 @@ func CreateModifierOption(client *ent.Client, ctx context.Context) (*ent.Modifie
 		return nil, err
 	}
 	return modifierOption, nil
+}
+
+func SetupOrder(client *ent.Client, ctx context.Context) (*ent.Order, error) {
+	restaurant, err := SetupRestaurant(client, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.Order.Create().
+		SetOrderType(order.OrderTypeDINE_IN).
+		SetRestaurant(restaurant).
+		Save(ctx)
 }
 
 func ptrString(s string) *string {

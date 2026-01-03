@@ -49,7 +49,7 @@ func (s *MenuItemTestSuite) TestCreateMenuItem() {
 			},
 			expectedStatus: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.MenuItemResponse]
+				var response utils.APIResponse[dto.MenuItem]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal("Test Menu Item", response.Data.Name)
@@ -118,7 +118,7 @@ func (s *MenuItemTestSuite) TestGetMenuItem() {
 			url:      path.Join(menuItemAPIBase, fmt.Sprintf("%d", initialMenuItem.ID)),
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.MenuItemResponse]
+				var response utils.APIResponse[dto.MenuItem]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal(initialMenuItem.ID, response.Data.ID)
@@ -132,7 +132,7 @@ func (s *MenuItemTestSuite) TestGetMenuItem() {
 			url:      menuItemAPIBase,
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[[]dto.MenuItemResponse]
+				var response utils.APIResponse[[]dto.MenuItem]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.True(response.Success)
@@ -187,7 +187,7 @@ func (s *MenuItemTestSuite) TestUpdateMenuItem() {
 			},
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var updatedMenuItem utils.APIResponse[dto.MenuItemResponse]
+				var updatedMenuItem utils.APIResponse[dto.MenuItem]
 				err := json.Unmarshal(w.Body.Bytes(), &updatedMenuItem)
 				s.Require().NoError(err)
 				s.Equal(initialMenuItem.ID, updatedMenuItem.Data.ID)

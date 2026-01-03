@@ -70,6 +70,7 @@ func (s *Server) routes() {
 	menuitemRepo := repos.NewEntMenuItemRepository(s.client)
 	modifierRepo := repos.NewEntModifierRepository(s.client)
 	modifierOptionRepo := repos.NewEntModifierOptionRepository(s.client)
+	orderRepo := repos.NewEntOrderRepository(s.client)
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
@@ -78,6 +79,7 @@ func (s *Server) routes() {
 	menuItemService := services.NewMenuItemService(menuitemRepo)
 	modifierService := services.NewModifierService(modifierRepo)
 	modifierOptionService := services.NewModifierOptionService(modifierOptionRepo)
+	orderService := services.NewOrderService(orderRepo, menuitemRepo, modifierOptionRepo)
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
@@ -86,10 +88,17 @@ func (s *Server) routes() {
 	menuItemHandler := handler.NewMenuItemHandler(menuItemService)
 	modifierHandler := handler.NewModifierHandler(modifierService)
 	modifierOptionHandler := handler.NewModifierOptionHandler(modifierOptionService)
+	orderHandler := handler.NewOrderHandler(orderService)
 
 	// API routes
 	api := s.engine.Group("/api")
 	{
+		public := api.Group("/public")
+		{
+			public.POST("/order", orderHandler.CreateOrderPub)
+			// TODO: Add session-based authentication middleware for public APIs\
+		}
+
 		categories := api.Group("/categories")
 		{
 			// Apply JWT middleware to all category routes
@@ -160,6 +169,17 @@ func (s *Server) routes() {
 				options.PATCH(":id", modifierOptionHandler.UpdateModifierOption)
 				options.DELETE(":id", modifierOptionHandler.DeleteModifierOption)
 			}
+		}
+
+		orders := api.Group("/orders")
+		{
+			orders.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+
+			orders.POST("", orderHandler.CreateOrderPub)
+			orders.GET("/:id", orderHandler.GetOrder)
+			orders.GET("", orderHandler.GetOrders)
+			orders.PATCH("/:id", orderHandler.UpdateOrder)
+			orders.DELETE("/:id", orderHandler.DeleteOrder)
 		}
 	}
 }

@@ -60,5 +60,7 @@ func (MenuItem) Edges() []ent.Edge {
 			Ref("menu_items").
 			Unique().
 			Field("category_id"),
+		edge.To("modifiers", Modifier.Type),
+		edge.To("order_items", OrderItem.Type),
 	}
 }

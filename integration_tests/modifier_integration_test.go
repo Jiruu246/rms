@@ -48,7 +48,7 @@ func (s *ModifierTestSuite) TestCreateModifier() {
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.ModifierResponse]
+				var response utils.APIResponse[dto.Modifier]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal("Test Modifier", response.Data.Name)
@@ -110,7 +110,7 @@ func (s *ModifierTestSuite) TestGetModifier() {
 			url:      path.Join(modifierAPIBase, initialModifier.ID.String()),
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.ModifierResponse]
+				var response utils.APIResponse[dto.Modifier]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal(initialModifier.ID, response.Data.ID)
@@ -158,7 +158,7 @@ func (s *ModifierTestSuite) TestUpdateModifier() {
 			},
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var updatedModifier utils.APIResponse[dto.ModifierResponse]
+				var updatedModifier utils.APIResponse[dto.Modifier]
 				err := json.Unmarshal(w.Body.Bytes(), &updatedModifier)
 				s.Require().NoError(err)
 				s.Equal(initialModifier.ID, updatedModifier.Data.ID)

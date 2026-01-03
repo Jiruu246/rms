@@ -22,14 +22,15 @@ type UpdateMenuItemRequest struct {
 	CategoryID  *uuid.UUID `json:"category_id"`
 }
 
-type MenuItemResponse struct {
-	ID           int64     `json:"id"`
-	Name         string    `json:"name"`
-	Description  string    `json:"description"`
-	Price        float64   `json:"price"`
-	IsAvailable  bool      `json:"is_available"`
-	RestaurantID uuid.UUID `json:"restaurant_id"`
-	CategoryID   uuid.UUID `json:"category_id"`
+type MenuItem struct {
+	ID           int64      `json:"id"`
+	Name         string     `json:"name"`
+	Description  string     `json:"description"`
+	Price        float64    `json:"price"`
+	IsAvailable  bool       `json:"is_available"`
+	RestaurantID uuid.UUID  `json:"restaurant_id"`
+	CategoryID   uuid.UUID  `json:"category_id"`
+	Modifiers    []Modifier `json:"modifiers,omitempty"`
 }
 
 // type MenuItemQueryParams struct {

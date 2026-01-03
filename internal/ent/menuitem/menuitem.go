@@ -34,6 +34,10 @@ const (
 	EdgeRestaurant = "restaurant"
 	// EdgeCategory holds the string denoting the category edge name in mutations.
 	EdgeCategory = "category"
+	// EdgeModifiers holds the string denoting the modifiers edge name in mutations.
+	EdgeModifiers = "modifiers"
+	// EdgeOrderItems holds the string denoting the order_items edge name in mutations.
+	EdgeOrderItems = "order_items"
 	// Table holds the table name of the menuitem in the database.
 	Table = "menu_items"
 	// RestaurantTable is the table that holds the restaurant relation/edge.
@@ -50,6 +54,20 @@ const (
 	CategoryInverseTable = "categories"
 	// CategoryColumn is the table column denoting the category relation/edge.
 	CategoryColumn = "category_id"
+	// ModifiersTable is the table that holds the modifiers relation/edge.
+	ModifiersTable = "modifiers"
+	// ModifiersInverseTable is the table name for the Modifier entity.
+	// It exists in this package in order to avoid circular dependency with the "modifier" package.
+	ModifiersInverseTable = "modifiers"
+	// ModifiersColumn is the table column denoting the modifiers relation/edge.
+	ModifiersColumn = "menu_item_modifiers"
+	// OrderItemsTable is the table that holds the order_items relation/edge.
+	OrderItemsTable = "order_items"
+	// OrderItemsInverseTable is the table name for the OrderItem entity.
+	// It exists in this package in order to avoid circular dependency with the "orderitem" package.
+	OrderItemsInverseTable = "order_items"
+	// OrderItemsColumn is the table column denoting the order_items relation/edge.
+	OrderItemsColumn = "menu_item_id"
 )
 
 // Columns holds all SQL columns for menuitem fields.
@@ -65,10 +83,21 @@ var Columns = []string{
 	FieldCategoryID,
 }
 
+// ForeignKeys holds the SQL foreign-keys that are owned by the "menu_items"
+// table and are not defined as standalone fields in the schema.
+var ForeignKeys = []string{
+	"modifier_menu_items",
+}
+
 // ValidColumn reports if the column name is valid (part of the table columns).
 func ValidColumn(column string) bool {
 	for i := range Columns {
 		if column == Columns[i] {
+			return true
+		}
+	}
+	for i := range ForeignKeys {
+		if column == ForeignKeys[i] {
 			return true
 		}
 	}
@@ -155,6 +184,34 @@ func ByCategoryField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newCategoryStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByModifiersCount orders the results by modifiers count.
+func ByModifiersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newModifiersStep(), opts...)
+	}
+}
+
+// ByModifiers orders the results by modifiers terms.
+func ByModifiers(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newModifiersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByOrderItemsCount orders the results by order_items count.
+func ByOrderItemsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrderItemsStep(), opts...)
+	}
+}
+
+// ByOrderItems orders the results by order_items terms.
+func ByOrderItems(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrderItemsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRestaurantStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -167,5 +224,19 @@ func newCategoryStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(CategoryInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, CategoryTable, CategoryColumn),
+	)
+}
+func newModifiersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(ModifiersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, ModifiersTable, ModifiersColumn),
+	)
+}
+func newOrderItemsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrderItemsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrderItemsTable, OrderItemsColumn),
 	)
 }

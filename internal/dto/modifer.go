@@ -29,7 +29,7 @@ type UpdateModifierData struct {
 	ID      uuid.UUID
 }
 
-type ModifierResponse struct {
+type Modifier struct {
 	ID           uuid.UUID `json:"id"`
 	Name         string    `json:"name"`
 	Required     bool      `json:"required"`

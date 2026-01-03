@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
@@ -28,6 +29,8 @@ type ModifierQuery struct {
 	predicates          []predicate.Modifier
 	withRestaurant      *RestaurantQuery
 	withModifierOptions *ModifierOptionQuery
+	withMenuItems       *MenuItemQuery
+	withFKs             bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,6 +104,28 @@ func (_q *ModifierQuery) QueryModifierOptions() *ModifierOptionQuery {
 			sqlgraph.From(modifier.Table, modifier.FieldID, selector),
 			sqlgraph.To(modifieroption.Table, modifieroption.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, modifier.ModifierOptionsTable, modifier.ModifierOptionsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMenuItems chains the current query on the "menu_items" edge.
+func (_q *ModifierQuery) QueryMenuItems() *MenuItemQuery {
+	query := (&MenuItemClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modifier.Table, modifier.FieldID, selector),
+			sqlgraph.To(menuitem.Table, menuitem.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, modifier.MenuItemsTable, modifier.MenuItemsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -302,6 +327,7 @@ func (_q *ModifierQuery) Clone() *ModifierQuery {
 		predicates:          append([]predicate.Modifier{}, _q.predicates...),
 		withRestaurant:      _q.withRestaurant.Clone(),
 		withModifierOptions: _q.withModifierOptions.Clone(),
+		withMenuItems:       _q.withMenuItems.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -327,6 +353,17 @@ func (_q *ModifierQuery) WithModifierOptions(opts ...func(*ModifierOptionQuery))
 		opt(query)
 	}
 	_q.withModifierOptions = query
+	return _q
+}
+
+// WithMenuItems tells the query-builder to eager-load the nodes that are connected to
+// the "menu_items" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ModifierQuery) WithMenuItems(opts ...func(*MenuItemQuery)) *ModifierQuery {
+	query := (&MenuItemClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMenuItems = query
 	return _q
 }
 
@@ -407,12 +444,17 @@ func (_q *ModifierQuery) prepareQuery(ctx context.Context) error {
 func (_q *ModifierQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Modifier, error) {
 	var (
 		nodes       = []*Modifier{}
+		withFKs     = _q.withFKs
 		_spec       = _q.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			_q.withRestaurant != nil,
 			_q.withModifierOptions != nil,
+			_q.withMenuItems != nil,
 		}
 	)
+	if withFKs {
+		_spec.Node.Columns = append(_spec.Node.Columns, modifier.ForeignKeys...)
+	}
 	_spec.ScanValues = func(columns []string) ([]any, error) {
 		return (*Modifier).scanValues(nil, columns)
 	}
@@ -441,6 +483,13 @@ func (_q *ModifierQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Mod
 		if err := _q.loadModifierOptions(ctx, query, nodes,
 			func(n *Modifier) { n.Edges.ModifierOptions = []*ModifierOption{} },
 			func(n *Modifier, e *ModifierOption) { n.Edges.ModifierOptions = append(n.Edges.ModifierOptions, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withMenuItems; query != nil {
+		if err := _q.loadMenuItems(ctx, query, nodes,
+			func(n *Modifier) { n.Edges.MenuItems = []*MenuItem{} },
+			func(n *Modifier, e *MenuItem) { n.Edges.MenuItems = append(n.Edges.MenuItems, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -501,6 +550,37 @@ func (_q *ModifierQuery) loadModifierOptions(ctx context.Context, query *Modifie
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "modifier_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *ModifierQuery) loadMenuItems(ctx context.Context, query *MenuItemQuery, nodes []*Modifier, init func(*Modifier), assign func(*Modifier, *MenuItem)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Modifier)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.MenuItem(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(modifier.MenuItemsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.modifier_menu_items
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "modifier_menu_items" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "modifier_menu_items" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

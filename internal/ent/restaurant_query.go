@@ -15,6 +15,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
+	"github.com/Jiruu246/rms/internal/ent/order"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -32,6 +33,7 @@ type RestaurantQuery struct {
 	withMenuItems  *MenuItemQuery
 	withCategories *CategoryQuery
 	withModifiers  *ModifierQuery
+	withOrders     *OrderQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -149,6 +151,28 @@ func (_q *RestaurantQuery) QueryModifiers() *ModifierQuery {
 			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
 			sqlgraph.To(modifier.Table, modifier.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.ModifiersTable, restaurant.ModifiersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrders chains the current query on the "orders" edge.
+func (_q *RestaurantQuery) QueryOrders() *OrderQuery {
+	query := (&OrderClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(order.Table, order.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.OrdersTable, restaurant.OrdersColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -352,6 +376,7 @@ func (_q *RestaurantQuery) Clone() *RestaurantQuery {
 		withMenuItems:  _q.withMenuItems.Clone(),
 		withCategories: _q.withCategories.Clone(),
 		withModifiers:  _q.withModifiers.Clone(),
+		withOrders:     _q.withOrders.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -399,6 +424,17 @@ func (_q *RestaurantQuery) WithModifiers(opts ...func(*ModifierQuery)) *Restaura
 		opt(query)
 	}
 	_q.withModifiers = query
+	return _q
+}
+
+// WithOrders tells the query-builder to eager-load the nodes that are connected to
+// the "orders" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RestaurantQuery) WithOrders(opts ...func(*OrderQuery)) *RestaurantQuery {
+	query := (&OrderClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOrders = query
 	return _q
 }
 
@@ -480,11 +516,12 @@ func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	var (
 		nodes       = []*Restaurant{}
 		_spec       = _q.querySpec()
-		loadedTypes = [4]bool{
+		loadedTypes = [5]bool{
 			_q.withUser != nil,
 			_q.withMenuItems != nil,
 			_q.withCategories != nil,
 			_q.withModifiers != nil,
+			_q.withOrders != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -532,6 +569,13 @@ func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 			return nil, err
 		}
 	}
+	if query := _q.withOrders; query != nil {
+		if err := _q.loadOrders(ctx, query, nodes,
+			func(n *Restaurant) { n.Edges.Orders = []*Order{} },
+			func(n *Restaurant, e *Order) { n.Edges.Orders = append(n.Edges.Orders, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -574,6 +618,7 @@ func (_q *RestaurantQuery) loadMenuItems(ctx context.Context, query *MenuItemQue
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(menuitem.FieldRestaurantID)
 	}
@@ -634,11 +679,42 @@ func (_q *RestaurantQuery) loadModifiers(ctx context.Context, query *ModifierQue
 			init(nodes[i])
 		}
 	}
+	query.withFKs = true
 	if len(query.ctx.Fields) > 0 {
 		query.ctx.AppendFieldOnce(modifier.FieldRestaurantID)
 	}
 	query.Where(predicate.Modifier(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(restaurant.ModifiersColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.RestaurantID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "restaurant_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *RestaurantQuery) loadOrders(ctx context.Context, query *OrderQuery, nodes []*Restaurant, init func(*Restaurant), assign func(*Restaurant, *Order)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Restaurant)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(order.FieldRestaurantID)
+	}
+	query.Where(predicate.Order(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(restaurant.OrdersColumn), fks...))
 	}))
 	neighbors, err := query.All(ctx)
 	if err != nil {

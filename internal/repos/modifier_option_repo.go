@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	ds "github.com/Jiruu246/rms/internal/data_structures"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
@@ -11,11 +12,12 @@ import (
 )
 
 type ModifierOptionRepository interface {
-	Create(ctx context.Context, data *dto.CreateModifierOptionData) (*dto.ModifierOptionResponse, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*dto.ModifierOptionResponse, error)
-	Update(ctx context.Context, data *dto.UpdateModifierOptionData) (*dto.ModifierOptionResponse, error)
+	Create(ctx context.Context, data *dto.CreateModifierOptionData) (*dto.ModifierOption, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*dto.ModifierOption, error)
+	GetByIDsStrict(ctx context.Context, ids ds.Set[uuid.UUID]) (map[uuid.UUID]*dto.ModifierOption, error)
+	Update(ctx context.Context, data *dto.UpdateModifierOptionData) (*dto.ModifierOption, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetAll(ctx context.Context) ([]*dto.ModifierOptionResponse, error)
+	GetAll(ctx context.Context) ([]*dto.ModifierOption, error)
 }
 
 type modifierOptionRepository struct {
@@ -28,7 +30,7 @@ func NewEntModifierOptionRepository(client *ent.Client) ModifierOptionRepository
 	}
 }
 
-func (r *modifierOptionRepository) Create(ctx context.Context, data *dto.CreateModifierOptionData) (*dto.ModifierOptionResponse, error) {
+func (r *modifierOptionRepository) Create(ctx context.Context, data *dto.CreateModifierOptionData) (*dto.ModifierOption, error) {
 	create := r.client.ModifierOption.Create().
 		SetName(data.Request.Name).
 		SetPrice(data.Request.Price).
@@ -43,7 +45,7 @@ func (r *modifierOptionRepository) Create(ctx context.Context, data *dto.CreateM
 	return mapToModifierOptionResponse(m), nil
 }
 
-func (r *modifierOptionRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.ModifierOptionResponse, error) {
+func (r *modifierOptionRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.ModifierOption, error) {
 	m, err := r.client.ModifierOption.Query().
 		Where(modifieroption.IDEQ(id)).
 		Only(ctx)
@@ -53,7 +55,24 @@ func (r *modifierOptionRepository) GetByID(ctx context.Context, id uuid.UUID) (*
 	return mapToModifierOptionResponse(m), nil
 }
 
-func (r *modifierOptionRepository) Update(ctx context.Context, data *dto.UpdateModifierOptionData) (*dto.ModifierOptionResponse, error) {
+func (r *modifierOptionRepository) GetByIDsStrict(ctx context.Context, ids ds.Set[uuid.UUID]) (map[uuid.UUID]*dto.ModifierOption, error) {
+	modifierOptions, err := r.client.ModifierOption.Query().
+		Where(modifieroption.IDIn(ids.Items()...)).
+		All(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get modifier options: %w", err)
+	}
+	if len(modifierOptions) != ids.Size() {
+		return nil, fmt.Errorf("one or more modifier options not found")
+	}
+	responses := make(map[uuid.UUID]*dto.ModifierOption, len(modifierOptions))
+	for _, m := range modifierOptions {
+		responses[m.ID] = mapToModifierOptionResponse(m)
+	}
+	return responses, nil
+}
+
+func (r *modifierOptionRepository) Update(ctx context.Context, data *dto.UpdateModifierOptionData) (*dto.ModifierOption, error) {
 	update := r.client.ModifierOption.UpdateOneID(data.ID)
 	if data.Request.Name != nil {
 		update.SetName(*data.Request.Name)
@@ -84,20 +103,20 @@ func (r *modifierOptionRepository) Delete(ctx context.Context, id uuid.UUID) err
 	return r.client.ModifierOption.DeleteOneID(id).Exec(ctx)
 }
 
-func (r *modifierOptionRepository) GetAll(ctx context.Context) ([]*dto.ModifierOptionResponse, error) {
+func (r *modifierOptionRepository) GetAll(ctx context.Context) ([]*dto.ModifierOption, error) {
 	options, err := r.client.ModifierOption.Query().All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get modifier options: %w", err)
 	}
-	responses := make([]*dto.ModifierOptionResponse, 0, len(options))
+	responses := make([]*dto.ModifierOption, 0, len(options))
 	for _, m := range options {
 		responses = append(responses, mapToModifierOptionResponse(m))
 	}
 	return responses, nil
 }
 
-func mapToModifierOptionResponse(m *ent.ModifierOption) *dto.ModifierOptionResponse {
-	return &dto.ModifierOptionResponse{
+func mapToModifierOptionResponse(m *ent.ModifierOption) *dto.ModifierOption {
+	return &dto.ModifierOption{
 		ID:         m.ID,
 		Name:       m.Name,
 		Price:      m.Price,

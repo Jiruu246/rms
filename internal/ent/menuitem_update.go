@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
+	"github.com/Jiruu246/rms/internal/ent/modifier"
+	"github.com/Jiruu246/rms/internal/ent/orderitem"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
@@ -164,6 +166,36 @@ func (_u *MenuItemUpdate) SetCategory(v *Category) *MenuItemUpdate {
 	return _u.SetCategoryID(v.ID)
 }
 
+// AddModifierIDs adds the "modifiers" edge to the Modifier entity by IDs.
+func (_u *MenuItemUpdate) AddModifierIDs(ids ...uuid.UUID) *MenuItemUpdate {
+	_u.mutation.AddModifierIDs(ids...)
+	return _u
+}
+
+// AddModifiers adds the "modifiers" edges to the Modifier entity.
+func (_u *MenuItemUpdate) AddModifiers(v ...*Modifier) *MenuItemUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModifierIDs(ids...)
+}
+
+// AddOrderItemIDs adds the "order_items" edge to the OrderItem entity by IDs.
+func (_u *MenuItemUpdate) AddOrderItemIDs(ids ...uuid.UUID) *MenuItemUpdate {
+	_u.mutation.AddOrderItemIDs(ids...)
+	return _u
+}
+
+// AddOrderItems adds the "order_items" edges to the OrderItem entity.
+func (_u *MenuItemUpdate) AddOrderItems(v ...*OrderItem) *MenuItemUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrderItemIDs(ids...)
+}
+
 // Mutation returns the MenuItemMutation object of the builder.
 func (_u *MenuItemUpdate) Mutation() *MenuItemMutation {
 	return _u.mutation
@@ -179,6 +211,48 @@ func (_u *MenuItemUpdate) ClearRestaurant() *MenuItemUpdate {
 func (_u *MenuItemUpdate) ClearCategory() *MenuItemUpdate {
 	_u.mutation.ClearCategory()
 	return _u
+}
+
+// ClearModifiers clears all "modifiers" edges to the Modifier entity.
+func (_u *MenuItemUpdate) ClearModifiers() *MenuItemUpdate {
+	_u.mutation.ClearModifiers()
+	return _u
+}
+
+// RemoveModifierIDs removes the "modifiers" edge to Modifier entities by IDs.
+func (_u *MenuItemUpdate) RemoveModifierIDs(ids ...uuid.UUID) *MenuItemUpdate {
+	_u.mutation.RemoveModifierIDs(ids...)
+	return _u
+}
+
+// RemoveModifiers removes "modifiers" edges to Modifier entities.
+func (_u *MenuItemUpdate) RemoveModifiers(v ...*Modifier) *MenuItemUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModifierIDs(ids...)
+}
+
+// ClearOrderItems clears all "order_items" edges to the OrderItem entity.
+func (_u *MenuItemUpdate) ClearOrderItems() *MenuItemUpdate {
+	_u.mutation.ClearOrderItems()
+	return _u
+}
+
+// RemoveOrderItemIDs removes the "order_items" edge to OrderItem entities by IDs.
+func (_u *MenuItemUpdate) RemoveOrderItemIDs(ids ...uuid.UUID) *MenuItemUpdate {
+	_u.mutation.RemoveOrderItemIDs(ids...)
+	return _u
+}
+
+// RemoveOrderItems removes "order_items" edges to OrderItem entities.
+func (_u *MenuItemUpdate) RemoveOrderItems(v ...*OrderItem) *MenuItemUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrderItemIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -327,6 +401,96 @@ func (_u *MenuItemUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.ModifiersTable,
+			Columns: []string{menuitem.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModifiersIDs(); len(nodes) > 0 && !_u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.ModifiersTable,
+			Columns: []string{menuitem.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModifiersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.ModifiersTable,
+			Columns: []string{menuitem.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrderItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.OrderItemsTable,
+			Columns: []string{menuitem.OrderItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitem.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrderItemsIDs(); len(nodes) > 0 && !_u.mutation.OrderItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.OrderItemsTable,
+			Columns: []string{menuitem.OrderItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitem.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrderItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.OrderItemsTable,
+			Columns: []string{menuitem.OrderItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitem.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -487,6 +651,36 @@ func (_u *MenuItemUpdateOne) SetCategory(v *Category) *MenuItemUpdateOne {
 	return _u.SetCategoryID(v.ID)
 }
 
+// AddModifierIDs adds the "modifiers" edge to the Modifier entity by IDs.
+func (_u *MenuItemUpdateOne) AddModifierIDs(ids ...uuid.UUID) *MenuItemUpdateOne {
+	_u.mutation.AddModifierIDs(ids...)
+	return _u
+}
+
+// AddModifiers adds the "modifiers" edges to the Modifier entity.
+func (_u *MenuItemUpdateOne) AddModifiers(v ...*Modifier) *MenuItemUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddModifierIDs(ids...)
+}
+
+// AddOrderItemIDs adds the "order_items" edge to the OrderItem entity by IDs.
+func (_u *MenuItemUpdateOne) AddOrderItemIDs(ids ...uuid.UUID) *MenuItemUpdateOne {
+	_u.mutation.AddOrderItemIDs(ids...)
+	return _u
+}
+
+// AddOrderItems adds the "order_items" edges to the OrderItem entity.
+func (_u *MenuItemUpdateOne) AddOrderItems(v ...*OrderItem) *MenuItemUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddOrderItemIDs(ids...)
+}
+
 // Mutation returns the MenuItemMutation object of the builder.
 func (_u *MenuItemUpdateOne) Mutation() *MenuItemMutation {
 	return _u.mutation
@@ -502,6 +696,48 @@ func (_u *MenuItemUpdateOne) ClearRestaurant() *MenuItemUpdateOne {
 func (_u *MenuItemUpdateOne) ClearCategory() *MenuItemUpdateOne {
 	_u.mutation.ClearCategory()
 	return _u
+}
+
+// ClearModifiers clears all "modifiers" edges to the Modifier entity.
+func (_u *MenuItemUpdateOne) ClearModifiers() *MenuItemUpdateOne {
+	_u.mutation.ClearModifiers()
+	return _u
+}
+
+// RemoveModifierIDs removes the "modifiers" edge to Modifier entities by IDs.
+func (_u *MenuItemUpdateOne) RemoveModifierIDs(ids ...uuid.UUID) *MenuItemUpdateOne {
+	_u.mutation.RemoveModifierIDs(ids...)
+	return _u
+}
+
+// RemoveModifiers removes "modifiers" edges to Modifier entities.
+func (_u *MenuItemUpdateOne) RemoveModifiers(v ...*Modifier) *MenuItemUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveModifierIDs(ids...)
+}
+
+// ClearOrderItems clears all "order_items" edges to the OrderItem entity.
+func (_u *MenuItemUpdateOne) ClearOrderItems() *MenuItemUpdateOne {
+	_u.mutation.ClearOrderItems()
+	return _u
+}
+
+// RemoveOrderItemIDs removes the "order_items" edge to OrderItem entities by IDs.
+func (_u *MenuItemUpdateOne) RemoveOrderItemIDs(ids ...uuid.UUID) *MenuItemUpdateOne {
+	_u.mutation.RemoveOrderItemIDs(ids...)
+	return _u
+}
+
+// RemoveOrderItems removes "order_items" edges to OrderItem entities.
+func (_u *MenuItemUpdateOne) RemoveOrderItems(v ...*OrderItem) *MenuItemUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveOrderItemIDs(ids...)
 }
 
 // Where appends a list predicates to the MenuItemUpdate builder.
@@ -680,6 +916,96 @@ func (_u *MenuItemUpdateOne) sqlSave(ctx context.Context) (_node *MenuItem, err 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(category.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.ModifiersTable,
+			Columns: []string{menuitem.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedModifiersIDs(); len(nodes) > 0 && !_u.mutation.ModifiersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.ModifiersTable,
+			Columns: []string{menuitem.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.ModifiersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.ModifiersTable,
+			Columns: []string{menuitem.ModifiersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(modifier.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.OrderItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.OrderItemsTable,
+			Columns: []string{menuitem.OrderItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitem.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedOrderItemsIDs(); len(nodes) > 0 && !_u.mutation.OrderItemsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.OrderItemsTable,
+			Columns: []string{menuitem.OrderItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitem.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.OrderItemsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   menuitem.OrderItemsTable,
+			Columns: []string{menuitem.OrderItemsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(orderitem.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

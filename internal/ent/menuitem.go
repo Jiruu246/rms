@@ -38,8 +38,9 @@ type MenuItem struct {
 	CategoryID uuid.UUID `json:"category_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the MenuItemQuery when eager-loading is set.
-	Edges        MenuItemEdges `json:"edges"`
-	selectValues sql.SelectValues
+	Edges               MenuItemEdges `json:"edges"`
+	modifier_menu_items *uuid.UUID
+	selectValues        sql.SelectValues
 }
 
 // MenuItemEdges holds the relations/edges for other nodes in the graph.
@@ -48,9 +49,13 @@ type MenuItemEdges struct {
 	Restaurant *Restaurant `json:"restaurant,omitempty"`
 	// Category holds the value of the category edge.
 	Category *Category `json:"category,omitempty"`
+	// Modifiers holds the value of the modifiers edge.
+	Modifiers []*Modifier `json:"modifiers,omitempty"`
+	// OrderItems holds the value of the order_items edge.
+	OrderItems []*OrderItem `json:"order_items,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [4]bool
 }
 
 // RestaurantOrErr returns the Restaurant value or an error if the edge
@@ -75,6 +80,24 @@ func (e MenuItemEdges) CategoryOrErr() (*Category, error) {
 	return nil, &NotLoadedError{edge: "category"}
 }
 
+// ModifiersOrErr returns the Modifiers value or an error if the edge
+// was not loaded in eager-loading.
+func (e MenuItemEdges) ModifiersOrErr() ([]*Modifier, error) {
+	if e.loadedTypes[2] {
+		return e.Modifiers, nil
+	}
+	return nil, &NotLoadedError{edge: "modifiers"}
+}
+
+// OrderItemsOrErr returns the OrderItems value or an error if the edge
+// was not loaded in eager-loading.
+func (e MenuItemEdges) OrderItemsOrErr() ([]*OrderItem, error) {
+	if e.loadedTypes[3] {
+		return e.OrderItems, nil
+	}
+	return nil, &NotLoadedError{edge: "order_items"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*MenuItem) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
@@ -92,6 +115,8 @@ func (*MenuItem) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullTime)
 		case menuitem.FieldRestaurantID, menuitem.FieldCategoryID:
 			values[i] = new(uuid.UUID)
+		case menuitem.ForeignKeys[0]: // modifier_menu_items
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		default:
 			values[i] = new(sql.UnknownType)
 		}
@@ -161,6 +186,13 @@ func (_m *MenuItem) assignValues(columns []string, values []any) error {
 			} else if value != nil {
 				_m.CategoryID = *value
 			}
+		case menuitem.ForeignKeys[0]:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field modifier_menu_items", values[i])
+			} else if value.Valid {
+				_m.modifier_menu_items = new(uuid.UUID)
+				*_m.modifier_menu_items = *value.S.(*uuid.UUID)
+			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
 		}
@@ -182,6 +214,16 @@ func (_m *MenuItem) QueryRestaurant() *RestaurantQuery {
 // QueryCategory queries the "category" edge of the MenuItem entity.
 func (_m *MenuItem) QueryCategory() *CategoryQuery {
 	return NewMenuItemClient(_m.config).QueryCategory(_m)
+}
+
+// QueryModifiers queries the "modifiers" edge of the MenuItem entity.
+func (_m *MenuItem) QueryModifiers() *ModifierQuery {
+	return NewMenuItemClient(_m.config).QueryModifiers(_m)
+}
+
+// QueryOrderItems queries the "order_items" edge of the MenuItem entity.
+func (_m *MenuItem) QueryOrderItems() *OrderItemQuery {
+	return NewMenuItemClient(_m.config).QueryOrderItems(_m)
 }
 
 // Update returns a builder for updating this MenuItem.

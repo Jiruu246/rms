@@ -31,7 +31,7 @@ type UpdateModifierOptionData struct {
 	ID      uuid.UUID
 }
 
-type ModifierOptionResponse struct {
+type ModifierOption struct {
 	ID         uuid.UUID `json:"id"`
 	Name       string    `json:"name"`
 	Price      float64   `json:"price"`
@@ -39,4 +39,5 @@ type ModifierOptionResponse struct {
 	Available  bool      `json:"available"`
 	PreSelect  bool      `json:"pre_select"`
 	ModifierID uuid.UUID `json:"modifier_id"`
+	Quantity   int       `json:"quantity,omitempty"`
 }

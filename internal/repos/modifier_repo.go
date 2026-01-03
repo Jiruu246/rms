@@ -11,11 +11,11 @@ import (
 )
 
 type ModifierRepository interface {
-	Create(ctx context.Context, data *dto.CreateModifierData) (*dto.ModifierResponse, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*dto.ModifierResponse, error)
-	Update(ctx context.Context, data *dto.UpdateModifierData) (*dto.ModifierResponse, error)
+	Create(ctx context.Context, data *dto.CreateModifierData) (*dto.Modifier, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*dto.Modifier, error)
+	Update(ctx context.Context, data *dto.UpdateModifierData) (*dto.Modifier, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetAll(ctx context.Context) ([]*dto.ModifierResponse, error)
+	GetAll(ctx context.Context) ([]*dto.Modifier, error)
 }
 
 type modifierRepository struct {
@@ -28,7 +28,7 @@ func NewEntModifierRepository(client *ent.Client) ModifierRepository {
 	}
 }
 
-func (r *modifierRepository) Create(ctx context.Context, data *dto.CreateModifierData) (*dto.ModifierResponse, error) {
+func (r *modifierRepository) Create(ctx context.Context, data *dto.CreateModifierData) (*dto.Modifier, error) {
 	create, err := r.client.Modifier.Create().
 		SetName(data.Request.Name).
 		SetRequired(data.Request.Required).
@@ -39,20 +39,20 @@ func (r *modifierRepository) Create(ctx context.Context, data *dto.CreateModifie
 	if err != nil {
 		return nil, fmt.Errorf("failed to create modifier: %w", err)
 	}
-	return mapToModifierResponse(create), nil
+	return mapToModifier(create), nil
 }
 
-func (r *modifierRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.ModifierResponse, error) {
+func (r *modifierRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Modifier, error) {
 	m, err := r.client.Modifier.Query().
 		Where(modifier.IDEQ(id)).
 		Only(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("modifier not found: %w", err)
 	}
-	return mapToModifierResponse(m), nil
+	return mapToModifier(m), nil
 }
 
-func (r *modifierRepository) Update(ctx context.Context, data *dto.UpdateModifierData) (*dto.ModifierResponse, error) {
+func (r *modifierRepository) Update(ctx context.Context, data *dto.UpdateModifierData) (*dto.Modifier, error) {
 	update := r.client.Modifier.UpdateOneID(data.ID)
 	if data.Request.Name != nil {
 		update.SetName(*data.Request.Name)
@@ -73,27 +73,27 @@ func (r *modifierRepository) Update(ctx context.Context, data *dto.UpdateModifie
 	if err != nil {
 		return nil, fmt.Errorf("failed to update modifier: %w", err)
 	}
-	return mapToModifierResponse(m), nil
+	return mapToModifier(m), nil
 }
 
 func (r *modifierRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return r.client.Modifier.DeleteOneID(id).Exec(ctx)
 }
 
-func (r *modifierRepository) GetAll(ctx context.Context) ([]*dto.ModifierResponse, error) {
+func (r *modifierRepository) GetAll(ctx context.Context) ([]*dto.Modifier, error) {
 	modifiers, err := r.client.Modifier.Query().All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get modifiers: %w", err)
 	}
-	responses := make([]*dto.ModifierResponse, 0, len(modifiers))
+	responses := make([]*dto.Modifier, 0, len(modifiers))
 	for _, m := range modifiers {
-		responses = append(responses, mapToModifierResponse(m))
+		responses = append(responses, mapToModifier(m))
 	}
 	return responses, nil
 }
 
-func mapToModifierResponse(m *ent.Modifier) *dto.ModifierResponse {
-	return &dto.ModifierResponse{
+func mapToModifier(m *ent.Modifier) *dto.Modifier {
+	return &dto.Modifier{
 		ID:           m.ID,
 		Name:         m.Name,
 		Required:     m.Required,

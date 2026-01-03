@@ -68,9 +68,11 @@ type RestaurantEdges struct {
 	Categories []*Category `json:"categories,omitempty"`
 	// Modifiers holds the value of the modifiers edge.
 	Modifiers []*Modifier `json:"modifiers,omitempty"`
+	// Orders holds the value of the orders edge.
+	Orders []*Order `json:"orders,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [4]bool
+	loadedTypes [5]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -109,6 +111,15 @@ func (e RestaurantEdges) ModifiersOrErr() ([]*Modifier, error) {
 		return e.Modifiers, nil
 	}
 	return nil, &NotLoadedError{edge: "modifiers"}
+}
+
+// OrdersOrErr returns the Orders value or an error if the edge
+// was not loaded in eager-loading.
+func (e RestaurantEdges) OrdersOrErr() ([]*Order, error) {
+	if e.loadedTypes[4] {
+		return e.Orders, nil
+	}
+	return nil, &NotLoadedError{edge: "orders"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -274,6 +285,11 @@ func (_m *Restaurant) QueryCategories() *CategoryQuery {
 // QueryModifiers queries the "modifiers" edge of the Restaurant entity.
 func (_m *Restaurant) QueryModifiers() *ModifierQuery {
 	return NewRestaurantClient(_m.config).QueryModifiers(_m)
+}
+
+// QueryOrders queries the "orders" edge of the Restaurant entity.
+func (_m *Restaurant) QueryOrders() *OrderQuery {
+	return NewRestaurantClient(_m.config).QueryOrders(_m)
 }
 
 // Update returns a builder for updating this Restaurant.

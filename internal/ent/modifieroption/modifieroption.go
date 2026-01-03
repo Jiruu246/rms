@@ -31,6 +31,8 @@ const (
 	FieldModifierID = "modifier_id"
 	// EdgeModifier holds the string denoting the modifier edge name in mutations.
 	EdgeModifier = "modifier"
+	// EdgeOrderItemModifierOptions holds the string denoting the order_item_modifier_options edge name in mutations.
+	EdgeOrderItemModifierOptions = "order_item_modifier_options"
 	// Table holds the table name of the modifieroption in the database.
 	Table = "modifier_options"
 	// ModifierTable is the table that holds the modifier relation/edge.
@@ -40,6 +42,13 @@ const (
 	ModifierInverseTable = "modifiers"
 	// ModifierColumn is the table column denoting the modifier relation/edge.
 	ModifierColumn = "modifier_id"
+	// OrderItemModifierOptionsTable is the table that holds the order_item_modifier_options relation/edge.
+	OrderItemModifierOptionsTable = "order_item_modifier_options"
+	// OrderItemModifierOptionsInverseTable is the table name for the OrderItemModifierOption entity.
+	// It exists in this package in order to avoid circular dependency with the "orderitemmodifieroption" package.
+	OrderItemModifierOptionsInverseTable = "order_item_modifier_options"
+	// OrderItemModifierOptionsColumn is the table column denoting the order_item_modifier_options relation/edge.
+	OrderItemModifierOptionsColumn = "modifier_option_id"
 )
 
 // Columns holds all SQL columns for modifieroption fields.
@@ -130,10 +139,31 @@ func ByModifierField(field string, opts ...sql.OrderTermOption) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newModifierStep(), sql.OrderByField(field, opts...))
 	}
 }
+
+// ByOrderItemModifierOptionsCount orders the results by order_item_modifier_options count.
+func ByOrderItemModifierOptionsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newOrderItemModifierOptionsStep(), opts...)
+	}
+}
+
+// ByOrderItemModifierOptions orders the results by order_item_modifier_options terms.
+func ByOrderItemModifierOptions(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newOrderItemModifierOptionsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newModifierStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ModifierInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.M2O, true, ModifierTable, ModifierColumn),
+	)
+}
+func newOrderItemModifierOptionsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(OrderItemModifierOptionsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, OrderItemModifierOptionsTable, OrderItemModifierOptionsColumn),
 	)
 }

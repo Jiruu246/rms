@@ -140,20 +140,13 @@ GET    /api/v1/tables/:id/current-order    [JWT: Owner, Manager, Waiter]
 
 ## Order API
 
-```
-POST   /api/v1/orders                      [JWT: Waiter, Manager]
-GET    /api/v1/orders                      [JWT: Owner, Manager, Kitchen, Waiter]
-GET    /api/v1/orders/:id                  [JWT: All staff]
-PUT    /api/v1/orders/:id                  [JWT: Waiter, Manager]
-DELETE /api/v1/orders/:id                  [JWT: Manager, Owner]
-
-POST   /api/v1/orders/:id/items            [JWT: Waiter, Manager]
-PUT    /api/v1/orders/:id/items/:itemId    [JWT: Waiter, Manager]
-DELETE /api/v1/orders/:id/items/:itemId    [JWT: Waiter, Manager]
-
-PUT    /api/v1/orders/:id/status           [JWT: Kitchen, Manager]
-POST   /api/v1/orders/:id/special-request  [JWT: Waiter, Manager]
-```
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| `POST` | `/api/orders` | Create a new order |
+| `GET` | `/api/orders` | Get all order for a restaurant |
+| `GET` | `/api/orders/{id}` | Get a specific order |
+| `PATCH` | `/api/orders/{id}` | Partial update an order |
+| `DELETE` | `/api/orders/{id}` | Delete a modifier |
 
 ---
 
@@ -253,14 +246,6 @@ All API endpoints require authentication using Bearer tokens:
 ```
 Authorization: Bearer <your_token_here>
 ```
-
----
-
-## Versioning
-
-API versioning is included in the URL:
-- Current version: `/api/v1/menu-items`
-- Future versions: `/api/v2/menu-items`
 
 ---
 

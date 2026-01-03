@@ -16,6 +16,9 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
+	"github.com/Jiruu246/rms/internal/ent/order"
+	"github.com/Jiruu246/rms/internal/ent/orderitem"
+	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
 )
@@ -78,12 +81,15 @@ var (
 func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			category.Table:       category.ValidColumn,
-			menuitem.Table:       menuitem.ValidColumn,
-			modifier.Table:       modifier.ValidColumn,
-			modifieroption.Table: modifieroption.ValidColumn,
-			restaurant.Table:     restaurant.ValidColumn,
-			user.Table:           user.ValidColumn,
+			category.Table:                category.ValidColumn,
+			menuitem.Table:                menuitem.ValidColumn,
+			modifier.Table:                modifier.ValidColumn,
+			modifieroption.Table:          modifieroption.ValidColumn,
+			order.Table:                   order.ValidColumn,
+			orderitem.Table:               orderitem.ValidColumn,
+			orderitemmodifieroption.Table: orderitemmodifieroption.ValidColumn,
+			restaurant.Table:              restaurant.ValidColumn,
+			user.Table:                    user.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

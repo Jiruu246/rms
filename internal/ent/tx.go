@@ -20,6 +20,12 @@ type Tx struct {
 	Modifier *ModifierClient
 	// ModifierOption is the client for interacting with the ModifierOption builders.
 	ModifierOption *ModifierOptionClient
+	// Order is the client for interacting with the Order builders.
+	Order *OrderClient
+	// OrderItem is the client for interacting with the OrderItem builders.
+	OrderItem *OrderItemClient
+	// OrderItemModifierOption is the client for interacting with the OrderItemModifierOption builders.
+	OrderItemModifierOption *OrderItemModifierOptionClient
 	// Restaurant is the client for interacting with the Restaurant builders.
 	Restaurant *RestaurantClient
 	// User is the client for interacting with the User builders.
@@ -159,6 +165,9 @@ func (tx *Tx) init() {
 	tx.MenuItem = NewMenuItemClient(tx.config)
 	tx.Modifier = NewModifierClient(tx.config)
 	tx.ModifierOption = NewModifierOptionClient(tx.config)
+	tx.Order = NewOrderClient(tx.config)
+	tx.OrderItem = NewOrderItemClient(tx.config)
+	tx.OrderItemModifierOption = NewOrderItemModifierOptionClient(tx.config)
 	tx.Restaurant = NewRestaurantClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 }

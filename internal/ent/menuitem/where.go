@@ -487,6 +487,52 @@ func HasCategoryWith(preds ...predicate.Category) predicate.MenuItem {
 	})
 }
 
+// HasModifiers applies the HasEdge predicate on the "modifiers" edge.
+func HasModifiers() predicate.MenuItem {
+	return predicate.MenuItem(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, ModifiersTable, ModifiersColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasModifiersWith applies the HasEdge predicate on the "modifiers" edge with a given conditions (other predicates).
+func HasModifiersWith(preds ...predicate.Modifier) predicate.MenuItem {
+	return predicate.MenuItem(func(s *sql.Selector) {
+		step := newModifiersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasOrderItems applies the HasEdge predicate on the "order_items" edge.
+func HasOrderItems() predicate.MenuItem {
+	return predicate.MenuItem(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, OrderItemsTable, OrderItemsColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasOrderItemsWith applies the HasEdge predicate on the "order_items" edge with a given conditions (other predicates).
+func HasOrderItemsWith(preds ...predicate.OrderItem) predicate.MenuItem {
+	return predicate.MenuItem(func(s *sql.Selector) {
+		step := newOrderItemsStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.MenuItem) predicate.MenuItem {
 	return predicate.MenuItem(sql.AndPredicates(predicates...))

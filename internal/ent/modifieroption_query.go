@@ -4,6 +4,7 @@ package ent
 
 import (
 	"context"
+	"database/sql/driver"
 	"fmt"
 	"math"
 
@@ -13,6 +14,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
+	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/google/uuid"
 )
@@ -20,11 +22,12 @@ import (
 // ModifierOptionQuery is the builder for querying ModifierOption entities.
 type ModifierOptionQuery struct {
 	config
-	ctx          *QueryContext
-	order        []modifieroption.OrderOption
-	inters       []Interceptor
-	predicates   []predicate.ModifierOption
-	withModifier *ModifierQuery
+	ctx                          *QueryContext
+	order                        []modifieroption.OrderOption
+	inters                       []Interceptor
+	predicates                   []predicate.ModifierOption
+	withModifier                 *ModifierQuery
+	withOrderItemModifierOptions *OrderItemModifierOptionQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -76,6 +79,28 @@ func (_q *ModifierOptionQuery) QueryModifier() *ModifierQuery {
 			sqlgraph.From(modifieroption.Table, modifieroption.FieldID, selector),
 			sqlgraph.To(modifier.Table, modifier.FieldID),
 			sqlgraph.Edge(sqlgraph.M2O, true, modifieroption.ModifierTable, modifieroption.ModifierColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryOrderItemModifierOptions chains the current query on the "order_item_modifier_options" edge.
+func (_q *ModifierOptionQuery) QueryOrderItemModifierOptions() *OrderItemModifierOptionQuery {
+	query := (&OrderItemModifierOptionClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(modifieroption.Table, modifieroption.FieldID, selector),
+			sqlgraph.To(orderitemmodifieroption.Table, orderitemmodifieroption.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, modifieroption.OrderItemModifierOptionsTable, modifieroption.OrderItemModifierOptionsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -270,12 +295,13 @@ func (_q *ModifierOptionQuery) Clone() *ModifierOptionQuery {
 		return nil
 	}
 	return &ModifierOptionQuery{
-		config:       _q.config,
-		ctx:          _q.ctx.Clone(),
-		order:        append([]modifieroption.OrderOption{}, _q.order...),
-		inters:       append([]Interceptor{}, _q.inters...),
-		predicates:   append([]predicate.ModifierOption{}, _q.predicates...),
-		withModifier: _q.withModifier.Clone(),
+		config:                       _q.config,
+		ctx:                          _q.ctx.Clone(),
+		order:                        append([]modifieroption.OrderOption{}, _q.order...),
+		inters:                       append([]Interceptor{}, _q.inters...),
+		predicates:                   append([]predicate.ModifierOption{}, _q.predicates...),
+		withModifier:                 _q.withModifier.Clone(),
+		withOrderItemModifierOptions: _q.withOrderItemModifierOptions.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -290,6 +316,17 @@ func (_q *ModifierOptionQuery) WithModifier(opts ...func(*ModifierQuery)) *Modif
 		opt(query)
 	}
 	_q.withModifier = query
+	return _q
+}
+
+// WithOrderItemModifierOptions tells the query-builder to eager-load the nodes that are connected to
+// the "order_item_modifier_options" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *ModifierOptionQuery) WithOrderItemModifierOptions(opts ...func(*OrderItemModifierOptionQuery)) *ModifierOptionQuery {
+	query := (&OrderItemModifierOptionClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withOrderItemModifierOptions = query
 	return _q
 }
 
@@ -371,8 +408,9 @@ func (_q *ModifierOptionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	var (
 		nodes       = []*ModifierOption{}
 		_spec       = _q.querySpec()
-		loadedTypes = [1]bool{
+		loadedTypes = [2]bool{
 			_q.withModifier != nil,
+			_q.withOrderItemModifierOptions != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -396,6 +434,15 @@ func (_q *ModifierOptionQuery) sqlAll(ctx context.Context, hooks ...queryHook) (
 	if query := _q.withModifier; query != nil {
 		if err := _q.loadModifier(ctx, query, nodes, nil,
 			func(n *ModifierOption, e *Modifier) { n.Edges.Modifier = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withOrderItemModifierOptions; query != nil {
+		if err := _q.loadOrderItemModifierOptions(ctx, query, nodes,
+			func(n *ModifierOption) { n.Edges.OrderItemModifierOptions = []*OrderItemModifierOption{} },
+			func(n *ModifierOption, e *OrderItemModifierOption) {
+				n.Edges.OrderItemModifierOptions = append(n.Edges.OrderItemModifierOptions, e)
+			}); err != nil {
 			return nil, err
 		}
 	}
@@ -428,6 +475,36 @@ func (_q *ModifierOptionQuery) loadModifier(ctx context.Context, query *Modifier
 		for i := range nodes {
 			assign(nodes[i], n)
 		}
+	}
+	return nil
+}
+func (_q *ModifierOptionQuery) loadOrderItemModifierOptions(ctx context.Context, query *OrderItemModifierOptionQuery, nodes []*ModifierOption, init func(*ModifierOption), assign func(*ModifierOption, *OrderItemModifierOption)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*ModifierOption)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(orderitemmodifieroption.FieldModifierOptionID)
+	}
+	query.Where(predicate.OrderItemModifierOption(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(modifieroption.OrderItemModifierOptionsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.ModifierOptionID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "modifier_option_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
 	}
 	return nil
 }

@@ -12,9 +12,11 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/order"
 	"github.com/Jiruu246/rms/internal/ent/orderitem"
 	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
+	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 	"github.com/google/uuid"
 )
 
@@ -253,6 +255,29 @@ func init() {
 	orderitemmodifieroptionDescOptionName := orderitemmodifieroptionFields[3].Descriptor()
 	// orderitemmodifieroption.OptionNameValidator is a validator for the "option_name" field. It is called by the builders before save.
 	orderitemmodifieroption.OptionNameValidator = orderitemmodifieroptionDescOptionName.Validators[0].(func(string) error)
+	refreshtokenMixin := schema.RefreshToken{}.Mixin()
+	refreshtokenMixinFields0 := refreshtokenMixin[0].Fields()
+	_ = refreshtokenMixinFields0
+	refreshtokenFields := schema.RefreshToken{}.Fields()
+	_ = refreshtokenFields
+	// refreshtokenDescUpdateTime is the schema descriptor for update_time field.
+	refreshtokenDescUpdateTime := refreshtokenMixinFields0[0].Descriptor()
+	// refreshtoken.DefaultUpdateTime holds the default value on creation for the update_time field.
+	refreshtoken.DefaultUpdateTime = refreshtokenDescUpdateTime.Default.(func() time.Time)
+	// refreshtoken.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	refreshtoken.UpdateDefaultUpdateTime = refreshtokenDescUpdateTime.UpdateDefault.(func() time.Time)
+	// refreshtokenDescToken is the schema descriptor for token field.
+	refreshtokenDescToken := refreshtokenFields[2].Descriptor()
+	// refreshtoken.TokenValidator is a validator for the "token" field. It is called by the builders before save.
+	refreshtoken.TokenValidator = refreshtokenDescToken.Validators[0].(func(string) error)
+	// refreshtokenDescRevoked is the schema descriptor for revoked field.
+	refreshtokenDescRevoked := refreshtokenFields[4].Descriptor()
+	// refreshtoken.DefaultRevoked holds the default value on creation for the revoked field.
+	refreshtoken.DefaultRevoked = refreshtokenDescRevoked.Default.(bool)
+	// refreshtokenDescID is the schema descriptor for id field.
+	refreshtokenDescID := refreshtokenFields[0].Descriptor()
+	// refreshtoken.DefaultID holds the default value on creation for the id field.
+	refreshtoken.DefaultID = refreshtokenDescID.Default.(func() uuid.UUID)
 	restaurantMixin := schema.Restaurant{}.Mixin()
 	restaurantMixinFields0 := restaurantMixin[0].Fields()
 	_ = restaurantMixinFields0
@@ -329,24 +354,67 @@ func init() {
 			return nil
 		}
 	}()
-	// userDescEmail is the schema descriptor for email field.
-	userDescEmail := userFields[2].Descriptor()
-	// user.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	user.EmailValidator = userDescEmail.Validators[0].(func(string) error)
+	// userDescEmailVerified is the schema descriptor for email_verified field.
+	userDescEmailVerified := userFields[3].Descriptor()
+	// user.DefaultEmailVerified holds the default value on creation for the email_verified field.
+	user.DefaultEmailVerified = userDescEmailVerified.Default.(bool)
 	// userDescPhoneNumber is the schema descriptor for phone_number field.
-	userDescPhoneNumber := userFields[3].Descriptor()
+	userDescPhoneNumber := userFields[4].Descriptor()
 	// user.DefaultPhoneNumber holds the default value on creation for the phone_number field.
 	user.DefaultPhoneNumber = userDescPhoneNumber.Default.(string)
 	// userDescIsActive is the schema descriptor for is_active field.
-	userDescIsActive := userFields[4].Descriptor()
+	userDescIsActive := userFields[5].Descriptor()
 	// user.DefaultIsActive holds the default value on creation for the is_active field.
 	user.DefaultIsActive = userDescIsActive.Default.(bool)
-	// userDescPasswordHash is the schema descriptor for password_hash field.
-	userDescPasswordHash := userFields[5].Descriptor()
-	// user.PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
-	user.PasswordHashValidator = userDescPasswordHash.Validators[0].(func(string) error)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	userauthproviderMixin := schema.UserAuthProvider{}.Mixin()
+	userauthproviderMixinFields0 := userauthproviderMixin[0].Fields()
+	_ = userauthproviderMixinFields0
+	userauthproviderFields := schema.UserAuthProvider{}.Fields()
+	_ = userauthproviderFields
+	// userauthproviderDescUpdateTime is the schema descriptor for update_time field.
+	userauthproviderDescUpdateTime := userauthproviderMixinFields0[0].Descriptor()
+	// userauthprovider.DefaultUpdateTime holds the default value on creation for the update_time field.
+	userauthprovider.DefaultUpdateTime = userauthproviderDescUpdateTime.Default.(func() time.Time)
+	// userauthprovider.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	userauthprovider.UpdateDefaultUpdateTime = userauthproviderDescUpdateTime.UpdateDefault.(func() time.Time)
+	// userauthproviderDescProvider is the schema descriptor for provider field.
+	userauthproviderDescProvider := userauthproviderFields[1].Descriptor()
+	// userauthprovider.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	userauthprovider.ProviderValidator = func() func(string) error {
+		validators := userauthproviderDescProvider.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(provider string) error {
+			for _, fn := range fns {
+				if err := fn(provider); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userauthproviderDescProviderUserID is the schema descriptor for provider_user_id field.
+	userauthproviderDescProviderUserID := userauthproviderFields[2].Descriptor()
+	// userauthprovider.ProviderUserIDValidator is a validator for the "provider_user_id" field. It is called by the builders before save.
+	userauthprovider.ProviderUserIDValidator = func() func(string) error {
+		validators := userauthproviderDescProviderUserID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(provider_user_id string) error {
+			for _, fn := range fns {
+				if err := fn(provider_user_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 }

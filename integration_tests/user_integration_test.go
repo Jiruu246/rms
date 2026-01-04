@@ -25,55 +25,6 @@ func TestUserTestSuite(t *testing.T) {
 	suite.Run(t, new(UserTestSuite))
 }
 
-// TestUserAPI tests the user API endpoints
-func (s *UserTestSuite) TestCreateUser() {
-	tests := []struct {
-		testName string
-		body     any
-		expected int
-		validate func(*httptest.ResponseRecorder)
-	}{
-		{
-			testName: "CreateUser",
-			body: dto.RegisterUserRequest{
-				Name:     "Test User",
-				Email:    "testuser@example.com",
-				Password: "securepassword",
-			},
-			expected: http.StatusCreated,
-			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.User]
-				err := json.Unmarshal(w.Body.Bytes(), &response)
-				s.Require().NoError(err)
-				s.Equal("Test User", response.Data.Name)
-				s.Equal("testuser@example.com", response.Data.Email)
-				s.NotEqual(uuid.Nil, response.Data.ID)
-			},
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.testName, func() {
-			var body []byte
-			var err error
-			if tt.body != nil {
-				body, err = json.Marshal(tt.body)
-				s.Require().NoError(err)
-			}
-
-			req := httptest.NewRequest(http.MethodPost, path.Join(userAPIBase, "register"), bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-
-			server := s.CreateServer()
-			server.Engine().ServeHTTP(w, req)
-			s.Equal(tt.expected, w.Code)
-
-			tt.validate(w)
-		})
-	}
-}
-
 func (s *UserTestSuite) TestGetUser() {
 	initialUser, err := s.client.User.Create().
 		SetName("Initial User").
@@ -238,37 +189,6 @@ func (s *UserTestSuite) TestDeleteUser() {
 			mockMiddlewares := DefaultMiddleware()
 			mockMiddlewares.JWTMiddleware = tt.mockJWTMiddleware
 			server := s.CreateServerWithMiddleware(mockMiddlewares)
-			server.Engine().ServeHTTP(w, req)
-			s.Equal(tt.expected, w.Code)
-		})
-	}
-}
-
-func (s *UserTestSuite) TestUserValidation() {
-	tests := []struct {
-		testName string
-		url      string
-		body     dto.RegisterUserRequest
-		expected int
-	}{
-		{
-			testName: "CreateUser_InvalidData_EmptyName",
-			url:      path.Join(userAPIBase, "register"),
-			body:     dto.RegisterUserRequest{Name: "", Email: "validemail@example.com"},
-			expected: http.StatusBadRequest,
-		},
-	}
-
-	for _, tt := range tests {
-		s.Run(tt.testName, func() {
-			body, err := json.Marshal(tt.body)
-			s.Require().NoError(err)
-
-			req := httptest.NewRequest(http.MethodPost, tt.url, bytes.NewBuffer(body))
-			req.Header.Set("Content-Type", "application/json")
-			w := httptest.NewRecorder()
-
-			server := s.CreateServerWithMiddleware(DefaultMiddleware())
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})

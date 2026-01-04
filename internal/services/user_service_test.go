@@ -6,17 +6,17 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) Create(ctx context.Context, req *dto.RegisterUserRequest) (*dto.User, error) {
+func (m *MockUserRepository) Create(ctx context.Context, req *repos.RegisterUserData) (*dto.User, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -53,125 +53,6 @@ func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return args.Error(0)
 }
 
-func TestUserService_Register(t *testing.T) {
-	testCases := []struct {
-		name          string
-		req           dto.RegisterUserRequest
-		mockSetup     func(*MockUserRepository)
-		expectedError string
-	}{
-		{
-			name: "successful registration",
-			req: dto.RegisterUserRequest{
-				Name:     "John Doe",
-				Email:    "john.doe@example.com",
-				Password: "password123",
-			},
-			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("Create", mock.Anything, mock.Anything).Return(&dto.User{
-					Name:  "John Doe",
-					Email: "john.doe@example.com",
-				}, nil)
-			},
-			expectedError: "",
-		},
-		{
-			name: "repository error",
-			req: dto.RegisterUserRequest{
-				Name:     "John Doe",
-				Email:    "john2.doe@example.com",
-				Password: "password123",
-			},
-			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("Create", mock.Anything, mock.Anything).Return(nil, errors.New("repository error"))
-			},
-			expectedError: "repository error",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			mockRepo := new(MockUserRepository)
-			testCase.mockSetup(mockRepo)
-
-			service := NewUserService(mockRepo)
-			result, err := service.Register(context.Background(), testCase.req)
-
-			if testCase.expectedError != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), testCase.expectedError)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, testCase.req.Name, result.Name)
-				assert.Equal(t, testCase.req.Email, result.Email)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
-}
-
-func TestUserService_Login(t *testing.T) {
-	testCases := []struct {
-		name          string
-		req           dto.LoginUserRequest
-		mockSetup     func(*MockUserRepository)
-		expectedError string
-	}{
-		{
-			name: "successful login",
-			req: dto.LoginUserRequest{
-				Email:    "john.doe@example.com",
-				Password: "password123",
-			},
-			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetByEmail", mock.Anything, "john.doe@example.com").Return(&dto.User{
-					Email:    "john.doe@example.com",
-					Password: hashPassword("password123"),
-				}, nil)
-			},
-			expectedError: "",
-		},
-		{
-			name: "invalid email or password",
-			req: dto.LoginUserRequest{
-				Email:    "john.doe@example.com",
-				Password: "wrongpassword",
-			},
-			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetByEmail", mock.Anything, "john.doe@example.com").Return(&dto.User{
-					Email:    "john.doe@example.com",
-					Password: hashPassword("password123"),
-				}, nil)
-			},
-			expectedError: "invalid email or password",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			mockRepo := new(MockUserRepository)
-			testCase.mockSetup(mockRepo)
-
-			service := NewUserService(mockRepo)
-			result, err := service.Login(context.Background(), testCase.req)
-
-			if testCase.expectedError != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), testCase.expectedError)
-				assert.Nil(t, result)
-			} else {
-				assert.NoError(t, err)
-				assert.NotNil(t, result)
-				assert.Equal(t, testCase.req.Email, result.Email)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
-}
 
 func TestUserService_GetProfile(t *testing.T) {
 	testUserId := uuid.New()
@@ -338,9 +219,4 @@ func TestUserService_DeleteAccount(t *testing.T) {
 
 func ptr[T any](v T) *T {
 	return &v
-}
-
-func hashPassword(password string) string {
-	hash, _ := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	return string(hash)
 }

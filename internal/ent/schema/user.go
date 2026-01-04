@@ -25,26 +25,26 @@ func (User) Fields() []ent.Field {
 			Immutable(),
 		field.String("name").
 			NotEmpty().
-			MaxLen(255).
-			Comment("Customer name"),
+			MaxLen(255),
 		field.String("email").
-			NotEmpty().
-			Unique().
-			Comment("Customer email"),
+			Optional().
+			Unique(),
+		field.Bool("email_verified").
+			Default(false),
 		field.String("phone_number").
-			Default("").
-			Comment("Customer phone number"),
+			Default(""),
 		field.Bool("is_active").
-			Default(true).
-			Comment("Whether the customer is active"),
+			Default(true),
 		field.String("password_hash").
-			NotEmpty().
-			Comment("Hashed password for authentication"),
+			Optional().
+			Nillable(),
 	}
 }
 
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("restaurants", Restaurant.Type),
+		edge.To("auth_providers", UserAuthProvider.Type),
+		edge.To("refresh_tokens", RefreshToken.Type),
 	}
 }

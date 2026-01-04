@@ -10,8 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type RegisterUserData struct {
+	Name     string
+	Email    string
+	Password string
+}
+
 type UserRepository interface {
-	Create(ctx context.Context, user *dto.RegisterUserRequest) (*dto.User, error)
+	Create(ctx context.Context, user *RegisterUserData) (*dto.User, error)
 	GetByEmail(ctx context.Context, email string) (*dto.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*dto.User, error)
 	Update(ctx context.Context, id uuid.UUID, user *dto.UpdateUserRequest) (*dto.User, error)
@@ -26,7 +32,7 @@ func NewEntUserRepository(client *ent.Client) *EntUserRepository {
 	return &EntUserRepository{client: client}
 }
 
-func (r *EntUserRepository) Create(ctx context.Context, req *dto.RegisterUserRequest) (*dto.User, error) {
+func (r *EntUserRepository) Create(ctx context.Context, req *RegisterUserData) (*dto.User, error) {
 	created, err := r.client.User.
 		Create().
 		SetName(req.Name).
@@ -41,7 +47,7 @@ func (r *EntUserRepository) Create(ctx context.Context, req *dto.RegisterUserReq
 		ID:       created.ID,
 		Name:     created.Name,
 		Email:    created.Email,
-		Password: created.PasswordHash,
+		Password: *created.PasswordHash,
 	}, nil
 }
 
@@ -57,7 +63,7 @@ func (r *EntUserRepository) GetByEmail(ctx context.Context, email string) (*dto.
 		ID:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
-		Password: user.PasswordHash,
+		Password: *user.PasswordHash,
 	}, nil
 }
 
@@ -71,7 +77,7 @@ func (r *EntUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Use
 		ID:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
-		Password: user.PasswordHash,
+		Password: *user.PasswordHash,
 	}, nil
 }
 
@@ -103,7 +109,7 @@ func (r *EntUserRepository) Update(ctx context.Context, id uuid.UUID, user *dto.
 		ID:       updated.ID,
 		Name:     updated.Name,
 		Email:    updated.Email,
-		Password: updated.PasswordHash,
+		Password: *updated.PasswordHash,
 	}, nil
 }
 

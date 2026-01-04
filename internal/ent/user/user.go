@@ -21,6 +21,8 @@ const (
 	FieldName = "name"
 	// FieldEmail holds the string denoting the email field in the database.
 	FieldEmail = "email"
+	// FieldEmailVerified holds the string denoting the email_verified field in the database.
+	FieldEmailVerified = "email_verified"
 	// FieldPhoneNumber holds the string denoting the phone_number field in the database.
 	FieldPhoneNumber = "phone_number"
 	// FieldIsActive holds the string denoting the is_active field in the database.
@@ -29,6 +31,10 @@ const (
 	FieldPasswordHash = "password_hash"
 	// EdgeRestaurants holds the string denoting the restaurants edge name in mutations.
 	EdgeRestaurants = "restaurants"
+	// EdgeAuthProviders holds the string denoting the auth_providers edge name in mutations.
+	EdgeAuthProviders = "auth_providers"
+	// EdgeRefreshTokens holds the string denoting the refresh_tokens edge name in mutations.
+	EdgeRefreshTokens = "refresh_tokens"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RestaurantsTable is the table that holds the restaurants relation/edge.
@@ -38,6 +44,20 @@ const (
 	RestaurantsInverseTable = "restaurants"
 	// RestaurantsColumn is the table column denoting the restaurants relation/edge.
 	RestaurantsColumn = "user_id"
+	// AuthProvidersTable is the table that holds the auth_providers relation/edge.
+	AuthProvidersTable = "user_auth_providers"
+	// AuthProvidersInverseTable is the table name for the UserAuthProvider entity.
+	// It exists in this package in order to avoid circular dependency with the "userauthprovider" package.
+	AuthProvidersInverseTable = "user_auth_providers"
+	// AuthProvidersColumn is the table column denoting the auth_providers relation/edge.
+	AuthProvidersColumn = "user_id"
+	// RefreshTokensTable is the table that holds the refresh_tokens relation/edge.
+	RefreshTokensTable = "refresh_tokens"
+	// RefreshTokensInverseTable is the table name for the RefreshToken entity.
+	// It exists in this package in order to avoid circular dependency with the "refreshtoken" package.
+	RefreshTokensInverseTable = "refresh_tokens"
+	// RefreshTokensColumn is the table column denoting the refresh_tokens relation/edge.
+	RefreshTokensColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -46,6 +66,7 @@ var Columns = []string{
 	FieldUpdateTime,
 	FieldName,
 	FieldEmail,
+	FieldEmailVerified,
 	FieldPhoneNumber,
 	FieldIsActive,
 	FieldPasswordHash,
@@ -68,14 +89,12 @@ var (
 	UpdateDefaultUpdateTime func() time.Time
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	EmailValidator func(string) error
+	// DefaultEmailVerified holds the default value on creation for the "email_verified" field.
+	DefaultEmailVerified bool
 	// DefaultPhoneNumber holds the default value on creation for the "phone_number" field.
 	DefaultPhoneNumber string
 	// DefaultIsActive holds the default value on creation for the "is_active" field.
 	DefaultIsActive bool
-	// PasswordHashValidator is a validator for the "password_hash" field. It is called by the builders before save.
-	PasswordHashValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -101,6 +120,11 @@ func ByName(opts ...sql.OrderTermOption) OrderOption {
 // ByEmail orders the results by the email field.
 func ByEmail(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldEmail, opts...).ToFunc()
+}
+
+// ByEmailVerified orders the results by the email_verified field.
+func ByEmailVerified(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldEmailVerified, opts...).ToFunc()
 }
 
 // ByPhoneNumber orders the results by the phone_number field.
@@ -131,10 +155,52 @@ func ByRestaurants(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRestaurantsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAuthProvidersCount orders the results by auth_providers count.
+func ByAuthProvidersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuthProvidersStep(), opts...)
+	}
+}
+
+// ByAuthProviders orders the results by auth_providers terms.
+func ByAuthProviders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuthProvidersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByRefreshTokensCount orders the results by refresh_tokens count.
+func ByRefreshTokensCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newRefreshTokensStep(), opts...)
+	}
+}
+
+// ByRefreshTokens orders the results by refresh_tokens terms.
+func ByRefreshTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newRefreshTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRestaurantsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RestaurantsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RestaurantsTable, RestaurantsColumn),
+	)
+}
+func newAuthProvidersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuthProvidersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AuthProvidersTable, AuthProvidersColumn),
+	)
+}
+func newRefreshTokensStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(RefreshTokensInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, RefreshTokensTable, RefreshTokensColumn),
 	)
 }

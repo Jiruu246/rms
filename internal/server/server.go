@@ -66,6 +66,7 @@ func (s *Server) routes() {
 	// initialize repositories
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
+	refreshTokenRepo := repos.NewEntRefreshTokenRepository(s.client)
 	restaurantRepo := repos.NewEntRestaurantRepository(s.client)
 	menuitemRepo := repos.NewEntMenuItemRepository(s.client)
 	modifierRepo := repos.NewEntModifierRepository(s.client)
@@ -74,6 +75,7 @@ func (s *Server) routes() {
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
+	authService := services.NewAuthService(userRepo, refreshTokenRepo)
 	userService := services.NewUserService(userRepo)
 	restaurantService := services.NewRestaurantService(restaurantRepo)
 	menuItemService := services.NewMenuItemService(menuitemRepo)
@@ -83,6 +85,7 @@ func (s *Server) routes() {
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
+	authHandler := handler.NewAuthHandler(authService, []byte(s.cfg.JWTSecret))
 	userHandler := handler.NewUserHandler(userService)
 	restaurantHandler := handler.NewRestaurantHandler(restaurantService)
 	menuItemHandler := handler.NewMenuItemHandler(menuItemService)
@@ -91,12 +94,21 @@ func (s *Server) routes() {
 	orderHandler := handler.NewOrderHandler(orderService)
 
 	// API routes
+
 	api := s.engine.Group("/api")
 	{
+		//TODO: Not a great pattern, refactor later
 		public := api.Group("/public")
 		{
 			public.POST("/order", orderHandler.CreateOrderPub)
-			// TODO: Add session-based authentication middleware for public APIs\
+		}
+
+		auth := api.Group("/auth")
+		{
+			auth.POST("/register", authHandler.Register)
+			auth.POST("/login", authHandler.Login)
+			auth.POST("/refresh", authHandler.Refresh)
+			auth.POST("/logout", authHandler.Logout)
 		}
 
 		categories := api.Group("/categories")
@@ -112,17 +124,11 @@ func (s *Server) routes() {
 		}
 
 		users := api.Group("/users")
+		users.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
 		{
-			users.POST("/register", userHandler.Register)
-			users.POST("/login", userHandler.Login)
-
-			profile := users.Group("/profile")
-			profile.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
-			{
-				profile.GET("", userHandler.GetProfile)
-				profile.PUT("", userHandler.UpdateProfile)
-				profile.DELETE("", userHandler.DeleteAccount)
-			}
+			users.GET("/profile", userHandler.GetProfile)
+			users.PUT("/profile", userHandler.UpdateProfile)
+			users.DELETE("/profile", userHandler.DeleteAccount)
 		}
 
 		restaurants := api.Group("/restaurants")

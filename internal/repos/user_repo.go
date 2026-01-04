@@ -41,7 +41,7 @@ func (r *EntUserRepository) Create(ctx context.Context, req *dto.RegisterUserReq
 		ID:       created.ID,
 		Name:     created.Name,
 		Email:    created.Email,
-		Password: created.PasswordHash,
+		Password: *created.PasswordHash,
 	}, nil
 }
 
@@ -57,7 +57,7 @@ func (r *EntUserRepository) GetByEmail(ctx context.Context, email string) (*dto.
 		ID:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
-		Password: user.PasswordHash,
+		Password: *user.PasswordHash,
 	}, nil
 }
 
@@ -71,7 +71,7 @@ func (r *EntUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Use
 		ID:       user.ID,
 		Name:     user.Name,
 		Email:    user.Email,
-		Password: user.PasswordHash,
+		Password: *user.PasswordHash,
 	}, nil
 }
 
@@ -103,7 +103,7 @@ func (r *EntUserRepository) Update(ctx context.Context, id uuid.UUID, user *dto.
 		ID:       updated.ID,
 		Name:     updated.Name,
 		Email:    updated.Email,
-		Password: updated.PasswordHash,
+		Password: *updated.PasswordHash,
 	}, nil
 }
 

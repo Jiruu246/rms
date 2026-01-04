@@ -27,8 +27,14 @@ type OrderItem func(*sql.Selector)
 // OrderItemModifierOption is the predicate function for orderitemmodifieroption builders.
 type OrderItemModifierOption func(*sql.Selector)
 
+// RefreshToken is the predicate function for refreshtoken builders.
+type RefreshToken func(*sql.Selector)
+
 // Restaurant is the predicate function for restaurant builders.
 type Restaurant func(*sql.Selector)
 
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
+
+// UserAuthProvider is the predicate function for userauthprovider builders.
+type UserAuthProvider func(*sql.Selector)

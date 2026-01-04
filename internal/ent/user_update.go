@@ -12,8 +12,10 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
+	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 	"github.com/google/uuid"
 )
 
@@ -64,6 +66,26 @@ func (_u *UserUpdate) SetNillableEmail(v *string) *UserUpdate {
 	return _u
 }
 
+// ClearEmail clears the value of the "email" field.
+func (_u *UserUpdate) ClearEmail() *UserUpdate {
+	_u.mutation.ClearEmail()
+	return _u
+}
+
+// SetEmailVerified sets the "email_verified" field.
+func (_u *UserUpdate) SetEmailVerified(v bool) *UserUpdate {
+	_u.mutation.SetEmailVerified(v)
+	return _u
+}
+
+// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
+func (_u *UserUpdate) SetNillableEmailVerified(v *bool) *UserUpdate {
+	if v != nil {
+		_u.SetEmailVerified(*v)
+	}
+	return _u
+}
+
 // SetPhoneNumber sets the "phone_number" field.
 func (_u *UserUpdate) SetPhoneNumber(v string) *UserUpdate {
 	_u.mutation.SetPhoneNumber(v)
@@ -106,6 +128,12 @@ func (_u *UserUpdate) SetNillablePasswordHash(v *string) *UserUpdate {
 	return _u
 }
 
+// ClearPasswordHash clears the value of the "password_hash" field.
+func (_u *UserUpdate) ClearPasswordHash() *UserUpdate {
+	_u.mutation.ClearPasswordHash()
+	return _u
+}
+
 // AddRestaurantIDs adds the "restaurants" edge to the Restaurant entity by IDs.
 func (_u *UserUpdate) AddRestaurantIDs(ids ...uuid.UUID) *UserUpdate {
 	_u.mutation.AddRestaurantIDs(ids...)
@@ -119,6 +147,36 @@ func (_u *UserUpdate) AddRestaurants(v ...*Restaurant) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddRestaurantIDs(ids...)
+}
+
+// AddAuthProviderIDs adds the "auth_providers" edge to the UserAuthProvider entity by IDs.
+func (_u *UserUpdate) AddAuthProviderIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAuthProviderIDs(ids...)
+	return _u
+}
+
+// AddAuthProviders adds the "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdate) AddAuthProviders(v ...*UserAuthProvider) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAuthProviderIDs(ids...)
+}
+
+// AddRefreshTokenIDs adds the "refresh_tokens" edge to the RefreshToken entity by IDs.
+func (_u *UserUpdate) AddRefreshTokenIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddRefreshTokenIDs(ids...)
+	return _u
+}
+
+// AddRefreshTokens adds the "refresh_tokens" edges to the RefreshToken entity.
+func (_u *UserUpdate) AddRefreshTokens(v ...*RefreshToken) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRefreshTokenIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -145,6 +203,48 @@ func (_u *UserUpdate) RemoveRestaurants(v ...*Restaurant) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRestaurantIDs(ids...)
+}
+
+// ClearAuthProviders clears all "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdate) ClearAuthProviders() *UserUpdate {
+	_u.mutation.ClearAuthProviders()
+	return _u
+}
+
+// RemoveAuthProviderIDs removes the "auth_providers" edge to UserAuthProvider entities by IDs.
+func (_u *UserUpdate) RemoveAuthProviderIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAuthProviderIDs(ids...)
+	return _u
+}
+
+// RemoveAuthProviders removes "auth_providers" edges to UserAuthProvider entities.
+func (_u *UserUpdate) RemoveAuthProviders(v ...*UserAuthProvider) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAuthProviderIDs(ids...)
+}
+
+// ClearRefreshTokens clears all "refresh_tokens" edges to the RefreshToken entity.
+func (_u *UserUpdate) ClearRefreshTokens() *UserUpdate {
+	_u.mutation.ClearRefreshTokens()
+	return _u
+}
+
+// RemoveRefreshTokenIDs removes the "refresh_tokens" edge to RefreshToken entities by IDs.
+func (_u *UserUpdate) RemoveRefreshTokenIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemoveRefreshTokenIDs(ids...)
+	return _u
+}
+
+// RemoveRefreshTokens removes "refresh_tokens" edges to RefreshToken entities.
+func (_u *UserUpdate) RemoveRefreshTokens(v ...*RefreshToken) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRefreshTokenIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -190,16 +290,6 @@ func (_u *UserUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Email(); ok {
-		if err := user.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.PasswordHash(); ok {
-		if err := user.PasswordHashValidator(v); err != nil {
-			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -224,6 +314,12 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.EmailVerified(); ok {
+		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.PhoneNumber(); ok {
 		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 	}
@@ -232,6 +328,9 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
+	}
+	if _u.mutation.PasswordHashCleared() {
+		_spec.ClearField(user.FieldPasswordHash, field.TypeString)
 	}
 	if _u.mutation.RestaurantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -271,6 +370,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAuthProvidersIDs(); len(nodes) > 0 && !_u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AuthProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RefreshTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshTokensTable,
+			Columns: []string{user.RefreshTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRefreshTokensIDs(); len(nodes) > 0 && !_u.mutation.RefreshTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshTokensTable,
+			Columns: []string{user.RefreshTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RefreshTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshTokensTable,
+			Columns: []string{user.RefreshTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -332,6 +521,26 @@ func (_u *UserUpdateOne) SetNillableEmail(v *string) *UserUpdateOne {
 	return _u
 }
 
+// ClearEmail clears the value of the "email" field.
+func (_u *UserUpdateOne) ClearEmail() *UserUpdateOne {
+	_u.mutation.ClearEmail()
+	return _u
+}
+
+// SetEmailVerified sets the "email_verified" field.
+func (_u *UserUpdateOne) SetEmailVerified(v bool) *UserUpdateOne {
+	_u.mutation.SetEmailVerified(v)
+	return _u
+}
+
+// SetNillableEmailVerified sets the "email_verified" field if the given value is not nil.
+func (_u *UserUpdateOne) SetNillableEmailVerified(v *bool) *UserUpdateOne {
+	if v != nil {
+		_u.SetEmailVerified(*v)
+	}
+	return _u
+}
+
 // SetPhoneNumber sets the "phone_number" field.
 func (_u *UserUpdateOne) SetPhoneNumber(v string) *UserUpdateOne {
 	_u.mutation.SetPhoneNumber(v)
@@ -374,6 +583,12 @@ func (_u *UserUpdateOne) SetNillablePasswordHash(v *string) *UserUpdateOne {
 	return _u
 }
 
+// ClearPasswordHash clears the value of the "password_hash" field.
+func (_u *UserUpdateOne) ClearPasswordHash() *UserUpdateOne {
+	_u.mutation.ClearPasswordHash()
+	return _u
+}
+
 // AddRestaurantIDs adds the "restaurants" edge to the Restaurant entity by IDs.
 func (_u *UserUpdateOne) AddRestaurantIDs(ids ...uuid.UUID) *UserUpdateOne {
 	_u.mutation.AddRestaurantIDs(ids...)
@@ -387,6 +602,36 @@ func (_u *UserUpdateOne) AddRestaurants(v ...*Restaurant) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddRestaurantIDs(ids...)
+}
+
+// AddAuthProviderIDs adds the "auth_providers" edge to the UserAuthProvider entity by IDs.
+func (_u *UserUpdateOne) AddAuthProviderIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAuthProviderIDs(ids...)
+	return _u
+}
+
+// AddAuthProviders adds the "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdateOne) AddAuthProviders(v ...*UserAuthProvider) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAuthProviderIDs(ids...)
+}
+
+// AddRefreshTokenIDs adds the "refresh_tokens" edge to the RefreshToken entity by IDs.
+func (_u *UserUpdateOne) AddRefreshTokenIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddRefreshTokenIDs(ids...)
+	return _u
+}
+
+// AddRefreshTokens adds the "refresh_tokens" edges to the RefreshToken entity.
+func (_u *UserUpdateOne) AddRefreshTokens(v ...*RefreshToken) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddRefreshTokenIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -413,6 +658,48 @@ func (_u *UserUpdateOne) RemoveRestaurants(v ...*Restaurant) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRestaurantIDs(ids...)
+}
+
+// ClearAuthProviders clears all "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdateOne) ClearAuthProviders() *UserUpdateOne {
+	_u.mutation.ClearAuthProviders()
+	return _u
+}
+
+// RemoveAuthProviderIDs removes the "auth_providers" edge to UserAuthProvider entities by IDs.
+func (_u *UserUpdateOne) RemoveAuthProviderIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAuthProviderIDs(ids...)
+	return _u
+}
+
+// RemoveAuthProviders removes "auth_providers" edges to UserAuthProvider entities.
+func (_u *UserUpdateOne) RemoveAuthProviders(v ...*UserAuthProvider) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAuthProviderIDs(ids...)
+}
+
+// ClearRefreshTokens clears all "refresh_tokens" edges to the RefreshToken entity.
+func (_u *UserUpdateOne) ClearRefreshTokens() *UserUpdateOne {
+	_u.mutation.ClearRefreshTokens()
+	return _u
+}
+
+// RemoveRefreshTokenIDs removes the "refresh_tokens" edge to RefreshToken entities by IDs.
+func (_u *UserUpdateOne) RemoveRefreshTokenIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemoveRefreshTokenIDs(ids...)
+	return _u
+}
+
+// RemoveRefreshTokens removes "refresh_tokens" edges to RefreshToken entities.
+func (_u *UserUpdateOne) RemoveRefreshTokens(v ...*RefreshToken) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveRefreshTokenIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -471,16 +758,6 @@ func (_u *UserUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "User.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Email(); ok {
-		if err := user.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "User.email": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.PasswordHash(); ok {
-		if err := user.PasswordHashValidator(v); err != nil {
-			return &ValidationError{Name: "password_hash", err: fmt.Errorf(`ent: validator failed for field "User.password_hash": %w`, err)}
-		}
-	}
 	return nil
 }
 
@@ -522,6 +799,12 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(user.FieldEmail, field.TypeString, value)
 	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(user.FieldEmail, field.TypeString)
+	}
+	if value, ok := _u.mutation.EmailVerified(); ok {
+		_spec.SetField(user.FieldEmailVerified, field.TypeBool, value)
+	}
 	if value, ok := _u.mutation.PhoneNumber(); ok {
 		_spec.SetField(user.FieldPhoneNumber, field.TypeString, value)
 	}
@@ -530,6 +813,9 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 	}
 	if value, ok := _u.mutation.PasswordHash(); ok {
 		_spec.SetField(user.FieldPasswordHash, field.TypeString, value)
+	}
+	if _u.mutation.PasswordHashCleared() {
+		_spec.ClearField(user.FieldPasswordHash, field.TypeString)
 	}
 	if _u.mutation.RestaurantsCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -569,6 +855,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAuthProvidersIDs(); len(nodes) > 0 && !_u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AuthProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.RefreshTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshTokensTable,
+			Columns: []string{user.RefreshTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedRefreshTokensIDs(); len(nodes) > 0 && !_u.mutation.RefreshTokensCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshTokensTable,
+			Columns: []string{user.RefreshTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RefreshTokensIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.RefreshTokensTable,
+			Columns: []string{user.RefreshTokensColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

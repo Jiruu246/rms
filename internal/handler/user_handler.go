@@ -15,40 +15,6 @@ func NewUserHandler(service services.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
-func (h *UserHandler) Register(c *gin.Context) {
-	var req dto.RegisterUserRequest
-
-	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
-		utils.WriteBadRequest(c.Writer, err.Error())
-		return
-	}
-
-	user, err := h.service.Register(c.Request.Context(), req)
-	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to register")
-		return
-	}
-
-	utils.WriteCreated(c.Writer, user)
-}
-
-func (h *UserHandler) Login(c *gin.Context) {
-	var req dto.LoginUserRequest
-
-	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
-		utils.WriteBadRequest(c.Writer, err.Error())
-		return
-	}
-
-	user, err := h.service.Login(c.Request.Context(), req)
-	if err != nil {
-		utils.WriteUnauthorized(c.Writer, err.Error())
-		return
-	}
-
-	utils.WriteSuccess(c.Writer, user)
-}
-
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	claims := c.MustGet("claims").(utils.JWTClaims)
 

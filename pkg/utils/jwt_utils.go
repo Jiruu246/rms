@@ -1,6 +1,8 @@
 package utils
 
 import (
+	"crypto/rand"
+	"encoding/hex"
 	"errors"
 	"time"
 
@@ -53,4 +55,12 @@ func ValidateJWT(JWTKey []byte, tokenString string) (JWTClaims, error) {
 	}
 
 	return JWTClaims{}, errors.New("invalid token")
+}
+
+func GenerateRefreshToken() (string, error) {
+	bytes := make([]byte, 32)
+	if _, err := rand.Read(bytes); err != nil {
+		return "", err
+	}
+	return hex.EncodeToString(bytes), nil
 }

@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -16,7 +17,7 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) Create(ctx context.Context, req *dto.RegisterUserRequest) (*dto.User, error) {
+func (m *MockUserRepository) Create(ctx context.Context, req *repos.RegisterUserData) (*dto.User, error) {
 	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
@@ -56,13 +57,13 @@ func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 func TestUserService_Register(t *testing.T) {
 	testCases := []struct {
 		name          string
-		req           dto.RegisterUserRequest
+		input         RegisterUserInput
 		mockSetup     func(*MockUserRepository)
 		expectedError string
 	}{
 		{
 			name: "successful registration",
-			req: dto.RegisterUserRequest{
+			input: RegisterUserInput{
 				Name:     "John Doe",
 				Email:    "john.doe@example.com",
 				Password: "password123",
@@ -77,7 +78,7 @@ func TestUserService_Register(t *testing.T) {
 		},
 		{
 			name: "repository error",
-			req: dto.RegisterUserRequest{
+			input: RegisterUserInput{
 				Name:     "John Doe",
 				Email:    "john2.doe@example.com",
 				Password: "password123",
@@ -95,7 +96,7 @@ func TestUserService_Register(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewUserService(mockRepo)
-			result, err := service.Register(context.Background(), testCase.req)
+			result, err := service.Register(context.Background(), testCase.input)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -104,8 +105,8 @@ func TestUserService_Register(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.Equal(t, testCase.req.Name, result.Name)
-				assert.Equal(t, testCase.req.Email, result.Email)
+				assert.Equal(t, testCase.input.Name, result.Name)
+				assert.Equal(t, testCase.input.Email, result.Email)
 			}
 
 			mockRepo.AssertExpectations(t)

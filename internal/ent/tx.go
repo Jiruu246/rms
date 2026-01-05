@@ -30,6 +30,8 @@ type Tx struct {
 	Restaurant *RestaurantClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserAuthProvider is the client for interacting with the UserAuthProvider builders.
+	UserAuthProvider *UserAuthProviderClient
 
 	// lazily loaded.
 	client     *Client
@@ -170,6 +172,7 @@ func (tx *Tx) init() {
 	tx.OrderItemModifierOption = NewOrderItemModifierOptionClient(tx.config)
 	tx.Restaurant = NewRestaurantClient(tx.config)
 	tx.User = NewUserClient(tx.config)
+	tx.UserAuthProvider = NewUserAuthProviderClient(tx.config)
 }
 
 // txDriver wraps the given dialect.Tx with a nop dialect.Driver implementation.

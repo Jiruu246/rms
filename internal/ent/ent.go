@@ -21,6 +21,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 )
 
 // ent aliases to avoid import conflicts in user's code.
@@ -90,6 +91,7 @@ func checkColumn(t, c string) error {
 			orderitemmodifieroption.Table: orderitemmodifieroption.ValidColumn,
 			restaurant.Table:              restaurant.ValidColumn,
 			user.Table:                    user.ValidColumn,
+			userauthprovider.Table:        userauthprovider.ValidColumn,
 		})
 	})
 	return columnCheck(t, c)

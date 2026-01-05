@@ -14,6 +14,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 	"github.com/google/uuid"
 )
 
@@ -147,6 +148,21 @@ func (_u *UserUpdate) AddRestaurants(v ...*Restaurant) *UserUpdate {
 	return _u.AddRestaurantIDs(ids...)
 }
 
+// AddAuthProviderIDs adds the "auth_providers" edge to the UserAuthProvider entity by IDs.
+func (_u *UserUpdate) AddAuthProviderIDs(ids ...int) *UserUpdate {
+	_u.mutation.AddAuthProviderIDs(ids...)
+	return _u
+}
+
+// AddAuthProviders adds the "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdate) AddAuthProviders(v ...*UserAuthProvider) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAuthProviderIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -171,6 +187,27 @@ func (_u *UserUpdate) RemoveRestaurants(v ...*Restaurant) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRestaurantIDs(ids...)
+}
+
+// ClearAuthProviders clears all "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdate) ClearAuthProviders() *UserUpdate {
+	_u.mutation.ClearAuthProviders()
+	return _u
+}
+
+// RemoveAuthProviderIDs removes the "auth_providers" edge to UserAuthProvider entities by IDs.
+func (_u *UserUpdate) RemoveAuthProviderIDs(ids ...int) *UserUpdate {
+	_u.mutation.RemoveAuthProviderIDs(ids...)
+	return _u
+}
+
+// RemoveAuthProviders removes "auth_providers" edges to UserAuthProvider entities.
+func (_u *UserUpdate) RemoveAuthProviders(v ...*UserAuthProvider) *UserUpdate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAuthProviderIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -296,6 +333,51 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAuthProvidersIDs(); len(nodes) > 0 && !_u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AuthProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {
@@ -440,6 +522,21 @@ func (_u *UserUpdateOne) AddRestaurants(v ...*Restaurant) *UserUpdateOne {
 	return _u.AddRestaurantIDs(ids...)
 }
 
+// AddAuthProviderIDs adds the "auth_providers" edge to the UserAuthProvider entity by IDs.
+func (_u *UserUpdateOne) AddAuthProviderIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.AddAuthProviderIDs(ids...)
+	return _u
+}
+
+// AddAuthProviders adds the "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdateOne) AddAuthProviders(v ...*UserAuthProvider) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddAuthProviderIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -464,6 +561,27 @@ func (_u *UserUpdateOne) RemoveRestaurants(v ...*Restaurant) *UserUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRestaurantIDs(ids...)
+}
+
+// ClearAuthProviders clears all "auth_providers" edges to the UserAuthProvider entity.
+func (_u *UserUpdateOne) ClearAuthProviders() *UserUpdateOne {
+	_u.mutation.ClearAuthProviders()
+	return _u
+}
+
+// RemoveAuthProviderIDs removes the "auth_providers" edge to UserAuthProvider entities by IDs.
+func (_u *UserUpdateOne) RemoveAuthProviderIDs(ids ...int) *UserUpdateOne {
+	_u.mutation.RemoveAuthProviderIDs(ids...)
+	return _u
+}
+
+// RemoveAuthProviders removes "auth_providers" edges to UserAuthProvider entities.
+func (_u *UserUpdateOne) RemoveAuthProviders(v ...*UserAuthProvider) *UserUpdateOne {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveAuthProviderIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -619,6 +737,51 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedAuthProvidersIDs(); len(nodes) > 0 && !_u.mutation.AuthProvidersCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.AuthProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

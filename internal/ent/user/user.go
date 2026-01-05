@@ -31,6 +31,8 @@ const (
 	FieldPasswordHash = "password_hash"
 	// EdgeRestaurants holds the string denoting the restaurants edge name in mutations.
 	EdgeRestaurants = "restaurants"
+	// EdgeAuthProviders holds the string denoting the auth_providers edge name in mutations.
+	EdgeAuthProviders = "auth_providers"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RestaurantsTable is the table that holds the restaurants relation/edge.
@@ -40,6 +42,13 @@ const (
 	RestaurantsInverseTable = "restaurants"
 	// RestaurantsColumn is the table column denoting the restaurants relation/edge.
 	RestaurantsColumn = "user_id"
+	// AuthProvidersTable is the table that holds the auth_providers relation/edge.
+	AuthProvidersTable = "user_auth_providers"
+	// AuthProvidersInverseTable is the table name for the UserAuthProvider entity.
+	// It exists in this package in order to avoid circular dependency with the "userauthprovider" package.
+	AuthProvidersInverseTable = "user_auth_providers"
+	// AuthProvidersColumn is the table column denoting the auth_providers relation/edge.
+	AuthProvidersColumn = "user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -137,10 +146,31 @@ func ByRestaurants(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRestaurantsStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByAuthProvidersCount orders the results by auth_providers count.
+func ByAuthProvidersCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newAuthProvidersStep(), opts...)
+	}
+}
+
+// ByAuthProviders orders the results by auth_providers terms.
+func ByAuthProviders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newAuthProvidersStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRestaurantsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RestaurantsInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RestaurantsTable, RestaurantsColumn),
+	)
+}
+func newAuthProvidersStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(AuthProvidersInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, AuthProvidersTable, AuthProvidersColumn),
 	)
 }

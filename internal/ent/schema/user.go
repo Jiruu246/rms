@@ -44,5 +44,6 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("restaurants", Restaurant.Type),
+		edge.To("auth_providers", UserAuthProvider.Type),
 	}
 }

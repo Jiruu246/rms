@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 	"github.com/google/uuid"
 )
 
@@ -139,6 +140,21 @@ func (_c *UserCreate) AddRestaurants(v ...*Restaurant) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRestaurantIDs(ids...)
+}
+
+// AddAuthProviderIDs adds the "auth_providers" edge to the UserAuthProvider entity by IDs.
+func (_c *UserCreate) AddAuthProviderIDs(ids ...int) *UserCreate {
+	_c.mutation.AddAuthProviderIDs(ids...)
+	return _c
+}
+
+// AddAuthProviders adds the "auth_providers" edges to the UserAuthProvider entity.
+func (_c *UserCreate) AddAuthProviders(v ...*UserAuthProvider) *UserCreate {
+	ids := make([]int, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddAuthProviderIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -292,6 +308,22 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(restaurant.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.AuthProvidersIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.AuthProvidersTable,
+			Columns: []string{user.AuthProvidersColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(userauthprovider.FieldID, field.TypeInt),
 			},
 		}
 		for _, k := range nodes {

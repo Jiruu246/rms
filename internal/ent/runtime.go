@@ -15,6 +15,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 	"github.com/google/uuid"
 )
 
@@ -345,4 +346,51 @@ func init() {
 	userDescID := userFields[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	userauthproviderMixin := schema.UserAuthProvider{}.Mixin()
+	userauthproviderMixinFields0 := userauthproviderMixin[0].Fields()
+	_ = userauthproviderMixinFields0
+	userauthproviderFields := schema.UserAuthProvider{}.Fields()
+	_ = userauthproviderFields
+	// userauthproviderDescUpdateTime is the schema descriptor for update_time field.
+	userauthproviderDescUpdateTime := userauthproviderMixinFields0[0].Descriptor()
+	// userauthprovider.DefaultUpdateTime holds the default value on creation for the update_time field.
+	userauthprovider.DefaultUpdateTime = userauthproviderDescUpdateTime.Default.(func() time.Time)
+	// userauthprovider.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	userauthprovider.UpdateDefaultUpdateTime = userauthproviderDescUpdateTime.UpdateDefault.(func() time.Time)
+	// userauthproviderDescProvider is the schema descriptor for provider field.
+	userauthproviderDescProvider := userauthproviderFields[1].Descriptor()
+	// userauthprovider.ProviderValidator is a validator for the "provider" field. It is called by the builders before save.
+	userauthprovider.ProviderValidator = func() func(string) error {
+		validators := userauthproviderDescProvider.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(provider string) error {
+			for _, fn := range fns {
+				if err := fn(provider); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// userauthproviderDescProviderUserID is the schema descriptor for provider_user_id field.
+	userauthproviderDescProviderUserID := userauthproviderFields[2].Descriptor()
+	// userauthprovider.ProviderUserIDValidator is a validator for the "provider_user_id" field. It is called by the builders before save.
+	userauthprovider.ProviderUserIDValidator = func() func(string) error {
+		validators := userauthproviderDescProviderUserID.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(provider_user_id string) error {
+			for _, fn := range fns {
+				if err := fn(provider_user_id); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
 }

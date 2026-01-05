@@ -267,6 +267,28 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// UserAuthProvidersColumns holds the columns for the "user_auth_providers" table.
+	UserAuthProvidersColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeInt, Increment: true},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "provider", Type: field.TypeString, Size: 100},
+		{Name: "provider_user_id", Type: field.TypeString, Size: 255},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// UserAuthProvidersTable holds the schema information for the "user_auth_providers" table.
+	UserAuthProvidersTable = &schema.Table{
+		Name:       "user_auth_providers",
+		Columns:    UserAuthProvidersColumns,
+		PrimaryKey: []*schema.Column{UserAuthProvidersColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "user_auth_providers_users_auth_providers",
+				Columns:    []*schema.Column{UserAuthProvidersColumns[4]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
@@ -278,6 +300,7 @@ var (
 		OrderItemModifierOptionsTable,
 		RestaurantsTable,
 		UsersTable,
+		UserAuthProvidersTable,
 	}
 )
 
@@ -295,4 +318,5 @@ func init() {
 	OrderItemModifierOptionsTable.ForeignKeys[0].RefTable = ModifierOptionsTable
 	OrderItemModifierOptionsTable.ForeignKeys[1].RefTable = OrderItemsTable
 	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
+	UserAuthProvidersTable.ForeignKeys[0].RefTable = UsersTable
 }

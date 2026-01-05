@@ -7,6 +7,12 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type RegisterUserSchema struct {
+	Name     string `json:"name" binding:"required"`
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password" binding:"required"`
+}
+
 type UserHandler struct {
 	service services.UserService
 }
@@ -16,14 +22,18 @@ func NewUserHandler(service services.UserService) *UserHandler {
 }
 
 func (h *UserHandler) Register(c *gin.Context) {
-	var req dto.RegisterUserRequest
+	var req RegisterUserSchema
 
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
 		utils.WriteBadRequest(c.Writer, err.Error())
 		return
 	}
 
-	user, err := h.service.Register(c.Request.Context(), req)
+	user, err := h.service.Register(c.Request.Context(), services.RegisterUserInput{
+		Name:     req.Name,
+		Email:    req.Email,
+		Password: req.Password,
+	})
 	if err != nil {
 		utils.WriteInternalError(c.Writer, "Failed to register")
 		return

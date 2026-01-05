@@ -25,6 +25,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
+	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
 )
 
 // Client is the client that holds all ent builders.
@@ -50,6 +51,8 @@ type Client struct {
 	Restaurant *RestaurantClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// UserAuthProvider is the client for interacting with the UserAuthProvider builders.
+	UserAuthProvider *UserAuthProviderClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -70,6 +73,7 @@ func (c *Client) init() {
 	c.OrderItemModifierOption = NewOrderItemModifierOptionClient(c.config)
 	c.Restaurant = NewRestaurantClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.UserAuthProvider = NewUserAuthProviderClient(c.config)
 }
 
 type (
@@ -171,6 +175,7 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		OrderItemModifierOption: NewOrderItemModifierOptionClient(cfg),
 		Restaurant:              NewRestaurantClient(cfg),
 		User:                    NewUserClient(cfg),
+		UserAuthProvider:        NewUserAuthProviderClient(cfg),
 	}, nil
 }
 
@@ -199,6 +204,7 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		OrderItemModifierOption: NewOrderItemModifierOptionClient(cfg),
 		Restaurant:              NewRestaurantClient(cfg),
 		User:                    NewUserClient(cfg),
+		UserAuthProvider:        NewUserAuthProviderClient(cfg),
 	}, nil
 }
 
@@ -229,7 +235,7 @@ func (c *Client) Close() error {
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
 		c.Category, c.MenuItem, c.Modifier, c.ModifierOption, c.Order, c.OrderItem,
-		c.OrderItemModifierOption, c.Restaurant, c.User,
+		c.OrderItemModifierOption, c.Restaurant, c.User, c.UserAuthProvider,
 	} {
 		n.Use(hooks...)
 	}
@@ -240,7 +246,7 @@ func (c *Client) Use(hooks ...Hook) {
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
 		c.Category, c.MenuItem, c.Modifier, c.ModifierOption, c.Order, c.OrderItem,
-		c.OrderItemModifierOption, c.Restaurant, c.User,
+		c.OrderItemModifierOption, c.Restaurant, c.User, c.UserAuthProvider,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -267,6 +273,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Restaurant.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *UserAuthProviderMutation:
+		return c.UserAuthProvider.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -1828,6 +1836,22 @@ func (c *UserClient) QueryRestaurants(_m *User) *RestaurantQuery {
 	return query
 }
 
+// QueryAuthProviders queries the auth_providers edge of a User.
+func (c *UserClient) QueryAuthProviders(_m *User) *UserAuthProviderQuery {
+	query := (&UserAuthProviderClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(userauthprovider.Table, userauthprovider.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.AuthProvidersTable, user.AuthProvidersColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *UserClient) Hooks() []Hook {
 	return c.hooks.User
@@ -1853,14 +1877,163 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// UserAuthProviderClient is a client for the UserAuthProvider schema.
+type UserAuthProviderClient struct {
+	config
+}
+
+// NewUserAuthProviderClient returns a client for the UserAuthProvider from the given config.
+func NewUserAuthProviderClient(c config) *UserAuthProviderClient {
+	return &UserAuthProviderClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `userauthprovider.Hooks(f(g(h())))`.
+func (c *UserAuthProviderClient) Use(hooks ...Hook) {
+	c.hooks.UserAuthProvider = append(c.hooks.UserAuthProvider, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `userauthprovider.Intercept(f(g(h())))`.
+func (c *UserAuthProviderClient) Intercept(interceptors ...Interceptor) {
+	c.inters.UserAuthProvider = append(c.inters.UserAuthProvider, interceptors...)
+}
+
+// Create returns a builder for creating a UserAuthProvider entity.
+func (c *UserAuthProviderClient) Create() *UserAuthProviderCreate {
+	mutation := newUserAuthProviderMutation(c.config, OpCreate)
+	return &UserAuthProviderCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of UserAuthProvider entities.
+func (c *UserAuthProviderClient) CreateBulk(builders ...*UserAuthProviderCreate) *UserAuthProviderCreateBulk {
+	return &UserAuthProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *UserAuthProviderClient) MapCreateBulk(slice any, setFunc func(*UserAuthProviderCreate, int)) *UserAuthProviderCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &UserAuthProviderCreateBulk{err: fmt.Errorf("calling to UserAuthProviderClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*UserAuthProviderCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &UserAuthProviderCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for UserAuthProvider.
+func (c *UserAuthProviderClient) Update() *UserAuthProviderUpdate {
+	mutation := newUserAuthProviderMutation(c.config, OpUpdate)
+	return &UserAuthProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *UserAuthProviderClient) UpdateOne(_m *UserAuthProvider) *UserAuthProviderUpdateOne {
+	mutation := newUserAuthProviderMutation(c.config, OpUpdateOne, withUserAuthProvider(_m))
+	return &UserAuthProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *UserAuthProviderClient) UpdateOneID(id int) *UserAuthProviderUpdateOne {
+	mutation := newUserAuthProviderMutation(c.config, OpUpdateOne, withUserAuthProviderID(id))
+	return &UserAuthProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for UserAuthProvider.
+func (c *UserAuthProviderClient) Delete() *UserAuthProviderDelete {
+	mutation := newUserAuthProviderMutation(c.config, OpDelete)
+	return &UserAuthProviderDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *UserAuthProviderClient) DeleteOne(_m *UserAuthProvider) *UserAuthProviderDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *UserAuthProviderClient) DeleteOneID(id int) *UserAuthProviderDeleteOne {
+	builder := c.Delete().Where(userauthprovider.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &UserAuthProviderDeleteOne{builder}
+}
+
+// Query returns a query builder for UserAuthProvider.
+func (c *UserAuthProviderClient) Query() *UserAuthProviderQuery {
+	return &UserAuthProviderQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeUserAuthProvider},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a UserAuthProvider entity by its id.
+func (c *UserAuthProviderClient) Get(ctx context.Context, id int) (*UserAuthProvider, error) {
+	return c.Query().Where(userauthprovider.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *UserAuthProviderClient) GetX(ctx context.Context, id int) *UserAuthProvider {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a UserAuthProvider.
+func (c *UserAuthProviderClient) QueryUser(_m *UserAuthProvider) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(userauthprovider.Table, userauthprovider.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, userauthprovider.UserTable, userauthprovider.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *UserAuthProviderClient) Hooks() []Hook {
+	return c.hooks.UserAuthProvider
+}
+
+// Interceptors returns the client interceptors.
+func (c *UserAuthProviderClient) Interceptors() []Interceptor {
+	return c.inters.UserAuthProvider
+}
+
+func (c *UserAuthProviderClient) mutate(ctx context.Context, m *UserAuthProviderMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&UserAuthProviderCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&UserAuthProviderUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&UserAuthProviderUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&UserAuthProviderDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown UserAuthProvider mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
 		Category, MenuItem, Modifier, ModifierOption, Order, OrderItem,
-		OrderItemModifierOption, Restaurant, User []ent.Hook
+		OrderItemModifierOption, Restaurant, User, UserAuthProvider []ent.Hook
 	}
 	inters struct {
 		Category, MenuItem, Modifier, ModifierOption, Order, OrderItem,
-		OrderItemModifierOption, Restaurant, User []ent.Interceptor
+		OrderItemModifierOption, Restaurant, User, UserAuthProvider []ent.Interceptor
 	}
 )

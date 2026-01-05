@@ -10,8 +10,14 @@ import (
 	"github.com/google/uuid"
 )
 
+type RegisterUserData struct {
+	Name     string
+	Email    string
+	Password string
+}
+
 type UserRepository interface {
-	Create(ctx context.Context, user *dto.RegisterUserRequest) (*dto.User, error)
+	Create(ctx context.Context, user *RegisterUserData) (*dto.User, error)
 	GetByEmail(ctx context.Context, email string) (*dto.User, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*dto.User, error)
 	Update(ctx context.Context, id uuid.UUID, user *dto.UpdateUserRequest) (*dto.User, error)
@@ -26,7 +32,7 @@ func NewEntUserRepository(client *ent.Client) *EntUserRepository {
 	return &EntUserRepository{client: client}
 }
 
-func (r *EntUserRepository) Create(ctx context.Context, req *dto.RegisterUserRequest) (*dto.User, error) {
+func (r *EntUserRepository) Create(ctx context.Context, req *RegisterUserData) (*dto.User, error) {
 	created, err := r.client.User.
 		Create().
 		SetName(req.Name).

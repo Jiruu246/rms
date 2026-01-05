@@ -9,6 +9,7 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/handler"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -35,7 +36,7 @@ func (s *UserTestSuite) TestCreateUser() {
 	}{
 		{
 			testName: "CreateUser",
-			body: dto.RegisterUserRequest{
+			body: handler.RegisterUserSchema{
 				Name:     "Test User",
 				Email:    "testuser@example.com",
 				Password: "securepassword",
@@ -248,13 +249,13 @@ func (s *UserTestSuite) TestUserValidation() {
 	tests := []struct {
 		testName string
 		url      string
-		body     dto.RegisterUserRequest
+		body     handler.RegisterUserSchema
 		expected int
 	}{
 		{
 			testName: "CreateUser_InvalidData_EmptyName",
 			url:      path.Join(userAPIBase, "register"),
-			body:     dto.RegisterUserRequest{Name: "", Email: "validemail@example.com"},
+			body:     handler.RegisterUserSchema{Name: "", Email: "validemail@example.com"},
 			expected: http.StatusBadRequest,
 		},
 	}

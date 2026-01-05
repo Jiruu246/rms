@@ -10,8 +10,14 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+type RegisterUserInput struct {
+	Name     string
+	Email    string
+	Password string
+}
+
 type UserService interface {
-	Register(ctx context.Context, req dto.RegisterUserRequest) (*dto.User, error)
+	Register(ctx context.Context, req RegisterUserInput) (*dto.User, error)
 	Login(ctx context.Context, req dto.LoginUserRequest) (*dto.User, error)
 	GetProfile(ctx context.Context, id uuid.UUID) (*dto.User, error)
 	UpdateProfile(ctx context.Context, id uuid.UUID, updates *dto.UpdateUserRequest) (*dto.User, error)
@@ -26,13 +32,13 @@ func NewUserService(repo repos.UserRepository) UserService {
 	return &userService{repo: repo}
 }
 
-func (s *userService) Register(ctx context.Context, req dto.RegisterUserRequest) (*dto.User, error) {
+func (s *userService) Register(ctx context.Context, req RegisterUserInput) (*dto.User, error) {
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return nil, err
 	}
 
-	reqUser := &dto.RegisterUserRequest{
+	reqUser := &repos.RegisterUserData{
 		Name:     req.Name,
 		Email:    req.Email,
 		Password: string(hashedPassword),

@@ -66,6 +66,7 @@ func (s *Server) routes() {
 	// initialize repositories
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
+	refreshTokenRepo := repos.NewEntRefreshTokenRepository(s.client)
 	restaurantRepo := repos.NewEntRestaurantRepository(s.client)
 	menuitemRepo := repos.NewEntMenuItemRepository(s.client)
 	modifierRepo := repos.NewEntModifierRepository(s.client)
@@ -74,7 +75,7 @@ func (s *Server) routes() {
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
-	userService := services.NewUserService(userRepo)
+	userService := services.NewUserService(userRepo, refreshTokenRepo)
 	restaurantService := services.NewRestaurantService(restaurantRepo)
 	menuItemService := services.NewMenuItemService(menuitemRepo)
 	modifierService := services.NewModifierService(modifierRepo)
@@ -83,7 +84,8 @@ func (s *Server) routes() {
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
-	userHandler := handler.NewUserHandler(userService)
+	//TDN TODO: what JWT secrete doing here?
+	userHandler := handler.NewUserHandler(userService, []byte(s.cfg.JWTSecret))
 	restaurantHandler := handler.NewRestaurantHandler(restaurantService)
 	menuItemHandler := handler.NewMenuItemHandler(menuItemService)
 	modifierHandler := handler.NewModifierHandler(modifierService)
@@ -96,7 +98,6 @@ func (s *Server) routes() {
 		public := api.Group("/public")
 		{
 			public.POST("/order", orderHandler.CreateOrderPub)
-			// TODO: Add session-based authentication middleware for public APIs\
 		}
 
 		categories := api.Group("/categories")
@@ -113,9 +114,15 @@ func (s *Server) routes() {
 
 		users := api.Group("/users")
 		{
+			// Public authentication endpoints
 			users.POST("/register", userHandler.Register)
 			users.POST("/login", userHandler.Login)
 
+			// TDN TODO: Refresh and logout should be protected?
+			users.POST("/refresh", userHandler.RefreshToken)
+			users.POST("/logout", userHandler.Logout)
+
+			// Protected profile endpoints
 			profile := users.Group("/profile")
 			profile.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
 			{

@@ -19,6 +19,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/order"
 	"github.com/Jiruu246/rms/internal/ent/orderitem"
 	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
+	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/Jiruu246/rms/internal/ent/userauthprovider"
@@ -89,6 +90,7 @@ func checkColumn(t, c string) error {
 			order.Table:                   order.ValidColumn,
 			orderitem.Table:               orderitem.ValidColumn,
 			orderitemmodifieroption.Table: orderitemmodifieroption.ValidColumn,
+			refreshtoken.Table:            refreshtoken.ValidColumn,
 			restaurant.Table:              restaurant.ValidColumn,
 			user.Table:                    user.ValidColumn,
 			userauthprovider.Table:        userauthprovider.ValidColumn,

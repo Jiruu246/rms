@@ -20,6 +20,8 @@ type Config struct {
 	ShutdownTimeout  int
 	AllowedOrigins   []string
 	JWTSecret        string
+	AccessTokenExp   time.Duration
+	RefreshTokenExp  time.Duration
 }
 
 // Load reads configuration from environment variables and optional file.

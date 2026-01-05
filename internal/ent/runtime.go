@@ -12,6 +12,7 @@ import (
 	"github.com/Jiruu246/rms/internal/ent/order"
 	"github.com/Jiruu246/rms/internal/ent/orderitem"
 	"github.com/Jiruu246/rms/internal/ent/orderitemmodifieroption"
+	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/schema"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -254,6 +255,29 @@ func init() {
 	orderitemmodifieroptionDescOptionName := orderitemmodifieroptionFields[3].Descriptor()
 	// orderitemmodifieroption.OptionNameValidator is a validator for the "option_name" field. It is called by the builders before save.
 	orderitemmodifieroption.OptionNameValidator = orderitemmodifieroptionDescOptionName.Validators[0].(func(string) error)
+	refreshtokenMixin := schema.RefreshToken{}.Mixin()
+	refreshtokenMixinFields0 := refreshtokenMixin[0].Fields()
+	_ = refreshtokenMixinFields0
+	refreshtokenFields := schema.RefreshToken{}.Fields()
+	_ = refreshtokenFields
+	// refreshtokenDescUpdateTime is the schema descriptor for update_time field.
+	refreshtokenDescUpdateTime := refreshtokenMixinFields0[0].Descriptor()
+	// refreshtoken.DefaultUpdateTime holds the default value on creation for the update_time field.
+	refreshtoken.DefaultUpdateTime = refreshtokenDescUpdateTime.Default.(func() time.Time)
+	// refreshtoken.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	refreshtoken.UpdateDefaultUpdateTime = refreshtokenDescUpdateTime.UpdateDefault.(func() time.Time)
+	// refreshtokenDescToken is the schema descriptor for token field.
+	refreshtokenDescToken := refreshtokenFields[2].Descriptor()
+	// refreshtoken.TokenValidator is a validator for the "token" field. It is called by the builders before save.
+	refreshtoken.TokenValidator = refreshtokenDescToken.Validators[0].(func(string) error)
+	// refreshtokenDescRevoked is the schema descriptor for revoked field.
+	refreshtokenDescRevoked := refreshtokenFields[4].Descriptor()
+	// refreshtoken.DefaultRevoked holds the default value on creation for the revoked field.
+	refreshtoken.DefaultRevoked = refreshtokenDescRevoked.Default.(bool)
+	// refreshtokenDescID is the schema descriptor for id field.
+	refreshtokenDescID := refreshtokenFields[0].Descriptor()
+	// refreshtoken.DefaultID holds the default value on creation for the id field.
+	refreshtoken.DefaultID = refreshtokenDescID.Default.(func() uuid.UUID)
 	restaurantMixin := schema.Restaurant{}.Mixin()
 	restaurantMixinFields0 := restaurantMixin[0].Fields()
 	_ = restaurantMixinFields0

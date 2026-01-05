@@ -216,6 +216,55 @@ var (
 			},
 		},
 	}
+	// RefreshTokensColumns holds the columns for the "refresh_tokens" table.
+	RefreshTokensColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "token", Type: field.TypeString, Unique: true},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "revoked", Type: field.TypeBool, Default: false},
+		{Name: "revoked_at", Type: field.TypeTime, Nullable: true},
+		{Name: "last_used_at", Type: field.TypeTime, Nullable: true},
+		{Name: "replaced_by", Type: field.TypeUUID, Unique: true, Nullable: true},
+		{Name: "user_id", Type: field.TypeUUID},
+	}
+	// RefreshTokensTable holds the schema information for the "refresh_tokens" table.
+	RefreshTokensTable = &schema.Table{
+		Name:       "refresh_tokens",
+		Columns:    RefreshTokensColumns,
+		PrimaryKey: []*schema.Column{RefreshTokensColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "refresh_tokens_refresh_tokens_replaced_by_token",
+				Columns:    []*schema.Column{RefreshTokensColumns[7]},
+				RefColumns: []*schema.Column{RefreshTokensColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "refresh_tokens_users_refresh_tokens",
+				Columns:    []*schema.Column{RefreshTokensColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "refreshtoken_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshTokensColumns[8]},
+			},
+			{
+				Name:    "refreshtoken_revoked_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshTokensColumns[4], RefreshTokensColumns[3]},
+			},
+			{
+				Name:    "refreshtoken_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{RefreshTokensColumns[3]},
+			},
+		},
+	}
 	// RestaurantsColumns holds the columns for the "restaurants" table.
 	RestaurantsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID, Unique: true},
@@ -298,6 +347,7 @@ var (
 		OrdersTable,
 		OrderItemsTable,
 		OrderItemModifierOptionsTable,
+		RefreshTokensTable,
 		RestaurantsTable,
 		UsersTable,
 		UserAuthProvidersTable,
@@ -317,6 +367,8 @@ func init() {
 	OrderItemsTable.ForeignKeys[1].RefTable = OrdersTable
 	OrderItemModifierOptionsTable.ForeignKeys[0].RefTable = ModifierOptionsTable
 	OrderItemModifierOptionsTable.ForeignKeys[1].RefTable = OrderItemsTable
+	RefreshTokensTable.ForeignKeys[0].RefTable = RefreshTokensTable
+	RefreshTokensTable.ForeignKeys[1].RefTable = UsersTable
 	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
 	UserAuthProvidersTable.ForeignKeys[0].RefTable = UsersTable
 }

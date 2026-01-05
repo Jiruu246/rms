@@ -44,9 +44,11 @@ type UserEdges struct {
 	Restaurants []*Restaurant `json:"restaurants,omitempty"`
 	// AuthProviders holds the value of the auth_providers edge.
 	AuthProviders []*UserAuthProvider `json:"auth_providers,omitempty"`
+	// RefreshTokens holds the value of the refresh_tokens edge.
+	RefreshTokens []*RefreshToken `json:"refresh_tokens,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // RestaurantsOrErr returns the Restaurants value or an error if the edge
@@ -65,6 +67,15 @@ func (e UserEdges) AuthProvidersOrErr() ([]*UserAuthProvider, error) {
 		return e.AuthProviders, nil
 	}
 	return nil, &NotLoadedError{edge: "auth_providers"}
+}
+
+// RefreshTokensOrErr returns the RefreshTokens value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) RefreshTokensOrErr() ([]*RefreshToken, error) {
+	if e.loadedTypes[2] {
+		return e.RefreshTokens, nil
+	}
+	return nil, &NotLoadedError{edge: "refresh_tokens"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -165,6 +176,11 @@ func (_m *User) QueryRestaurants() *RestaurantQuery {
 // QueryAuthProviders queries the "auth_providers" edge of the User entity.
 func (_m *User) QueryAuthProviders() *UserAuthProviderQuery {
 	return NewUserClient(_m.config).QueryAuthProviders(_m)
+}
+
+// QueryRefreshTokens queries the "refresh_tokens" edge of the User entity.
+func (_m *User) QueryRefreshTokens() *RefreshTokenQuery {
+	return NewUserClient(_m.config).QueryRefreshTokens(_m)
 }
 
 // Update returns a builder for updating this User.

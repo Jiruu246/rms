@@ -14,11 +14,15 @@ type RegisterUserSchema struct {
 }
 
 type UserHandler struct {
-	service services.UserService
+	service   services.UserService
+	jwtSecret []byte
 }
 
-func NewUserHandler(service services.UserService) *UserHandler {
-	return &UserHandler{service: service}
+func NewUserHandler(service services.UserService, jwtSecret []byte) *UserHandler {
+	return &UserHandler{
+		service:   service,
+		jwtSecret: jwtSecret,
+	}
 }
 
 func (h *UserHandler) Register(c *gin.Context) {
@@ -50,13 +54,47 @@ func (h *UserHandler) Login(c *gin.Context) {
 		return
 	}
 
-	user, err := h.service.Login(c.Request.Context(), req)
+	authResponse, err := h.service.Login(c.Request.Context(), req, h.jwtSecret)
 	if err != nil {
 		utils.WriteUnauthorized(c.Writer, err.Error())
 		return
 	}
 
-	utils.WriteSuccess(c.Writer, user)
+	utils.WriteSuccess(c.Writer, authResponse)
+}
+
+func (h *UserHandler) RefreshToken(c *gin.Context) {
+	var req dto.RefreshTokenRequest
+
+	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
+		utils.WriteBadRequest(c.Writer, err.Error())
+		return
+	}
+
+	response, err := h.service.RefreshAccessToken(c.Request.Context(), req.RefreshToken, h.jwtSecret)
+	if err != nil {
+		utils.WriteUnauthorized(c.Writer, err.Error())
+		return
+	}
+
+	utils.WriteSuccess(c.Writer, response)
+}
+
+func (h *UserHandler) Logout(c *gin.Context) {
+	var req dto.LogoutRequest
+
+	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
+		utils.WriteBadRequest(c.Writer, err.Error())
+		return
+	}
+
+	err := h.service.Logout(c.Request.Context(), req.RefreshToken)
+	if err != nil {
+		utils.WriteBadRequest(c.Writer, err.Error())
+		return
+	}
+
+	utils.WriteNoContent(c.Writer)
 }
 
 func (h *UserHandler) GetProfile(c *gin.Context) {

@@ -16,7 +16,10 @@ import (
 	"github.com/stretchr/testify/suite"
 )
 
-const userAPIBase = "/api/users"
+const (
+	userAPIBase = "/api/users"
+	authAPIBase = "/api/auth"
+)
 
 type UserTestSuite struct {
 	IntegrationTestSuite
@@ -62,7 +65,7 @@ func (s *UserTestSuite) TestCreateUser() {
 				s.Require().NoError(err)
 			}
 
-			req := httptest.NewRequest(http.MethodPost, path.Join(userAPIBase, "register"), bytes.NewBuffer(body))
+			req := httptest.NewRequest(http.MethodPost, path.Join(authAPIBase, "register"), bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
@@ -254,7 +257,7 @@ func (s *UserTestSuite) TestUserValidation() {
 	}{
 		{
 			testName: "CreateUser_InvalidData_EmptyName",
-			url:      path.Join(userAPIBase, "register"),
+			url:      path.Join(authAPIBase, "register"),
 			body:     handler.RegisterUserSchema{Name: "", Email: "validemail@example.com"},
 			expected: http.StatusBadRequest,
 		},

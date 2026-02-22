@@ -1,13 +1,17 @@
 package handler
 
 import (
+	"net/http"
 	"time"
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/gin-gonic/gin"
+	"golang.org/x/oauth2"
 )
+
+var oauthConfig *oauth2.Config
 
 type RegisterUserSchema struct {
 	Name     string `json:"name" binding:"required"`
@@ -115,4 +119,30 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	)
 
 	utils.WriteNoContent(c.Writer)
+}
+
+func (h *AuthHandler) GoogleLogin(c *gin.Context) {
+	url := oauthConfig.AuthCodeURL("state", oauth2.AccessTypeOnline)
+	c.Redirect(http.StatusTemporaryRedirect, url) //TODO use the utils response writer
+}
+
+func (h *AuthHandler) GoogleCallback(c *gin.Context) {
+	code := c.Query("code")
+	token, err := oauthConfig.Exchange(c.Request.Context(), code)
+	if err != nil {
+		utils.WriteInternalError(c.Writer, "Failed to exchange token")
+		return
+	}
+
+	client := oauthConfig.Client(c.Request.Context(), token)
+
+	resp, err := client.Get("https://www.googleapis.com/oauth2/v2/userinfo")
+	if err != nil {
+		utils.WriteInternalError(c.Writer, "Failed to get user info")
+		return
+	}
+	defer resp.Body.Close()
+
+	// TODO: Parse user info and create/login user in the system, then generate JWT tokens as in the normal login flow
+
 }

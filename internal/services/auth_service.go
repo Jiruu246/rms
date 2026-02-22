@@ -23,19 +23,22 @@ type RegisterUserInput struct {
 type AuthService interface {
 	Register(ctx context.Context, req RegisterUserInput) (*dto.User, error)
 	Login(ctx context.Context, req dto.LoginUserRequest, jwtSecret []byte) (*dto.AccessToken, *dto.RefreshToken, error)
+	ThirdPartyLogin(ctx context.Context, provider string, code string) (*dto.AccessToken, *dto.RefreshToken, error)
 	RefreshAccessToken(ctx context.Context, refreshTokenStr string, jwtSecret []byte) (*dto.AccessToken, error)
 	Logout(ctx context.Context, refreshTokenStr string) error
 }
 
 type authService struct {
-	userRepo         repos.UserRepository
-	refreshTokenRepo repos.RefreshTokenRepository
+	userRepo             repos.UserRepository
+	userAuthProviderRepo repos.UserAuthProviderRepository
+	refreshTokenRepo     repos.RefreshTokenRepository
 }
 
-func NewAuthService(userRepo repos.UserRepository, refreshTokenRepo repos.RefreshTokenRepository) AuthService {
+func NewAuthService(userRepo repos.UserRepository, userAuthProviderRepo repos.UserAuthProviderRepository, refreshTokenRepo repos.RefreshTokenRepository) AuthService {
 	return &authService{
-		userRepo:         userRepo,
-		refreshTokenRepo: refreshTokenRepo,
+		userRepo:             userRepo,
+		userAuthProviderRepo: userAuthProviderRepo,
+		refreshTokenRepo:     refreshTokenRepo,
 	}
 }
 
@@ -94,6 +97,23 @@ func (s *authService) Login(ctx context.Context, req dto.LoginUserRequest, jwtSe
 			Token:     formattedToken,
 			ExpiresAt: refreshTokenExp,
 		}, nil
+}
+
+func (s *authService) ThirdPartyLogin(ctx context.Context, provider string, userId string) (*dto.AccessToken, *dto.RefreshToken, error) {
+	var user *dto.UserAuthProvider
+
+	switch provider {
+	case "google":
+		user, err := s.userAuthProviderRepo.GetByUserIDAndProvider(ctx, userId, provider)
+		if err != nil {
+			return nil, nil, errors.New("failed to retrieve user from third-party provider")
+		}
+
+		// user not found, create new user and link to provider
+		if user == nil {
+			// Create a new user and link to the provider
+		}
+	}
 }
 
 func (s *authService) RefreshAccessToken(ctx context.Context, refreshTokenStr string, jwtSecret []byte) (*dto.AccessToken, error) {

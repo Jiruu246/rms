@@ -11,6 +11,12 @@ type User struct {
 	Password string    `json:"-"`
 }
 
+type UserAuthProvider struct {
+	UserID         uuid.UUID
+	ProviderUserID string
+	Provider       string
+}
+
 type LoginUserRequest struct {
 	Email    string `json:"email" binding:"required,email"`
 	Password string `json:"password" binding:"required"`

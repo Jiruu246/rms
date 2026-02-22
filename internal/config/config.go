@@ -9,19 +9,22 @@ import (
 
 // Config holds application configuration.
 type Config struct {
-	Env              string
-	Port             int
-	LogLevel         string
-	DatabaseURL      string
-	PostgresUser     string
-	PostgresPassword string
-	ReadTimeout      time.Duration
-	WriteTimeout     time.Duration
-	ShutdownTimeout  int
-	AllowedOrigins   []string
-	JWTSecret        string
-	AccessTokenExp   time.Duration
-	RefreshTokenExp  time.Duration
+	Env                string
+	Port               int
+	LogLevel           string
+	DatabaseURL        string
+	PostgresUser       string
+	PostgresPassword   string
+	ReadTimeout        time.Duration
+	WriteTimeout       time.Duration
+	ShutdownTimeout    int
+	AllowedOrigins     []string
+	JWTSecret          string
+	AccessTokenExp     time.Duration
+	RefreshTokenExp    time.Duration
+	GoogleClientID     string
+	GoogleClientSecret string
+	GoogleRedirectURL  string
 }
 
 // Load reads configuration from environment variables and optional file.
@@ -40,17 +43,20 @@ func Load() (*Config, error) {
 	v.SetDefault("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"})
 
 	cfg := &Config{
-		Env:              v.GetString("ENV"),
-		Port:             v.GetInt("PORT"),
-		LogLevel:         v.GetString("LOG_LEVEL"),
-		DatabaseURL:      v.GetString("DATABASE_URL"),
-		PostgresUser:     v.GetString("POSTGRES_USER"),
-		PostgresPassword: v.GetString("POSTGRES_PASSWORD"),
-		ReadTimeout:      time.Duration(v.GetInt("READ_TIMEOUT")) * time.Second,
-		WriteTimeout:     time.Duration(v.GetInt("WRITE_TIMEOUT")) * time.Second,
-		ShutdownTimeout:  v.GetInt("SHUTDOWN_TIMEOUT"),
-		AllowedOrigins:   v.GetStringSlice("ALLOWED_ORIGINS"),
-		JWTSecret:        v.GetString("JWT_SECRET"),
+		Env:                v.GetString("ENV"),
+		Port:               v.GetInt("PORT"),
+		LogLevel:           v.GetString("LOG_LEVEL"),
+		DatabaseURL:        v.GetString("DATABASE_URL"),
+		PostgresUser:       v.GetString("POSTGRES_USER"),
+		PostgresPassword:   v.GetString("POSTGRES_PASSWORD"),
+		ReadTimeout:        time.Duration(v.GetInt("READ_TIMEOUT")) * time.Second,
+		WriteTimeout:       time.Duration(v.GetInt("WRITE_TIMEOUT")) * time.Second,
+		ShutdownTimeout:    v.GetInt("SHUTDOWN_TIMEOUT"),
+		AllowedOrigins:     v.GetStringSlice("ALLOWED_ORIGINS"),
+		JWTSecret:          v.GetString("JWT_SECRET"),
+		GoogleClientID:     v.GetString("GOOGLE_CLIENT_ID"),
+		GoogleClientSecret: v.GetString("GOOGLE_CLIENT_SECRET"),
+		GoogleRedirectURL:  v.GetString("GOOGLE_REDIRECT_URL"),
 	}
 
 	if cfg.Port <= 0 {

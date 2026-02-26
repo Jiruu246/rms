@@ -109,6 +109,12 @@ func (s *Server) routes() {
 			auth.POST("/login", authHandler.Login)
 			auth.POST("/refresh", authHandler.Refresh)
 			auth.POST("/logout", authHandler.Logout)
+
+			google := auth.Group("/google")
+			{
+				google.POST("/login", authHandler.GoogleLogin)
+				google.POST("/callback", authHandler.GoogleCallback)
+			}
 		}
 
 		categories := api.Group("/categories")

@@ -6,9 +6,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/Jiruu246/rms/internal/config"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/Jiruu246/rms/pkg/utils"
+	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -22,18 +24,20 @@ type RegisterUserInput struct {
 // AuthService handles authentication and session lifecycle.
 type AuthService interface {
 	Register(ctx context.Context, req RegisterUserInput) (*dto.User, error)
-	Login(ctx context.Context, req dto.LoginUserRequest, jwtSecret []byte) (*dto.AccessToken, *dto.RefreshToken, error)
-	RefreshAccessToken(ctx context.Context, refreshTokenStr string, jwtSecret []byte) (*dto.AccessToken, error)
+	Login(ctx context.Context, req dto.LoginUserRequest) (*dto.AccessToken, *dto.RefreshToken, error)
+	RefreshAccessToken(ctx context.Context, refreshTokenStr string) (*dto.AccessToken, error)
 	Logout(ctx context.Context, refreshTokenStr string) error
 }
 
 type authService struct {
+	authConfig       config.AuthConfig
 	userRepo         repos.UserRepository
 	refreshTokenRepo repos.RefreshTokenRepository
 }
 
-func NewAuthService(userRepo repos.UserRepository, refreshTokenRepo repos.RefreshTokenRepository) AuthService {
+func NewAuthService(authConfig config.AuthConfig, userRepo repos.UserRepository, refreshTokenRepo repos.RefreshTokenRepository) AuthService {
 	return &authService{
+		authConfig:       authConfig,
 		userRepo:         userRepo,
 		refreshTokenRepo: refreshTokenRepo,
 	}
@@ -54,7 +58,7 @@ func (s *authService) Register(ctx context.Context, req RegisterUserInput) (*dto
 	return s.userRepo.Create(ctx, reqUser)
 }
 
-func (s *authService) Login(ctx context.Context, req dto.LoginUserRequest, jwtSecret []byte) (*dto.AccessToken, *dto.RefreshToken, error) {
+func (s *authService) Login(ctx context.Context, req dto.LoginUserRequest) (*dto.AccessToken, *dto.RefreshToken, error) {
 	user, err := s.userRepo.GetByEmail(ctx, req.Email)
 	if err != nil {
 		return nil, nil, errors.New("invalid email or password")
@@ -64,13 +68,12 @@ func (s *authService) Login(ctx context.Context, req dto.LoginUserRequest, jwtSe
 		return nil, nil, errors.New("invalid email or password")
 	}
 
-	accessTokenExp := time.Now().Add(15 * time.Minute) //TODO: make configurable
-	accessToken, err := utils.GenerateJWT(jwtSecret, user.ID, "user", accessTokenExp)
+	accessToken, err := createAccessToken(user.ID, s.authConfig.JwtSecret, s.authConfig.AccessTokenExpiration)
 	if err != nil {
-		return nil, nil, errors.New("failed to generate access token")
+		return nil, nil, err
 	}
 
-	refreshTokenExp := time.Now().Add(7 * 24 * time.Hour) //TODO: make configurable
+	refreshTokenExp := time.Now().Add(s.authConfig.RefreshTokenExpiration)
 	refreshTokenStr, err := utils.GenerateRefreshToken()
 	if err != nil {
 		return nil, nil, errors.New("failed to generate refresh token")
@@ -88,15 +91,15 @@ func (s *authService) Login(ctx context.Context, req dto.LoginUserRequest, jwtSe
 	formattedToken := refreshToken.ID.String() + ":" + refreshTokenStr
 
 	return &dto.AccessToken{
-			Token:     accessToken,
-			ExpiresAt: accessTokenExp,
+			Token:     accessToken.Token,
+			ExpiresAt: accessToken.ExpiresAt,
 		}, &dto.RefreshToken{
 			Token:     formattedToken,
 			ExpiresAt: refreshTokenExp,
 		}, nil
 }
 
-func (s *authService) RefreshAccessToken(ctx context.Context, refreshTokenStr string, jwtSecret []byte) (*dto.AccessToken, error) {
+func (s *authService) RefreshAccessToken(ctx context.Context, refreshTokenStr string) (*dto.AccessToken, error) {
 	// Parse selector:validator format
 	parts := strings.Split(refreshTokenStr, ":")
 	if len(parts) != 2 {
@@ -118,15 +121,11 @@ func (s *authService) RefreshAccessToken(ctx context.Context, refreshTokenStr st
 		// or if failed then log out
 	}
 
-	accessTokenExp := time.Now().Add(15 * time.Minute)
-	accessToken, err := utils.GenerateJWT(jwtSecret, refreshToken.UserID, "user", accessTokenExp)
-	if err != nil {
-		return nil, errors.New("failed to generate access token")
-	}
+	accessToken, err := createAccessToken(refreshToken.UserID, s.authConfig.JwtSecret, s.authConfig.AccessTokenExpiration)
 
 	return &dto.AccessToken{
-		Token:     accessToken,
-		ExpiresAt: accessTokenExp,
+		Token:     accessToken.Token,
+		ExpiresAt: accessToken.ExpiresAt,
 	}, nil
 }
 
@@ -150,4 +149,16 @@ func (s *authService) Logout(ctx context.Context, refreshTokenStr string) error 
 	}
 
 	return s.refreshTokenRepo.RevokeToken(ctx, refreshToken.ID)
+}
+
+func createAccessToken(userID uuid.UUID, jwtSecret []byte, ttl time.Duration) (*dto.AccessToken, error) {
+	accessTokenExp := time.Now().Add(ttl)
+	accessToken, err := utils.GenerateJWT(jwtSecret, userID, "user", accessTokenExp)
+	if err != nil {
+		return nil, errors.New("failed to generate access token")
+	}
+	return &dto.AccessToken{
+		Token:     accessToken,
+		ExpiresAt: accessTokenExp,
+	}, nil
 }

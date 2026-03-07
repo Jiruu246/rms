@@ -33,11 +33,6 @@ func DefaultMiddleware() server.Middlewares {
 				c.Next()
 			}
 		},
-		CORS: func() gin.HandlerFunc {
-			return func(c *gin.Context) {
-				c.Next()
-			}
-		},
 		JWTMiddleware: func(secretKey []byte) gin.HandlerFunc {
 			return func(c *gin.Context) {
 				c.Next()

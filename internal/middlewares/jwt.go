@@ -1,7 +1,7 @@
 package middlewares
 
 import (
-	"net/http"
+	"strings"
 
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/gin-gonic/gin"
@@ -10,15 +10,18 @@ import (
 // JWTMiddleware is a middleware for validating JWT tokens
 func JWTMiddleware(secretKey []byte) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		tokenString := c.GetHeader("Authorization")
-		if tokenString == "" {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Authorization header is required"})
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
+			utils.WriteUnauthorized(c.Writer, "Authorization header is required")
+			c.Abort()
 			return
 		}
 
+		tokenString := strings.TrimPrefix(authHeader, "Bearer ")
 		claims, err := utils.ValidateJWT(secretKey, tokenString)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Invalid token"})
+			utils.WriteUnauthorized(c.Writer, "Invalid token")
+			c.Abort()
 			return
 		}
 

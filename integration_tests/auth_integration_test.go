@@ -170,7 +170,7 @@ func (s *AuthTestSuite) TestLogin() {
 				s.NotNil(refreshTokenCookie, "refresh_token cookie should be set")
 				s.NotEmpty(refreshTokenCookie.Value)
 				s.True(refreshTokenCookie.HttpOnly)
-				s.Equal("/auth/refresh", refreshTokenCookie.Path)
+				s.Equal("/api/auth", refreshTokenCookie.Path)
 			},
 		},
 		{
@@ -450,7 +450,7 @@ func (s *AuthTestSuite) TestAuthFlow() {
 	s.NotEmpty(refreshTokenCookie.Value)
 
 	// Test refresh token endpoint
-	req = httptest.NewRequest(http.MethodPost, path.Join(authAPIBase, "refresh"), bytes.NewBuffer([]byte(`{"refresh_token":""}`)))
+	req = httptest.NewRequest(http.MethodPost, path.Join(authAPIBase, "refresh"), nil)
 	req.Header.Set("Content-Type", "application/json")
 	req.AddCookie(refreshTokenCookie)
 	w = httptest.NewRecorder()

@@ -6,6 +6,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/Jiruu246/rms/internal/config"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/repos"
@@ -146,7 +147,7 @@ func TestAuthService_Register(t *testing.T) {
 			mockRefreshRepo := new(MockRefreshTokenRepository)
 			testCase.mockSetup(mockUserRepo)
 
-			service := NewAuthService(mockUserRepo, mockRefreshRepo)
+			service := NewAuthService(config.AuthConfig{}, mockUserRepo, mockRefreshRepo)
 			result, err := service.Register(context.Background(), testCase.input)
 
 			if testCase.expectedError != "" {
@@ -214,8 +215,8 @@ func TestAuthService_Login(t *testing.T) {
 			mockRefreshRepo := new(MockRefreshTokenRepository)
 			testCase.mockSetup(mockUserRepo, mockRefreshRepo)
 
-			service := NewAuthService(mockUserRepo, mockRefreshRepo)
-			accessToken, refreshToken, err := service.Login(context.Background(), testCase.req, []byte("secret"))
+			service := NewAuthService(config.AuthConfig{}, mockUserRepo, mockRefreshRepo)
+			accessToken, refreshToken, err := service.Login(context.Background(), testCase.req)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -255,8 +256,8 @@ func TestAuthService_RefreshAccessToken(t *testing.T) {
 	}, nil)
 	mockRefreshRepo.On("UpdateLastUsed", mock.Anything, tokenID).Return(nil)
 
-	service := NewAuthService(mockUserRepo, mockRefreshRepo)
-	accessToken, err := service.RefreshAccessToken(context.Background(), selectorValidatorToken, []byte("secret"))
+	service := NewAuthService(config.AuthConfig{}, mockUserRepo, mockRefreshRepo)
+	accessToken, err := service.RefreshAccessToken(context.Background(), selectorValidatorToken)
 
 	assert.NoError(t, err)
 	assert.NotNil(t, accessToken)
@@ -279,7 +280,7 @@ func TestAuthService_Logout(t *testing.T) {
 	}, nil)
 	mockRefreshRepo.On("RevokeToken", mock.Anything, tokenID).Return(nil)
 
-	service := NewAuthService(mockUserRepo, mockRefreshRepo)
+	service := NewAuthService(config.AuthConfig{}, mockUserRepo, mockRefreshRepo)
 	err := service.Logout(context.Background(), selectorValidatorToken)
 
 	assert.NoError(t, err)

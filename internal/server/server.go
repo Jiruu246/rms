@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Jiruu246/rms/internal/config"
+	"github.com/Jiruu246/rms/internal/cookies"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/handler"
 	"github.com/Jiruu246/rms/internal/repos"
@@ -16,15 +17,15 @@ import (
 
 type Middlewares struct {
 	RestrictiveCORS func(origins []string) gin.HandlerFunc
-	CORS            func() gin.HandlerFunc
 	JWTMiddleware   func(secretKey []byte) gin.HandlerFunc
 }
 type Server struct {
-	cfg         *config.Config
-	client      *ent.Client
-	engine      *gin.Engine
-	srv         *http.Server
-	middlewares Middlewares
+	cfg           *config.Config
+	client        *ent.Client
+	engine        *gin.Engine
+	srv           *http.Server
+	middlewares   Middlewares
+	cookieFactory *cookies.Factory
 }
 
 func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Server {
@@ -32,23 +33,20 @@ func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Serve
 		gin.SetMode(gin.ReleaseMode)
 	}
 
+	cookieFactory := cookies.NewFactory(cfg.CookieConfig)
+
 	engine := gin.New()
 	engine.Use(gin.Recovery())
+	engine.Use(gin.Logger())
 
-	// Add CORS middleware at the top level
-	if cfg.Env == "production" {
-		// Use restrictive CORS for production with configured origins
-		engine.Use(middlewares.RestrictiveCORS(cfg.AllowedOrigins))
-	} else {
-		// Use permissive CORS for development
-		engine.Use(middlewares.CORS())
-	}
+	engine.Use(middlewares.RestrictiveCORS(cfg.AllowedOrigins))
 
 	s := &Server{
-		cfg:         cfg,
-		client:      client,
-		engine:      engine,
-		middlewares: middlewares,
+		cfg:           cfg,
+		client:        client,
+		engine:        engine,
+		middlewares:   middlewares,
+		cookieFactory: cookieFactory,
 	}
 
 	s.routes()
@@ -75,7 +73,7 @@ func (s *Server) routes() {
 
 	// initialize services
 	categoryService := services.NewCategoryService(categoryRepo)
-	authService := services.NewAuthService(userRepo, refreshTokenRepo)
+	authService := services.NewAuthService(s.cfg.AuthConfig, userRepo, refreshTokenRepo)
 	userService := services.NewUserService(userRepo)
 	restaurantService := services.NewRestaurantService(restaurantRepo)
 	menuItemService := services.NewMenuItemService(menuitemRepo)
@@ -85,7 +83,7 @@ func (s *Server) routes() {
 
 	// initialize handlers
 	categoryHandler := handler.NewCategoryHandler(categoryService)
-	authHandler := handler.NewAuthHandler(authService, []byte(s.cfg.JWTSecret))
+	authHandler := handler.NewAuthHandler(s.cookieFactory, authService)
 	userHandler := handler.NewUserHandler(userService)
 	restaurantHandler := handler.NewRestaurantHandler(restaurantService)
 	menuItemHandler := handler.NewMenuItemHandler(menuItemService)
@@ -93,7 +91,7 @@ func (s *Server) routes() {
 	modifierOptionHandler := handler.NewModifierOptionHandler(modifierOptionService)
 	orderHandler := handler.NewOrderHandler(orderService)
 
-	// API routes
+	JwtMiddleware := s.middlewares.JWTMiddleware([]byte(s.cfg.AuthConfig.JwtSecret))
 
 	api := s.engine.Group("/api")
 	{
@@ -114,7 +112,7 @@ func (s *Server) routes() {
 		categories := api.Group("/categories")
 		{
 			// Apply JWT middleware to all category routes
-			categories.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+			categories.Use(JwtMiddleware)
 
 			categories.POST("", categoryHandler.CreateCategory)
 			categories.GET("", categoryHandler.GetCategories)
@@ -124,17 +122,16 @@ func (s *Server) routes() {
 		}
 
 		users := api.Group("/users")
-		users.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+		users.Use(JwtMiddleware)
 		{
 			users.GET("/profile", userHandler.GetProfile)
 			users.PUT("/profile", userHandler.UpdateProfile)
-			users.DELETE("/profile", userHandler.DeleteAccount)
 		}
 
 		restaurants := api.Group("/restaurants")
 		{
 			// Apply JWT middleware to all restaurant routes
-			restaurants.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+			restaurants.Use(JwtMiddleware)
 
 			restaurants.POST("", restaurantHandler.CreateRestaurant)
 			restaurants.GET("", restaurantHandler.GetRestaurants)
@@ -146,7 +143,7 @@ func (s *Server) routes() {
 		menuItems := api.Group("/menu-items")
 		{
 			// Apply JWT middleware to all menu item routes
-			menuItems.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+			menuItems.Use(JwtMiddleware)
 
 			menuItems.POST("", menuItemHandler.CreateMenuItem)
 			menuItems.GET("", menuItemHandler.GetMenuItems)
@@ -158,7 +155,7 @@ func (s *Server) routes() {
 		modifiers := api.Group("/modifiers")
 		{
 			// Apply JWT middleware to all modifier routes
-			modifiers.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+			modifiers.Use(JwtMiddleware)
 
 			modifiers.POST("", modifierHandler.CreateModifier)
 			modifiers.GET("", modifierHandler.GetAllModifiers)
@@ -179,7 +176,7 @@ func (s *Server) routes() {
 
 		orders := api.Group("/orders")
 		{
-			orders.Use(s.middlewares.JWTMiddleware([]byte(s.cfg.JWTSecret)))
+			orders.Use(JwtMiddleware)
 
 			orders.POST("", orderHandler.CreateOrderPub)
 			orders.GET("/:id", orderHandler.GetOrder)

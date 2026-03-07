@@ -14,7 +14,7 @@ type APIResponse[T any] struct {
 }
 
 type APIError struct {
-	Code    string         `json:"code"`
+	Code    int            `json:"code"`
 	Message string         `json:"message"`
 	Details map[string]any `json:"details,omitempty"`
 }
@@ -31,11 +31,11 @@ func WriteResponse[T any](w http.ResponseWriter, status int, data T) {
 	json.NewEncoder(w).Encode(response)
 }
 
-func WriteError(w http.ResponseWriter, status int, code, message string, details map[string]any) {
+func WriteError(w http.ResponseWriter, status int, message string, details map[string]any) {
 	response := APIResponse[any]{
 		Success: false,
 		Error: &APIError{
-			Code:    code,
+			Code:    status,
 			Message: message,
 			Details: details,
 		},
@@ -56,23 +56,23 @@ func WriteCreated(w http.ResponseWriter, data any) {
 }
 
 func WriteBadRequest(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusBadRequest, "BAD_REQUEST", message, nil)
+	WriteError(w, http.StatusBadRequest, message, nil)
 }
 
 func WriteNotFound(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusNotFound, "NOT_FOUND", message, nil)
+	WriteError(w, http.StatusNotFound, message, nil)
 }
 
 func WriteInternalError(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusInternalServerError, "INTERNAL_ERROR", message, nil)
+	WriteError(w, http.StatusInternalServerError, message, nil)
 }
 
 func WriteForbidden(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusForbidden, "FORBIDDEN", message, nil)
+	WriteError(w, http.StatusForbidden, message, nil)
 }
 
 func WriteUnauthorized(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusUnauthorized, "UNAUTHORIZED", message, nil)
+	WriteError(w, http.StatusUnauthorized, message, nil)
 }
 
 func WriteNoContent(w http.ResponseWriter) {

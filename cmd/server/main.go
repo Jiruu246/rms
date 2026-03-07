@@ -41,7 +41,6 @@ func main() {
 	// create server
 	srv := server.New(cfg, db, server.Middlewares{
 		RestrictiveCORS: middlewares.RestrictiveCORS,
-		CORS:            middlewares.CORS,
 		JWTMiddleware:   middlewares.JWTMiddleware,
 	})
 

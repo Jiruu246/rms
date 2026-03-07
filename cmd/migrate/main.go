@@ -79,6 +79,12 @@ func main() {
 		}
 		fmt.Println("✅ Database reset completed successfully")
 
+	case "seed":
+		if err := seedDatabase(ctx, client); err != nil {
+			log.Fatalf("seeding failed: %v", err)
+		}
+		fmt.Println("✅ Database seeding completed successfully")
+
 	case "create":
 		if len(flags.Args()) == 0 {
 			log.Fatal("migration name is required for create command")
@@ -165,6 +171,7 @@ func usage() {
 Commands:
   apply   		Apply all pending migrations
   reset    		Drop all tables and recreate schema (destructive!)
+  seed    		Populate database with initial sample data
   create NAME  	Create a new migration file with given name
 `, os.Args[0])
 }

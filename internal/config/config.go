@@ -19,38 +19,43 @@ type Config struct {
 	WriteTimeout     time.Duration
 	ShutdownTimeout  int
 	AllowedOrigins   []string
-	JWTSecret        string
 	AccessTokenExp   time.Duration
 	RefreshTokenExp  time.Duration
+	CookieConfig     CookieConfig
+	AuthConfig       AuthConfig
 }
 
 // Load reads configuration from environment variables and optional file.
 func Load() (*Config, error) {
-	v := viper.New()
-	v.SetEnvPrefix("APP")
-	v.AutomaticEnv()
+	configurator := viper.New()
+	configurator.SetEnvPrefix("APP")
+	configurator.AutomaticEnv()
 
 	// defaults
-	v.SetDefault("ENV", "development")
-	v.SetDefault("PORT", 8080)
-	v.SetDefault("LOG_LEVEL", "info")
-	v.SetDefault("READ_TIMEOUT", 15)
-	v.SetDefault("WRITE_TIMEOUT", 15)
-	v.SetDefault("SHUTDOWN_TIMEOUT", 15)
-	v.SetDefault("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"})
+	configurator.SetDefault("ENV", "development")
+	configurator.SetDefault("PORT", 8080)
+	configurator.SetDefault("LOG_LEVEL", "info")
+	configurator.SetDefault("READ_TIMEOUT", 15)
+	configurator.SetDefault("WRITE_TIMEOUT", 15)
+	configurator.SetDefault("SHUTDOWN_TIMEOUT", 15)
+	configurator.SetDefault("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"})
+
+	CookieConfig := NewCookieConfig(configurator)
+	AuthConfig := NewAuthConfig(configurator)
 
 	cfg := &Config{
-		Env:              v.GetString("ENV"),
-		Port:             v.GetInt("PORT"),
-		LogLevel:         v.GetString("LOG_LEVEL"),
-		DatabaseURL:      v.GetString("DATABASE_URL"),
-		PostgresUser:     v.GetString("POSTGRES_USER"),
-		PostgresPassword: v.GetString("POSTGRES_PASSWORD"),
-		ReadTimeout:      time.Duration(v.GetInt("READ_TIMEOUT")) * time.Second,
-		WriteTimeout:     time.Duration(v.GetInt("WRITE_TIMEOUT")) * time.Second,
-		ShutdownTimeout:  v.GetInt("SHUTDOWN_TIMEOUT"),
-		AllowedOrigins:   v.GetStringSlice("ALLOWED_ORIGINS"),
-		JWTSecret:        v.GetString("JWT_SECRET"),
+		Env:              configurator.GetString("ENV"),
+		Port:             configurator.GetInt("PORT"),
+		LogLevel:         configurator.GetString("LOG_LEVEL"),
+		DatabaseURL:      configurator.GetString("DATABASE_URL"),
+		PostgresUser:     configurator.GetString("POSTGRES_USER"),
+		PostgresPassword: configurator.GetString("POSTGRES_PASSWORD"),
+		ReadTimeout:      time.Duration(configurator.GetInt("READ_TIMEOUT")) * time.Second,
+		WriteTimeout:     time.Duration(configurator.GetInt("WRITE_TIMEOUT")) * time.Second,
+		ShutdownTimeout:  configurator.GetInt("SHUTDOWN_TIMEOUT"),
+		AllowedOrigins:   configurator.GetStringSlice("ALLOWED_ORIGINS"),
+		CookieConfig:     CookieConfig,
+		AuthConfig:       AuthConfig,
 	}
 
 	if cfg.Port <= 0 {

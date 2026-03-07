@@ -50,20 +50,3 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	utils.WriteSuccess(c.Writer, user)
 }
-
-func (h *UserHandler) DeleteAccount(c *gin.Context) {
-	claims, ok := c.Get("claims")
-	if !ok {
-		utils.WriteUnauthorized(c.Writer, "unauthorized")
-		return
-	}
-
-	userID := claims.(utils.JWTClaims).UserID
-
-	if err := h.service.DeleteAccount(c.Request.Context(), userID); err != nil {
-		utils.WriteInternalError(c.Writer, err.Error())
-		return
-	}
-
-	utils.WriteNoContent(c.Writer)
-}

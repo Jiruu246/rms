@@ -7,5 +7,43 @@ This repo's test is ran from VSCode test runner
 
 These are the potential areas to be reconfigured when we have more resources
 
-### Environment Setup
-Run `docker compose up` to bring up the database
+# Database Setup for Development Environment
+You will run a docker instance of the PostgreSQL localy on your computer for development
+
+Prerequisites
+- Docker and Docker Compose installed
+- Git repository cloned to your local machine
+
+## Setup Instructions
+1. Create environment file
+```
+cp .env.example .env
+```
+
+2. Configure database settings
+Edit the `.env` file and update:
+
+    - Database credentials (`POSTGRES_USER`, `POSTGRES_PASSWORD`, `POSTGRES_DB`)
+    - Data storage path (`POSTGRES_DATA_PATH`) - use forward slashes for Windows paths
+
+3. Start the database
+```
+docker compose up -d db
+```
+4. Verify database is running
+```
+docker compose ps
+```
+
+5. Migrate
+```
+   go run ./cmd/migrate apply
+```
+For more migration details see [migration document](./migration-guide.md)
+
+6. Seed
+```
+go run ./cmd/migrate seed
+```
+
+7. Run web server

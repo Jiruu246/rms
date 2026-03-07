@@ -3,6 +3,7 @@ package handler
 import (
 	"time"
 
+	"github.com/Jiruu246/rms/internal/cookies"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -16,14 +17,14 @@ type RegisterUserSchema struct {
 }
 
 type AuthHandler struct {
-	service   services.AuthService
-	jwtSecret []byte
+	cookieFactory *cookies.Factory
+	service       services.AuthService
 }
 
-func NewAuthHandler(service services.AuthService, jwtSecret []byte) *AuthHandler {
+func NewAuthHandler(cookieFactory *cookies.Factory, service services.AuthService) *AuthHandler {
 	return &AuthHandler{
-		service:   service,
-		jwtSecret: jwtSecret,
+		cookieFactory: cookieFactory,
+		service:       service,
 	}
 }
 
@@ -56,21 +57,14 @@ func (h *AuthHandler) Login(c *gin.Context) {
 		return
 	}
 
-	accessToken, refreshToken, err := h.service.Login(c.Request.Context(), req, h.jwtSecret)
+	accessToken, refreshToken, err := h.service.Login(c.Request.Context(), req)
 	if err != nil {
 		utils.WriteUnauthorized(c.Writer, err.Error())
 		return
 	}
 
-	c.SetCookie(
-		"refresh_token",
-		refreshToken.Token,
-		int(time.Until(refreshToken.ExpiresAt).Seconds()),
-		"/auth/refresh", // TODO: This should be configurable from the server level?
-		"",              // domain (empty for current domain)
-		false,           // secure (should be true in production with HTTPS)
-		true,            // httpOnly
-	)
+	cookie := h.cookieFactory.NewRefreshToken(refreshToken.Token, time.Until(refreshToken.ExpiresAt))
+	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
 
 	utils.WriteSuccess(c.Writer, accessToken)
 }
@@ -82,7 +76,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 		return
 	}
 
-	response, err := h.service.RefreshAccessToken(c.Request.Context(), refreshToken, h.jwtSecret)
+	response, err := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
 	if err != nil {
 		utils.WriteUnauthorized(c.Writer, err.Error())
 		return
@@ -104,15 +98,8 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie(
-		"refresh_token",
-		"",
-		-1,
-		"/auth/refresh",
-		"",
-		false,
-		true,
-	)
+	cookie := h.cookieFactory.ExpireRefreshToken()
+	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
 
 	utils.WriteNoContent(c.Writer)
 }

@@ -1,0 +1,54 @@
+name: PR Checks
+
+on:
+  pull_request:
+    branches:
+        - main
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+        -   name: Checkout code
+            uses: actions/checkout@v4
+
+        -   name: Set up Go
+            uses: actions/setup-go@v5
+            with:
+                go-version-file: go.mod
+                cache: true
+                cache-dependency-path: go.sum
+
+        -   name: Download dependencies
+            run: go mod download
+
+        -   name: Check go mod tidy
+            run: |
+                go mod tidy 
+                git diff --exit-code
+
+        -   name: Check for compile errors
+            run: go build ./cmd/server ./cmd/migrate
+
+        -   name: Run golangci-lint
+            uses: golangci/golangci-lint-action@v3
+            with:
+                version: latest 
+
+        -   name: Run tests
+            run: go test ./internal/services/... && go test ./integration_tests/... # TODO: configure integration test run
+
+        -   name: Generate ent code
+            run: go generate ./...
+
+        -   name: Check for uncommitted changes
+            run: |
+                if git diff --quiet; then
+                    echo "✓ All generated code is committed"
+                else
+                    echo "✗ Uncommitted changes detected after code generation"
+                    echo "Please run 'go generate ./...' and commit the generated code"
+                    git diff
+                    exit 1
+                fi

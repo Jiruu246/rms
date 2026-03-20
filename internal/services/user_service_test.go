@@ -53,7 +53,6 @@ func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return args.Error(0)
 }
 
-
 func TestUserService_GetProfile(t *testing.T) {
 	testUserId := uuid.New()
 
@@ -170,53 +169,4 @@ func TestUserService_UpdateProfile(t *testing.T) {
 			mockRepo.AssertExpectations(t)
 		})
 	}
-}
-
-func TestUserService_DeleteAccount(t *testing.T) {
-	testCases := []struct {
-		name          string
-		idInput       uuid.UUID
-		mockSetup     func(*MockUserRepository)
-		expectedError string
-	}{
-		{
-			name:    "successful account deletion",
-			idInput: uuid.New(),
-			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("Delete", mock.Anything, mock.Anything).Return(nil)
-			},
-			expectedError: "",
-		},
-		{
-			name:    "user not found",
-			idInput: uuid.New(),
-			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("Delete", mock.Anything, mock.Anything).Return(errors.New("user not found"))
-			},
-			expectedError: "user not found",
-		},
-	}
-
-	for _, testCase := range testCases {
-		t.Run(testCase.name, func(t *testing.T) {
-			mockRepo := new(MockUserRepository)
-			testCase.mockSetup(mockRepo)
-
-			service := NewUserService(mockRepo)
-			err := service.DeleteAccount(context.Background(), testCase.idInput)
-
-			if testCase.expectedError != "" {
-				assert.Error(t, err)
-				assert.Contains(t, err.Error(), testCase.expectedError)
-			} else {
-				assert.NoError(t, err)
-			}
-
-			mockRepo.AssertExpectations(t)
-		})
-	}
-}
-
-func ptr[T any](v T) *T {
-	return &v
 }

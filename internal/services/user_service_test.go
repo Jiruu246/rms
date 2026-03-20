@@ -53,7 +53,6 @@ func (m *MockUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	return args.Error(0)
 }
 
-
 func TestUserService_GetProfile(t *testing.T) {
 	testUserId := uuid.New()
 

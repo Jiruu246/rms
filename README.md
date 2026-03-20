@@ -48,6 +48,6 @@ TODO: Instruction & documentation for testing
 
 # To do before make PR
 - compile: make sure no error
-- lint: resolve linting issue
+- lint: resolve linting issue (can be resolved by running gofmt, goimports)
 - generate ORM
 - run test

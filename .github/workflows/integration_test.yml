@@ -1,0 +1,44 @@
+name: Integration Tests
+
+on:
+  workflow_call:
+    secrets:
+      DB_PASSWORD:
+        required: true
+      # You can add DB_USER or DB_NAME here too
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          POSTGRES_USER: dev_user
+          POSTGRES_DB: test_db
+        ports:
+            - 5432:5432
+        options: >-
+            --health-cmd pg_isready
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+        
+    steps:
+        -   uses: actions/checkout@v4
+
+        -   name: Set up Go
+            uses: actions/setup-go@v5
+            with:
+                go-version: '1.21' # Or your specific version
+                cache: true        # Speeds up subsequent runs
+
+        -   name: Install dependencies
+            run: go mod download
+
+        -   name: Run Integration Tests
+            run: go test -v ./...
+            env:
+                # Mapping Github Secrets/Service to your Go Env Vars
+                DB_URL: postgres://user_dev:${{ secrets.DB_PASSWORD }}@localhost:5432/test_db?sslmode=disable

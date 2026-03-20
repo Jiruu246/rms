@@ -2,8 +2,10 @@ package integration_tests
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/Jiruu246/rms/internal/config"
@@ -44,8 +46,14 @@ func DefaultMiddleware() server.Middlewares {
 // SetupSuite runs once before the entire test suite
 func (s *IntegrationTestSuite) SetupSuite() {
 	ctx := context.Background()
-	s.Require().NoError(godotenv.Load(".env.test"), "Failed to load .env file")
-	cfg, err := config.Load()
+	if err := godotenv.Load(".env.test"); err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			log.Printf(".env.test not found; using existing environment variables")
+		} else {
+			s.Require().NoError(err, "Failed to load .env.test")
+		}
+	}
+	cfg, err := config.LoadTestConfig()
 	s.Require().NoError(err, "Failed to load config")
 	s.cfg = cfg
 
@@ -178,10 +186,3 @@ func (s *IntegrationTestSuite) cleanupTestData() {
 		log.Printf("Warning: failed to delete categories: %v", err)
 	}
 }
-
-// TestMain runs the test suite
-// func TestMain(m *testing.M) {
-// 	// Run the test suite
-// 	code := m.Run()
-// 	os.Exit(code)
-// }

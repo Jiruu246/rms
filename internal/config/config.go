@@ -64,3 +64,25 @@ func Load() (*Config, error) {
 
 	return cfg, nil
 }
+
+func LoadTestConfig() (*Config, error) {
+	configurator := viper.New()
+	configurator.SetEnvPrefix("APP")
+	configurator.AutomaticEnv()
+
+	configurator.SetDefault("ENV", "testing")
+
+	cookieConfig := NewCookieConfig(configurator)
+	AuthConfig := NewAuthConfig(configurator)
+
+	cfg := &Config{
+		Env:              configurator.GetString("ENV"),
+		DatabaseURL:      configurator.GetString("DATABASE_URL"),
+		PostgresUser:     configurator.GetString("POSTGRES_USER"),
+		PostgresPassword: configurator.GetString("POSTGRES_PASSWORD"),
+		CookieConfig:     cookieConfig,
+		AuthConfig:       AuthConfig,
+	}
+
+	return cfg, nil
+}

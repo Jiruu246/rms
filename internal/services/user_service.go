@@ -12,7 +12,6 @@ import (
 type UserService interface {
 	GetProfile(ctx context.Context, id uuid.UUID) (*dto.User, error)
 	UpdateProfile(ctx context.Context, id uuid.UUID, updates *dto.UpdateUserRequest) (*dto.User, error)
-	DeleteAccount(ctx context.Context, id uuid.UUID) error
 }
 
 type userService struct {
@@ -35,8 +34,4 @@ func (s *userService) UpdateProfile(ctx context.Context, id uuid.UUID, updates *
 	}
 
 	return s.repo.Update(ctx, id, updates)
-}
-
-func (s *userService) DeleteAccount(ctx context.Context, id uuid.UUID) error {
-	return s.repo.Delete(ctx, id)
 }

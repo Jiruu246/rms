@@ -1,0 +1,79 @@
+name: Integration Tests
+
+on:
+  workflow_call:
+    secrets:
+      APP_ENV:
+        required: true
+      APP_POSTGRES_USER:
+        required: true
+      APP_POSTGRES_PASSWORD:
+        required: true
+      APP_JWT_SECRET:
+        required: true
+      APP_ACCESS_TOKEN_EXPIRATION:
+        required: true
+      APP_REFRESH_TOKEN_EXPIRATION:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  integration-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      APP_ENV: ${{ secrets.APP_ENV }}
+      APP_POSTGRES_USER: ${{ secrets.APP_POSTGRES_USER }}
+      APP_POSTGRES_PASSWORD: ${{ secrets.APP_POSTGRES_PASSWORD }}
+      APP_POSTGRES_PORT: "5432"
+      APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
+      APP_ACCESS_TOKEN_EXPIRATION: ${{ secrets.APP_ACCESS_TOKEN_EXPIRATION }} # TOOD: This should be set in a config file rather than an env variable
+      APP_REFRESH_TOKEN_EXPIRATION: ${{ secrets.APP_REFRESH_TOKEN_EXPIRATION }}
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: ${{ secrets.APP_POSTGRES_PASSWORD }}
+          POSTGRES_USER: ${{ secrets.APP_POSTGRES_USER }}
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -d postgres"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Install dependencies
+        run: go mod download
+
+      - name: Run Tests
+        env:
+          APP_DATABASE_URL: postgres://${{ secrets.APP_POSTGRES_USER }}:${{ secrets.APP_POSTGRES_PASSWORD }}@localhost:${{ env.APP_POSTGRES_PORT }}/postgres?sslmode=disable
+        run: |
+          go test ./... \
+            -v \
+            -race \
+            -count=1 \
+            -timeout=10m \
+            -tags=integration
+
+      - name: Upload Test Results on Failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-test-results
+          path: /tmp/test-results.xml
+          retention-days: 3

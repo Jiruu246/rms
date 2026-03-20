@@ -1,0 +1,53 @@
+name: Generated Code Check
+
+on:
+  pull_request:
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - ready_for_review
+
+permissions:
+  contents: read
+
+concurrency:
+  group: generated-code-${{ github.workflow }}-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  ent-generate-check:
+    if: ${{ !github.event.pull_request.draft }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+          cache: true
+          cache-dependency-path: go.sum
+
+      - name: Download dependencies
+        run: go mod download
+
+      - name: Generate Ent ORM code
+        run: go generate ./internal/ent/...
+
+      - name: Ensure generated code is committed
+        run: |
+          if git diff --quiet; then
+            echo "Generated code is up to date."
+          else
+            echo "Generated code is not up to date."
+            echo "Run: go generate ./internal/ent/..."
+            echo "Then commit generated changes."
+            git --no-pager diff
+            exit 1
+          fi

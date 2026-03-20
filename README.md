@@ -39,3 +39,15 @@ Notes and next steps
 
 - Run `go mod tidy` to fetch new dependencies used by the scaffold.
 - Add request logging middleware, metrics (Prometheus), tracing (OpenTelemetry), and migration tool (golang-migrate) as next steps.
+
+# Testing
+TODO: Instruction for testint, unit testing & integration testing
+
+# CICD
+TODO: Instruction & documentation for testing
+
+# To do before make PR
+- compile: make sure no error
+- lint: resolve linting issue (can be resolved by running gofmt, goimports)
+- generate ORM
+- run test

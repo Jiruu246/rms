@@ -28,7 +28,9 @@ func main() {
 		flags = flag.NewFlagSet("migrate", flag.ExitOnError)
 	)
 	flags.Usage = usage
-	flags.Parse(os.Args[2:])
+	if err := flags.Parse(os.Args[2:]); err != nil {
+		log.Fatalf("failed to parse flags: %v", err)
+	}
 
 	if len(os.Args) < 2 {
 		usage()
@@ -53,14 +55,22 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to open database: %v", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			log.Printf("failed to close database connection: %v", err)
+		}
+	}()
 
 	// Create Ent driver
 	drv := entsql.OpenDB("postgres", db)
 
 	// Create Ent client
 	client := ent.NewClient(ent.Driver(dialect.Debug(drv)))
-	defer client.Close()
+	defer func() {
+		if err := client.Close(); err != nil {
+			log.Printf("failed to close ent client: %v", err)
+		}
+	}()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
@@ -116,7 +126,11 @@ func resetDB(ctx context.Context, client *ent.Client, db *sql.DB) error {
 	if err != nil {
 		return fmt.Errorf("failed to begin transaction: %w", err)
 	}
-	defer tx.Rollback()
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("failed to rollback transaction: %v", err)
+		}
+	}()
 
 	if _, err := tx.ExecContext(ctx, "DROP SCHEMA IF EXISTS public CASCADE"); err != nil {
 		return fmt.Errorf("failed to drop schema: %w", err)
@@ -152,13 +166,19 @@ func createMigration(ctx context.Context, client *ent.Client, name string) error
 	if err != nil {
 		return fmt.Errorf("failed to create migration file: %w", err)
 	}
-	defer file.Close()
 
 	if err := client.Schema.WriteTo(ctx, file,
 		migrate.WithDropColumn(true),
 		migrate.WithDropIndex(true),
 	); err != nil {
+		if closeErr := file.Close(); closeErr != nil {
+			return fmt.Errorf("failed to write migration: %w (also failed to close file: %v)", err, closeErr)
+		}
 		return fmt.Errorf("failed to write migration: %w", err)
+	}
+
+	if err := file.Close(); err != nil {
+		return fmt.Errorf("failed to close migration file: %w", err)
 	}
 
 	fmt.Printf("✅ Migration file created: %s\n", filename)

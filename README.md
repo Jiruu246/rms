@@ -46,6 +46,13 @@ TODO: Instruction for testint, unit testing & integration testing
 # CICD
 TODO: Instruction & documentation for testing
 
+# Linting
+```
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4
+```
+
+install go lint and runs before create pr
+
 # To do before make PR
 - compile: make sure no error
 - lint: resolve linting issue (can be resolved by running gofmt, goimports)

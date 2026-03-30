@@ -116,12 +116,16 @@ func (s *authService) RefreshAccessToken(ctx context.Context, refreshTokenStr st
 		return nil, errors.New("invalid refresh token")
 	}
 
+	//nolint:staticcheck // SA9003: intentionally empty for now; will handle error path later
 	if err = s.refreshTokenRepo.UpdateLastUsed(ctx, refreshToken.ID); err != nil {
-		// best-effort update; do not fail request
+		// TODO: best-effort update; do not fail request
 		// or if failed then log out
 	}
 
 	accessToken, err := createAccessToken(refreshToken.UserID, s.authConfig.JwtSecret, s.authConfig.AccessTokenExpiration)
+	if err != nil {
+		return nil, err
+	}
 
 	return &dto.AccessToken{
 		Token:     accessToken.Token,

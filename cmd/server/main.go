@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,7 +20,7 @@ func main() {
 	ctx := context.Background()
 
 	if err := godotenv.Load(".env"); err != nil {
-		fmt.Fprintf(os.Stdout, "failed to load config: %v\n", err)
+		log.Printf("failed to load config: %v", err)
 	}
 
 	// load config
@@ -34,7 +35,11 @@ func main() {
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to init database: %v\n", err)
 	}
-	defer db.Close()
+	defer func() {
+		if err := db.Close(); err != nil {
+			fmt.Fprintf(os.Stderr, "failed to close database: %v\n", err)
+		}
+	}()
 
 	// initialize custom middlewares
 

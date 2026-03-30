@@ -2,6 +2,7 @@ package utils
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"time"
 )
@@ -28,7 +29,9 @@ func WriteResponse[T any](w http.ResponseWriter, status int, data T) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("failed to encode API response: %v", err)
+	}
 }
 
 func WriteError(w http.ResponseWriter, status int, message string, details map[string]any) {
@@ -44,7 +47,9 @@ func WriteError(w http.ResponseWriter, status int, message string, details map[s
 
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
-	json.NewEncoder(w).Encode(response)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		log.Printf("failed to encode API error response: %v", err)
+	}
 }
 
 func WriteSuccess(w http.ResponseWriter, data any) {

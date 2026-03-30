@@ -139,6 +139,7 @@ func (s *AuthTestSuite) TestLogin() {
 	const Password = "password"
 
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(Password), bcrypt.DefaultCost)
+	s.Require().NoError(err)
 	user, err := SetupUser(s.client, s.T().Context())
 	s.Require().NoError(err)
 	_, err = user.Update().SetPasswordHash(string(hashedPassword)).Save(s.T().Context())
@@ -258,6 +259,7 @@ func (s *AuthTestSuite) TestRefreshToken() {
 	user, err := SetupUser(s.client, s.T().Context())
 	s.Require().NoError(err)
 	refreshTokenStr, err := utils.GenerateRefreshToken()
+	s.Require().NoError(err)
 	hashedRefreshToken, err := bcrypt.GenerateFromPassword([]byte(refreshTokenStr), bcrypt.DefaultCost)
 	s.Require().NoError(err)
 	refreshToken, err := s.client.RefreshToken.Create().
@@ -330,6 +332,7 @@ func (s *AuthTestSuite) TestLogout() {
 	user, err := SetupUser(s.client, s.T().Context())
 	s.Require().NoError(err)
 	refreshTokenStr, err := utils.GenerateRefreshToken()
+	s.Require().NoError(err)
 	hashedRefreshToken, err := bcrypt.GenerateFromPassword([]byte(refreshTokenStr), bcrypt.DefaultCost)
 	s.Require().NoError(err)
 	refreshToken, err := s.client.RefreshToken.Create().

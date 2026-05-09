@@ -3,7 +3,6 @@ package main
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 	"os/signal"
@@ -19,9 +18,7 @@ import (
 func main() {
 	ctx := context.Background()
 
-	if err := godotenv.Load(".env"); err != nil {
-		log.Printf("failed to load config: %v", err)
-	}
+	godotenv.Load(".env")
 
 	// load config
 	cfg, err := config.Load()

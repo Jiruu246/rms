@@ -15,7 +15,7 @@ jobs:
       packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Log in to GHCR
         uses: docker/login-action@v3
@@ -35,7 +35,7 @@ jobs:
             echo "MIGRATOR_IMAGE=ghcr.io/$REPO_OWNER/rms-database-migrator" >> "$GITHUB_OUTPUT"
 
       - name: Build & push API image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.server
@@ -45,7 +45,7 @@ jobs:
             ${{ steps.meta.outputs.API_IMAGE }}:latest
 
       - name: Build & push migrator image
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile.migrator

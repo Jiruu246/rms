@@ -2,6 +2,7 @@ package config
 
 import (
 	"errors"
+	"strings"
 	"time"
 
 	"github.com/spf13/viper"
@@ -17,7 +18,7 @@ type Config struct {
 	PostgresPassword string
 	ReadTimeout      time.Duration
 	WriteTimeout     time.Duration
-	ShutdownTimeout  int
+	ShutdownTimeout  time.Duration
 	AllowedOrigins   []string
 	AccessTokenExp   time.Duration
 	RefreshTokenExp  time.Duration
@@ -38,7 +39,7 @@ func Load() (*Config, error) {
 	configurator.SetDefault("READ_TIMEOUT", 15)
 	configurator.SetDefault("WRITE_TIMEOUT", 15)
 	configurator.SetDefault("SHUTDOWN_TIMEOUT", 15)
-	configurator.SetDefault("ALLOWED_ORIGINS", []string{"http://localhost:3000", "http://localhost:5173"})
+	configurator.SetDefault("ALLOWED_ORIGINS", "http://localhost:3000,http://localhost:5173")
 
 	CookieConfig := NewCookieConfig(configurator)
 	AuthConfig := NewAuthConfig(configurator)
@@ -52,8 +53,8 @@ func Load() (*Config, error) {
 		PostgresPassword: configurator.GetString("POSTGRES_PASSWORD"),
 		ReadTimeout:      time.Duration(configurator.GetInt("READ_TIMEOUT")) * time.Second,
 		WriteTimeout:     time.Duration(configurator.GetInt("WRITE_TIMEOUT")) * time.Second,
-		ShutdownTimeout:  configurator.GetInt("SHUTDOWN_TIMEOUT"),
-		AllowedOrigins:   configurator.GetStringSlice("ALLOWED_ORIGINS"),
+		ShutdownTimeout:  time.Duration(configurator.GetInt("SHUTDOWN_TIMEOUT")) * time.Second,
+		AllowedOrigins:   strings.Split(configurator.GetString("ALLOWED_ORIGINS"), ","),
 		CookieConfig:     CookieConfig,
 		AuthConfig:       AuthConfig,
 	}

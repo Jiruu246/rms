@@ -6,7 +6,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/Jiruu246/rms/internal/config"
 	"github.com/Jiruu246/rms/internal/middlewares"
@@ -59,7 +58,7 @@ func main() {
 	<-quit
 	fmt.Println("shutdown initiated")
 
-	ctxShut, cancel := context.WithTimeout(ctx, time.Duration(cfg.ShutdownTimeout)*time.Second)
+	ctxShut, cancel := context.WithTimeout(ctx, cfg.ShutdownTimeout)
 	defer cancel()
 	if err := srv.Shutdown(ctxShut); err != nil {
 		fmt.Fprintf(os.Stderr, "server forced to shutdown: %v\n", err)

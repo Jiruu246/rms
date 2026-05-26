@@ -64,7 +64,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	}
 
 	cookie := h.cookieFactory.NewRefreshToken(refreshToken.Token, time.Until(refreshToken.ExpiresAt))
-	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
+	c.SetCookieData(cookie)
 
 	utils.WriteSuccess(c.Writer, accessToken)
 }
@@ -99,7 +99,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	cookie := h.cookieFactory.ExpireRefreshToken()
-	c.SetCookie(cookie.Name, cookie.Value, cookie.MaxAge, cookie.Path, cookie.Domain, cookie.Secure, cookie.HttpOnly)
+	c.SetCookieData(cookie)
 
 	utils.WriteNoContent(c.Writer)
 }

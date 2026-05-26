@@ -2,12 +2,14 @@ package config
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/spf13/viper"
 )
 
 type Environment string
 
+// FIXMES: environment declares in here?
 const (
 	EnvDevelopment Environment = "development"
 	EnvProduction  Environment = "production"
@@ -21,13 +23,26 @@ type CookieConfig struct {
 }
 
 func NewCookieConfig(Configurator *viper.Viper) CookieConfig {
-	env := Environment(Configurator.GetString("ENV"))
 	domain := Configurator.GetString("COOKIE_DOMAIN")
+	sameSite := parseSameSite(Configurator.GetString("COOKIE_SAMESITE"))
 
 	return CookieConfig{
-		Secure:   env == EnvProduction,
+		Secure:   Configurator.GetBool("COOKIE_SECURE"),
 		HttpOnly: true,
-		SameSite: http.SameSiteLaxMode,
+		SameSite: sameSite,
 		Domain:   domain,
+	}
+}
+
+func parseSameSite(value string) http.SameSite {
+	switch strings.ToLower(strings.TrimSpace(value)) {
+	case "none":
+		return http.SameSiteNoneMode
+	case "strict":
+		return http.SameSiteStrictMode
+	case "lax", "":
+		return http.SameSiteLaxMode
+	default:
+		return http.SameSiteLaxMode
 	}
 }

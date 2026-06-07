@@ -17,7 +17,11 @@ import (
 func main() {
 	ctx := context.Background()
 
-	godotenv.Load(".env")
+	err := godotenv.Load(".env")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to load .env file: %v\n", err)
+		os.Exit(1)
+	}
 
 	// load config
 	cfg, err := config.Load()

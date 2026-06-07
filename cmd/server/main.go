@@ -19,8 +19,7 @@ func main() {
 
 	err := godotenv.Load(".env")
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "failed to load .env file: %v\n", err)
-		os.Exit(1)
+		fmt.Println("No .env file found, relying on environment variables")
 	}
 
 	// load config

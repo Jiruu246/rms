@@ -22,7 +22,7 @@ import (
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatalf("failed to load .env file: %v", err)
+		log.Println("No .env file found, relying on environment variables")
 	}
 
 	var (

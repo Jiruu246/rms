@@ -20,7 +20,10 @@ import (
 )
 
 func main() {
-	godotenv.Load()
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatalf("failed to load .env file: %v", err)
+	}
 
 	var (
 		flags = flag.NewFlagSet("migrate", flag.ExitOnError)

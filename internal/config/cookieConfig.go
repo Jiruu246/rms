@@ -19,18 +19,15 @@ type CookieConfig struct {
 	Secure   bool
 	HttpOnly bool
 	SameSite http.SameSite
-	Domain   string
 }
 
 func NewCookieConfig(Configurator *viper.Viper) CookieConfig {
-	domain := Configurator.GetString("COOKIE_DOMAIN")
 	sameSite := parseSameSite(Configurator.GetString("COOKIE_SAMESITE"))
 
 	return CookieConfig{
 		Secure:   Configurator.GetBool("COOKIE_SECURE"),
 		HttpOnly: true,
 		SameSite: sameSite,
-		Domain:   domain,
 	}
 }
 

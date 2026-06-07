@@ -47,14 +47,15 @@ TODO: Instruction for testint, unit testing & integration testing
 TODO: Instruction & documentation for testing
 
 # Linting
+Install go lint locally (check the version of linting in the CI to avoid mismatch rules)
 ```
-go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11.4
+go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.11
 ```
 
 install go lint and runs before create pr
 
 # To do before make PR
 - compile: make sure no error
-- lint: resolve linting issue (can be resolved by running gofmt, goimports)
+- lint: resolve linting issue `golangci-lint run`
 - generate ORM
 - run test

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"log"
 	"time"
 
 	"github.com/Jiruu246/rms/internal/cookies"
@@ -43,6 +44,8 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	})
 	if err != nil {
 		utils.WriteInternalError(c.Writer, "Failed to register")
+		// TODO: Add structured logging and log the error with more context
+		log.Printf("Error registering user: %v", err)
 		return
 	}
 

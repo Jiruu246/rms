@@ -2,7 +2,6 @@ package middlewares
 
 import (
 	"fmt"
-	"log"
 	"net/http"
 	"slices"
 
@@ -60,8 +59,6 @@ func CORS() gin.HandlerFunc {
 func CORSWithConfig(config CORSConfig) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		origin := c.GetHeader("Origin")
-		log.Println("Allowed Origins:", config.AllowOrigins)
-		log.Printf("CORS middleware: Origin=%s, Method=%s, Path=%s", origin, c.Request.Method, c.Request.URL.Path)
 
 		// Set allowed origins
 		if len(config.AllowOrigins) > 0 {

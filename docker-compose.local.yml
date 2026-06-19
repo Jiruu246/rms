@@ -1,0 +1,49 @@
+services:
+  postgres-database:
+    image: postgres:16-alpine
+    container_name: postgres-database
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${APP_POSTGRES_USER}
+      POSTGRES_PASSWORD: ${APP_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${APP_POSTGRES_DB}
+    volumes:
+      - ${POSTGRES_DATA_PATH}:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"   # exposed locally so you can connect with psql / a GUI
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${APP_POSTGRES_USER} -d ${APP_POSTGRES_DB}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  database-migration:
+    build:
+      context: .
+      dockerfile: Dockerfile.migrator
+    image: rms-database-migrator:local
+    container_name: database-migration
+    command: ["apply"]
+    environment:
+      APP_DATABASE_URL: postgres://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres-database:5432/${APP_POSTGRES_DB}?sslmode=disable
+    depends_on:
+      postgres-database:
+        condition: service_healthy
+    restart: "no"   # run once and exit
+
+  api-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.server
+    image: rms-api:local
+    container_name: api-service
+    restart: unless-stopped
+    ports:
+      - "${API_PORT_HOST:-8080}:8080"
+    env_file:
+      - .env
+    depends_on:
+      postgres-database:
+        condition: service_healthy
+      database-migration:
+        condition: service_completed_successfully

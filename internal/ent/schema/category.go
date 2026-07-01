@@ -15,6 +15,7 @@ type Category struct {
 func (Category) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		mixin.UpdateTime{},
+		mixin.CreateTime{},
 	}
 }
 

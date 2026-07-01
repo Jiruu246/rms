@@ -55,6 +55,7 @@ type CategoryMutation struct {
 	typ               string
 	id                *uuid.UUID
 	update_time       *time.Time
+	create_time       *time.Time
 	name              *string
 	description       *string
 	display_order     *int
@@ -209,6 +210,42 @@ func (m *CategoryMutation) OldUpdateTime(ctx context.Context) (v time.Time, err 
 // ResetUpdateTime resets all changes to the "update_time" field.
 func (m *CategoryMutation) ResetUpdateTime() {
 	m.update_time = nil
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *CategoryMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *CategoryMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the Category entity.
+// If the Category object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *CategoryMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *CategoryMutation) ResetCreateTime() {
+	m.create_time = nil
 }
 
 // SetName sets the "name" field.
@@ -526,9 +563,12 @@ func (m *CategoryMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *CategoryMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.update_time != nil {
 		fields = append(fields, category.FieldUpdateTime)
+	}
+	if m.create_time != nil {
+		fields = append(fields, category.FieldCreateTime)
 	}
 	if m.name != nil {
 		fields = append(fields, category.FieldName)
@@ -555,6 +595,8 @@ func (m *CategoryMutation) Field(name string) (ent.Value, bool) {
 	switch name {
 	case category.FieldUpdateTime:
 		return m.UpdateTime()
+	case category.FieldCreateTime:
+		return m.CreateTime()
 	case category.FieldName:
 		return m.Name()
 	case category.FieldDescription:
@@ -576,6 +618,8 @@ func (m *CategoryMutation) OldField(ctx context.Context, name string) (ent.Value
 	switch name {
 	case category.FieldUpdateTime:
 		return m.OldUpdateTime(ctx)
+	case category.FieldCreateTime:
+		return m.OldCreateTime(ctx)
 	case category.FieldName:
 		return m.OldName(ctx)
 	case category.FieldDescription:
@@ -601,6 +645,13 @@ func (m *CategoryMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetUpdateTime(v)
+		return nil
+	case category.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
 		return nil
 	case category.FieldName:
 		v, ok := value.(string)
@@ -703,6 +754,9 @@ func (m *CategoryMutation) ResetField(name string) error {
 	switch name {
 	case category.FieldUpdateTime:
 		m.ResetUpdateTime()
+		return nil
+	case category.FieldCreateTime:
+		m.ResetCreateTime()
 		return nil
 	case category.FieldName:
 		m.ResetName()

@@ -21,6 +21,8 @@ type Category struct {
 	ID uuid.UUID `json:"id,omitempty"`
 	// UpdateTime holds the value of the "update_time" field.
 	UpdateTime time.Time `json:"update_time,omitempty"`
+	// CreateTime holds the value of the "create_time" field.
+	CreateTime time.Time `json:"create_time,omitempty"`
 	// Category name
 	Name string `json:"name,omitempty"`
 	// Category description
@@ -79,7 +81,7 @@ func (*Category) scanValues(columns []string) ([]any, error) {
 			values[i] = new(sql.NullInt64)
 		case category.FieldName, category.FieldDescription:
 			values[i] = new(sql.NullString)
-		case category.FieldUpdateTime:
+		case category.FieldUpdateTime, category.FieldCreateTime:
 			values[i] = new(sql.NullTime)
 		case category.FieldID, category.FieldRestaurantID:
 			values[i] = new(uuid.UUID)
@@ -109,6 +111,12 @@ func (_m *Category) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field update_time", values[i])
 			} else if value.Valid {
 				_m.UpdateTime = value.Time
+			}
+		case category.FieldCreateTime:
+			if value, ok := values[i].(*sql.NullTime); !ok {
+				return fmt.Errorf("unexpected type %T for field create_time", values[i])
+			} else if value.Valid {
+				_m.CreateTime = value.Time
 			}
 		case category.FieldName:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -188,6 +196,9 @@ func (_m *Category) String() string {
 	builder.WriteString(fmt.Sprintf("id=%v, ", _m.ID))
 	builder.WriteString("update_time=")
 	builder.WriteString(_m.UpdateTime.Format(time.ANSIC))
+	builder.WriteString(", ")
+	builder.WriteString("create_time=")
+	builder.WriteString(_m.CreateTime.Format(time.ANSIC))
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(_m.Name)

@@ -27,6 +27,8 @@ func init() {
 	categoryMixin := schema.Category{}.Mixin()
 	categoryMixinFields0 := categoryMixin[0].Fields()
 	_ = categoryMixinFields0
+	categoryMixinFields1 := categoryMixin[1].Fields()
+	_ = categoryMixinFields1
 	categoryFields := schema.Category{}.Fields()
 	_ = categoryFields
 	// categoryDescUpdateTime is the schema descriptor for update_time field.
@@ -35,6 +37,10 @@ func init() {
 	category.DefaultUpdateTime = categoryDescUpdateTime.Default.(func() time.Time)
 	// category.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
 	category.UpdateDefaultUpdateTime = categoryDescUpdateTime.UpdateDefault.(func() time.Time)
+	// categoryDescCreateTime is the schema descriptor for create_time field.
+	categoryDescCreateTime := categoryMixinFields1[0].Descriptor()
+	// category.DefaultCreateTime holds the default value on creation for the create_time field.
+	category.DefaultCreateTime = categoryDescCreateTime.Default.(func() time.Time)
 	// categoryDescName is the schema descriptor for name field.
 	categoryDescName := categoryFields[1].Descriptor()
 	// category.NameValidator is a validator for the "name" field. It is called by the builders before save.

@@ -37,6 +37,20 @@ func (_c *CategoryCreate) SetNillableUpdateTime(v *time.Time) *CategoryCreate {
 	return _c
 }
 
+// SetCreateTime sets the "create_time" field.
+func (_c *CategoryCreate) SetCreateTime(v time.Time) *CategoryCreate {
+	_c.mutation.SetCreateTime(v)
+	return _c
+}
+
+// SetNillableCreateTime sets the "create_time" field if the given value is not nil.
+func (_c *CategoryCreate) SetNillableCreateTime(v *time.Time) *CategoryCreate {
+	if v != nil {
+		_c.SetCreateTime(*v)
+	}
+	return _c
+}
+
 // SetName sets the "name" field.
 func (_c *CategoryCreate) SetName(v string) *CategoryCreate {
 	_c.mutation.SetName(v)
@@ -164,6 +178,10 @@ func (_c *CategoryCreate) defaults() {
 		v := category.DefaultUpdateTime()
 		_c.mutation.SetUpdateTime(v)
 	}
+	if _, ok := _c.mutation.CreateTime(); !ok {
+		v := category.DefaultCreateTime()
+		_c.mutation.SetCreateTime(v)
+	}
 	if _, ok := _c.mutation.Description(); !ok {
 		v := category.DefaultDescription
 		_c.mutation.SetDescription(v)
@@ -186,6 +204,9 @@ func (_c *CategoryCreate) defaults() {
 func (_c *CategoryCreate) check() error {
 	if _, ok := _c.mutation.UpdateTime(); !ok {
 		return &ValidationError{Name: "update_time", err: errors.New(`ent: missing required field "Category.update_time"`)}
+	}
+	if _, ok := _c.mutation.CreateTime(); !ok {
+		return &ValidationError{Name: "create_time", err: errors.New(`ent: missing required field "Category.create_time"`)}
 	}
 	if _, ok := _c.mutation.Name(); !ok {
 		return &ValidationError{Name: "name", err: errors.New(`ent: missing required field "Category.name"`)}
@@ -258,6 +279,10 @@ func (_c *CategoryCreate) createSpec() (*Category, *sqlgraph.CreateSpec) {
 	if value, ok := _c.mutation.UpdateTime(); ok {
 		_spec.SetField(category.FieldUpdateTime, field.TypeTime, value)
 		_node.UpdateTime = value
+	}
+	if value, ok := _c.mutation.CreateTime(); ok {
+		_spec.SetField(category.FieldCreateTime, field.TypeTime, value)
+		_node.CreateTime = value
 	}
 	if value, ok := _c.mutation.Name(); ok {
 		_spec.SetField(category.FieldName, field.TypeString, value)

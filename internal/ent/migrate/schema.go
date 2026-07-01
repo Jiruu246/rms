@@ -12,6 +12,7 @@ var (
 	CategoriesColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeUUID},
 		{Name: "update_time", Type: field.TypeTime},
+		{Name: "create_time", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString, Size: 255},
 		{Name: "description", Type: field.TypeString, Size: 1000, Default: ""},
 		{Name: "display_order", Type: field.TypeInt, Default: 0},
@@ -26,7 +27,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "categories_restaurants_categories",
-				Columns:    []*schema.Column{CategoriesColumns[6]},
+				Columns:    []*schema.Column{CategoriesColumns[7]},
 				RefColumns: []*schema.Column{RestaurantsColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

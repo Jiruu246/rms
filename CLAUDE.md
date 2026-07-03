@@ -15,6 +15,7 @@ internal/
   config/             # Config loading (viper + godotenv)
   cookies/            # Cookie helpers
   data_structures/    # Shared data structures
+  docs/               # Generated Swagger/OpenAPI spec — DO NOT hand-edit (see API documentation below)
   dto/                # Request/response DTOs
   ent/                # Generated ent ORM code — DO NOT hand-edit
     schema/           # ← edit here; run `go generate ./internal/ent` to regenerate
@@ -99,6 +100,26 @@ Exposes: `ListCategories(ctx, client, req, filters)`, `NewCategoryQueryExecutor(
 
 `map[string]any` JSON unmarshal always produces `float64` for numbers and `string` for time values. Each `SortFieldSpec.Decode` must re-parse to the correct Go type. See `display_order` (float64→int) and `create_time` (string→time.Time via RFC3339Nano) in the Category adapter.
 
+## API documentation (Swagger / swaggo)
+
+Handlers are annotated with `swaggo/swag` comments; the OpenAPI 2.0 spec is generated into `internal/docs/` (`docs.go`, `swagger.json`, `swagger.yaml`) and served at `/swagger/index.html` via `gin-swagger`.
+
+The route is only registered when `cfg.Env != "production"` (see `Server.routes()` in `internal/server/server.go`) — the API spec is not exposed on production deployments.
+
+- General API info (`@title`, `@BasePath`, `@securityDefinitions.apikey BearerAuth`, ...) lives above `func main()` in `cmd/server/main.go`.
+- Each handler method has its own `@Summary`/`@Tags`/`@Param`/`@Success`/`@Failure`/`@Router` block directly above the function — keep it next to the code it documents, not in a separate file.
+- Response bodies are documented as the real generic envelope types, e.g. `utils.APIResponse[dto.Category]` or `utils.APIResponse[pagination.PageResponse[dto.Category]]` — swag resolves Go generics natively.
+- Routes requiring `JwtMiddleware` (see `internal/server/server.go`) get `@Security BearerAuth`; public routes (e.g. `/public/order`) omit it.
+- `@Router` paths are relative to `BasePath` (`/api`) and must match the method registered in `internal/server/server.go` exactly (categories/restaurants/menu-items use `PUT` for update; modifiers/modifier-options/orders use `PATCH` — don't assume PATCH everywhere).
+
+Regenerate after changing any handler annotation or DTO:
+
+```sh
+swag init -g cmd/server/main.go -o internal/docs --parseDependency --parseInternal
+```
+
+Install the CLI once via `go install github.com/swaggo/swag/cmd/swag@latest` if `swag` isn't on `PATH`.
+
 ## ent ORM
 
 - Schema files live in `internal/ent/schema/` — edit these, then regenerate.
@@ -125,6 +146,7 @@ docker compose -f docker-compose.local.yml up -d
 
 # Run server
 go run ./cmd/server
+# API docs: http://localhost:<port>/swagger/index.html
 
 # Run tests (unit — no DB)
 go test ./pkg/pagination/...

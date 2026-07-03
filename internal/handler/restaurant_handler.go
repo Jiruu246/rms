@@ -19,6 +19,17 @@ func NewRestaurantHandler(service services.RestaurantService) *RestaurantHandler
 }
 
 // CreateRestaurant handles POST /api/restaurants
+//
+//	@Summary		Create a restaurant
+//	@Tags			restaurants
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		dto.CreateRestaurantRequest	true	"Restaurant details"
+//	@Success		201		{object}	utils.APIResponse[dto.RestaurantResponse]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/restaurants [post]
 func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 	claims := c.MustGet("claims").(utils.JWTClaims)
 
@@ -44,6 +55,16 @@ func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 }
 
 // GetRestaurant handles GET /api/restaurants/{id}
+//
+//	@Summary		Get a restaurant by ID
+//	@Tags			restaurants
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Restaurant ID"	format(uuid)
+//	@Success		200	{object}	utils.APIResponse[dto.RestaurantResponse]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/restaurants/{id} [get]
 func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -62,6 +83,14 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 }
 
 // GetRestaurants handles GET /api/restaurants
+//
+//	@Summary		List restaurants
+//	@Tags			restaurants
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	utils.APIResponse[[]dto.RestaurantResponse]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/restaurants [get]
 func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 	restaurants, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
@@ -72,7 +101,19 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, restaurants)
 }
 
-// UpdateRestaurant handles PATCH /api/restaurants/{id}
+// UpdateRestaurant handles PUT /api/restaurants/{id}
+//
+//	@Summary		Update a restaurant
+//	@Tags			restaurants
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string						true	"Restaurant ID"	format(uuid)
+//	@Param			request	body		dto.UpdateRestaurantRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.RestaurantResponse]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/restaurants/{id} [put]
 func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -97,6 +138,15 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 }
 
 // DeleteRestaurant handles DELETE /api/restaurants/{id}
+//
+//	@Summary		Delete a restaurant
+//	@Tags			restaurants
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Restaurant ID"	format(uuid)
+//	@Success		204	"No Content"
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/restaurants/{id} [delete]
 func (h *RestaurantHandler) DeleteRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)

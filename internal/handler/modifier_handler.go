@@ -19,6 +19,17 @@ func NewModifierHandler(service services.ModifierService) *ModifierHandler {
 }
 
 // CreateModifier handles POST /api/modifiers
+//
+//	@Summary		Create a modifier
+//	@Tags			modifiers
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		dto.CreateModifierRequest	true	"Modifier details"
+//	@Success		201		{object}	utils.APIResponse[dto.Modifier]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/modifiers [post]
 func (h *ModifierHandler) CreateModifier(c *gin.Context) {
 	var req dto.CreateModifierRequest
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
@@ -35,6 +46,16 @@ func (h *ModifierHandler) CreateModifier(c *gin.Context) {
 }
 
 // GetModifier handles GET /api/modifiers/{id}
+//
+//	@Summary		Get a modifier by ID
+//	@Tags			modifiers
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Modifier ID"	format(uuid)
+//	@Success		200	{object}	utils.APIResponse[dto.Modifier]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/modifiers/{id} [get]
 func (h *ModifierHandler) GetModifier(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -51,6 +72,14 @@ func (h *ModifierHandler) GetModifier(c *gin.Context) {
 }
 
 // GetAllModifiers handles GET /api/modifiers
+//
+//	@Summary		List modifiers
+//	@Tags			modifiers
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	utils.APIResponse[[]dto.Modifier]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/modifiers [get]
 func (h *ModifierHandler) GetAllModifiers(c *gin.Context) {
 	modifiers, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
@@ -61,6 +90,18 @@ func (h *ModifierHandler) GetAllModifiers(c *gin.Context) {
 }
 
 // UpdateModifier handles PATCH /api/modifiers/{id}
+//
+//	@Summary		Update a modifier
+//	@Tags			modifiers
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string						true	"Modifier ID"	format(uuid)
+//	@Param			request	body		dto.UpdateModifierRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.Modifier]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/modifiers/{id} [patch]
 func (h *ModifierHandler) UpdateModifier(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -82,6 +123,15 @@ func (h *ModifierHandler) UpdateModifier(c *gin.Context) {
 }
 
 // DeleteModifier handles DELETE /api/modifiers/{id}
+//
+//	@Summary		Delete a modifier
+//	@Tags			modifiers
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Modifier ID"	format(uuid)
+//	@Success		204	"No Content"
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/modifiers/{id} [delete]
 func (h *ModifierHandler) DeleteModifier(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)

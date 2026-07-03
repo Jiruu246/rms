@@ -18,6 +18,17 @@ func NewMenuItemHandler(service services.MenuItemService) *MenuItemHandler {
 }
 
 // CreateMenuItem handles POST /api/menu-items
+//
+//	@Summary		Create a menu item
+//	@Tags			menu-items
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		dto.CreateMenuItemRequest	true	"Menu item details"
+//	@Success		201		{object}	utils.APIResponse[dto.MenuItem]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/menu-items [post]
 func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 	var req dto.CreateMenuItemRequest
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
@@ -33,6 +44,14 @@ func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 }
 
 // GetMenuItems handles GET /api/menu-items
+//
+//	@Summary		List menu items
+//	@Tags			menu-items
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	utils.APIResponse[[]dto.MenuItem]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/menu-items [get]
 func (h *MenuItemHandler) GetMenuItems(c *gin.Context) {
 	items, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
@@ -43,6 +62,16 @@ func (h *MenuItemHandler) GetMenuItems(c *gin.Context) {
 }
 
 // GetMenuItem handles GET /api/menu-items/{id}
+//
+//	@Summary		Get a menu item by ID
+//	@Tags			menu-items
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		int	true	"Menu item ID"
+//	@Success		200	{object}	utils.APIResponse[dto.MenuItem]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/menu-items/{id} [get]
 func (h *MenuItemHandler) GetMenuItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -58,7 +87,19 @@ func (h *MenuItemHandler) GetMenuItem(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, item)
 }
 
-// UpdateMenuItem handles PATCH /api/menu-items/{id}
+// UpdateMenuItem handles PUT /api/menu-items/{id}
+//
+//	@Summary		Update a menu item
+//	@Tags			menu-items
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		int							true	"Menu item ID"
+//	@Param			request	body		dto.UpdateMenuItemRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.MenuItem]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/menu-items/{id} [put]
 func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)
@@ -80,6 +121,15 @@ func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 }
 
 // DeleteMenuItem handles DELETE /api/menu-items/{id}
+//
+//	@Summary		Delete a menu item
+//	@Tags			menu-items
+//	@Security		BearerAuth
+//	@Param			id	path	int	true	"Menu item ID"
+//	@Success		204	"No Content"
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/menu-items/{id} [delete]
 func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)

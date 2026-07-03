@@ -19,6 +19,17 @@ func NewModifierOptionHandler(service services.ModifierOptionService) *ModifierO
 }
 
 // CreateModifierOption handles POST /api/modifiers/options
+//
+//	@Summary		Create a modifier option
+//	@Tags			modifier-options
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		dto.CreateModifierOptionRequest	true	"Modifier option details"
+//	@Success		201		{object}	utils.APIResponse[dto.ModifierOption]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/modifiers/options [post]
 func (h *ModifierOptionHandler) CreateModifierOption(c *gin.Context) {
 	var req dto.CreateModifierOptionRequest
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
@@ -35,6 +46,16 @@ func (h *ModifierOptionHandler) CreateModifierOption(c *gin.Context) {
 }
 
 // GetModifierOption handles GET /api/modifiers/options/{id}
+//
+//	@Summary		Get a modifier option by ID
+//	@Tags			modifier-options
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Modifier option ID"	format(uuid)
+//	@Success		200	{object}	utils.APIResponse[dto.ModifierOption]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/modifiers/options/{id} [get]
 func (h *ModifierOptionHandler) GetModifierOption(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -51,6 +72,14 @@ func (h *ModifierOptionHandler) GetModifierOption(c *gin.Context) {
 }
 
 // GetAllModifierOptions handles GET /api/modifiers/options
+//
+//	@Summary		List modifier options
+//	@Tags			modifier-options
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	utils.APIResponse[[]dto.ModifierOption]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/modifiers/options [get]
 func (h *ModifierOptionHandler) GetAllModifierOptions(c *gin.Context) {
 	options, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
@@ -61,6 +90,18 @@ func (h *ModifierOptionHandler) GetAllModifierOptions(c *gin.Context) {
 }
 
 // UpdateModifierOption handles PATCH /api/modifiers/options/{id}
+//
+//	@Summary		Update a modifier option
+//	@Tags			modifier-options
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string								true	"Modifier option ID"	format(uuid)
+//	@Param			request	body		dto.UpdateModifierOptionRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.ModifierOption]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/modifiers/options/{id} [patch]
 func (h *ModifierOptionHandler) UpdateModifierOption(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -82,6 +123,15 @@ func (h *ModifierOptionHandler) UpdateModifierOption(c *gin.Context) {
 }
 
 // DeleteModifierOption handles DELETE /api/modifiers/options/{id}
+//
+//	@Summary		Delete a modifier option
+//	@Tags			modifier-options
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Modifier option ID"	format(uuid)
+//	@Success		204	"No Content"
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/modifiers/options/{id} [delete]
 func (h *ModifierOptionHandler) DeleteModifierOption(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)

@@ -33,7 +33,19 @@ func NewOrderHandler(service services.OrderService) *OrderHandler {
 	return &OrderHandler{service: service}
 }
 
-// CreateOrderPub handles POST /api/orders
+// CreateOrderPub handles POST /api/orders and POST /api/public/order
+//
+//	@Summary		Create an order
+//	@Description	Creates an order. Mounted both as an authenticated endpoint and as a public (no-auth) endpoint for customer-facing ordering.
+//	@Tags			orders
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		CreateOrderSchema	true	"Order details"
+//	@Success		201		{object}	utils.APIResponse[dto.Order]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/orders [post]
+//	@Router			/public/order [post]
 func (h *OrderHandler) CreateOrderPub(c *gin.Context) {
 	var req CreateOrderSchema
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
@@ -70,6 +82,16 @@ func (h *OrderHandler) CreateOrderPub(c *gin.Context) {
 }
 
 // GetOrder handles GET /api/orders/{id}
+//
+//	@Summary		Get an order by ID
+//	@Tags			orders
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Order ID"	format(uuid)
+//	@Success		200	{object}	utils.APIResponse[dto.Order]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/orders/{id} [get]
 func (h *OrderHandler) GetOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -86,6 +108,16 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 }
 
 // GetOrders handles GET /api/orders?restaurant_id=xxx
+//
+//	@Summary		List orders for a restaurant
+//	@Tags			orders
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			restaurant_id	query		string	true	"Restaurant ID"	format(uuid)
+//	@Success		200				{object}	utils.APIResponse[[]dto.Order]
+//	@Failure		400				{object}	utils.APIResponse[any]
+//	@Failure		500				{object}	utils.APIResponse[any]
+//	@Router			/orders [get]
 func (h *OrderHandler) GetOrders(c *gin.Context) {
 	restaurantIDStr := c.Query("restaurant_id")
 	if restaurantIDStr == "" {
@@ -106,6 +138,18 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 }
 
 // UpdateOrder handles PATCH /api/orders/{id}
+//
+//	@Summary		Update an order
+//	@Tags			orders
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string					true	"Order ID"	format(uuid)
+//	@Param			request	body		dto.UpdateOrderRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.Order]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/orders/{id} [patch]
 func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -127,6 +171,15 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 }
 
 // DeleteOrder handles DELETE /api/orders/{id}
+//
+//	@Summary		Delete an order
+//	@Tags			orders
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Order ID"	format(uuid)
+//	@Success		204	"No Content"
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/orders/{id} [delete]
 func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)

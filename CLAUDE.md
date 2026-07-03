@@ -32,7 +32,7 @@ pkg/
 integration_tests/
 ```
 
-## Pagination system (`pkg/pagination` + `internal/repos/*_pagination.go`)
+## Pagination system (`pkg/pagination` + per-entity adapters in `internal/repos/*_repo.go`)
 
 Cursor (keyset/seek) pagination — NOT offset. Every sort ends with `id ASC` as an implicit tie-breaker.
 
@@ -74,15 +74,17 @@ catOrders[i] = category.OrderOption(orders[i])  // same underlying type — vali
 q = q.Where(predicate.Category(cursorPred))
 ```
 
-**Worked example:** `internal/repos/category_pagination.go`  
-Exposes: `ListCategories(ctx, client, req, filters)` and `NewCategoryQueryExecutor(q)`.
+The adapter lives alongside the entity's other repo code in `internal/repos/<entity>_repo.go` — it is not split into a separate file.
+
+**Worked example:** `internal/repos/category_repo.go`  
+Exposes: `ListCategories(ctx, client, req, filters)`, `NewCategoryQueryExecutor(q)`, and `CategoryRepository.List(ctx, req)` (the thin repo-interface method that calls `ListCategories` with the repo's own `ent.Client`).
 
 ### Adding a new entity adapter
 
-1. Create `internal/repos/<entity>_pagination.go`
-2. Declare `var <entity>SortFields = map[string]pagination.SortFieldSpec[*ent.<Entity>]{...}`
-3. Implement `New<Entity>QueryExecutor(q *ent.<Entity>Query) pagination.QueryExecutor[*ent.<Entity>]`
-4. Implement `List<Entity>s(ctx, client, req, filters)` — apply filters to `q` before wrapping
+1. In `internal/repos/<entity>_repo.go`, declare `var <entity>SortFields = map[string]pagination.SortFieldSpec[*ent.<Entity>]{...}`
+2. Implement `New<Entity>QueryExecutor(q *ent.<Entity>Query) pagination.QueryExecutor[*ent.<Entity>]`
+3. Implement `List<Entity>s(ctx, client, req, filters)` — apply filters to `q` before wrapping
+4. Add a `List(ctx, req)` method to the entity's repository interface/struct that calls `List<Entity>s` and maps `*ent.<Entity>` rows to the entity's DTO
 5. Add composite DB indexes `(field, id)` for every sortable field in the ent schema
 
 ### Sentinel errors (map to HTTP status in handlers)
@@ -137,3 +139,54 @@ go test ./integration_tests/...
 - Handlers parse `PageRequest` via `pagination.ParsePageRequest(c.Query("limit"), c.Query("cursor"), c.Query("sort"))`.
 - Default sort must be applied by the `List*` function when `req.Sort` is empty — `Run` does not apply defaults.
 - `prev_cursor` backward pagination is not implemented (field exists in `PageResponse` but is always empty).
+
+### Go file organization
+
+Organize files for readability rather than enforcing a strict visibility-based layout:
+
+```
+package
+imports
+
+const
+var
+
+types
+    interfaces
+    structs
+    aliases
+
+constructors (New...)
+
+public API
+
+private helpers
+```
+
+- **Group by feature, not visibility.** A private helper lives directly below the public function/method that uses it, not collected in a separate section at the end of the file.
+
+  Preferred:
+  ```go
+  func (s *Service) CreateUser(...) error {
+      return s.validate(...)
+  }
+
+  func (s *Service) validate(...) error {
+      ...
+  }
+  ```
+
+  Avoid:
+  ```go
+  // Public methods
+  func (s *Service) CreateUser(...) error { ... }
+  func (s *Service) DeleteUser(...) error { ... }
+
+  // Private helpers
+  func (s *Service) validate(...) error { ... }
+  func (s *Service) normalize(...) { ... }
+  ```
+
+- **Keep files focused.** When a file grows large or covers multiple responsibilities, split it into multiple files in the same package instead of adding more sections — e.g. `service.go` (type + constructor), `service_create.go`, `service_delete.go`, `types.go`, `errors.go`.
+
+The goal is minimal scrolling to find related code.

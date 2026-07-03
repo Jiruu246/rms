@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
@@ -135,11 +136,11 @@ func (s *CategoryTestSuite) TestGetCategory() {
 			url:      categoryAPIBase,
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[[]dto.Category]
+				var response utils.APIResponse[pagination.PageResponse[dto.Category]]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.True(response.Success)
-				s.True(len(response.Data) >= 2)
+				s.True(len(response.Data.Data) >= 2)
 			},
 		},
 	}

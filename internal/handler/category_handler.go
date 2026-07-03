@@ -1,10 +1,12 @@
 package handler
 
 import (
+	"errors"
 	"strings"
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
+	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/Jiruu246/rms/pkg/utils"
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -112,11 +114,23 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 
 // GetCategories handles GET /api/categories
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
-	categories, err := h.service.GetAll(c.Request.Context())
+	req, err := pagination.ParsePageRequest(c.Query("limit"), c.Query("cursor"), c.Query("sort"))
 	if err != nil {
+		utils.WriteBadRequest(c.Writer, err.Error())
+		return
+	}
+
+	page, err := h.service.List(c.Request.Context(), req)
+	if err != nil {
+		if errors.Is(err, pagination.ErrInvalidSortField) ||
+			errors.Is(err, pagination.ErrCursorSortMismatch) ||
+			errors.Is(err, pagination.ErrInvalidCursor) {
+			utils.WriteBadRequest(c.Writer, err.Error())
+			return
+		}
 		utils.WriteInternalError(c.Writer, "Failed to retrieve categories")
 		return
 	}
 
-	utils.WriteSuccess(c.Writer, categories)
+	utils.WriteSuccess(c.Writer, page)
 }

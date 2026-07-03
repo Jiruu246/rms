@@ -6,13 +6,14 @@ import (
 
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/repos"
+	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/google/uuid"
 )
 
 type CategoryService interface {
 	Create(ctx context.Context, req *dto.CreateCategoryRequest) (*dto.Category, error)
 	GetByID(ctx context.Context, id uuid.UUID) (*dto.Category, error)
-	GetAll(ctx context.Context) ([]*dto.Category, error)
+	List(ctx context.Context, req pagination.PageRequest) (*pagination.PageResponse[*dto.Category], error)
 	Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCategoryRequest) (*dto.Category, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 }
@@ -39,6 +40,10 @@ func (s *categoryService) GetByID(ctx context.Context, id uuid.UUID) (*dto.Categ
 	return s.repo.GetByID(ctx, id)
 }
 
+func (s *categoryService) List(ctx context.Context, req pagination.PageRequest) (*pagination.PageResponse[*dto.Category], error) {
+	return s.repo.List(ctx, req)
+}
+
 func (s *categoryService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCategoryRequest) (*dto.Category, error) {
 	if id == uuid.Nil {
 		return nil, fmt.Errorf("invalid category id")
@@ -53,8 +58,4 @@ func (s *categoryService) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return s.repo.Delete(ctx, id)
-}
-
-func (s *categoryService) GetAll(ctx context.Context) ([]*dto.Category, error) {
-	return s.repo.GetAll(ctx)
 }

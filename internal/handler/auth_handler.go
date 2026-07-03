@@ -29,6 +29,18 @@ func NewAuthHandler(cookieFactory *cookies.Factory, service services.AuthService
 	}
 }
 
+// Register handles POST /api/auth/register
+//
+//	@Summary		Register a new user
+//	@Description	Creates a new user account
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		RegisterUserSchema	true	"Registration details"
+//	@Success		201		{object}	utils.APIResponse[dto.User]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
 	var req RegisterUserSchema
 
@@ -52,6 +64,18 @@ func (h *AuthHandler) Register(c *gin.Context) {
 	utils.WriteCreated(c.Writer, user)
 }
 
+// Login handles POST /api/auth/login
+//
+//	@Summary		Log in
+//	@Description	Authenticates a user and returns an access token; sets a refresh token cookie
+//	@Tags			auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		dto.LoginUserRequest	true	"Login credentials"
+//	@Success		200		{object}	utils.APIResponse[dto.AccessToken]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		401		{object}	utils.APIResponse[any]
+//	@Router			/auth/login [post]
 func (h *AuthHandler) Login(c *gin.Context) {
 	var req dto.LoginUserRequest
 
@@ -72,6 +96,16 @@ func (h *AuthHandler) Login(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, accessToken)
 }
 
+// Refresh handles POST /api/auth/refresh
+//
+//	@Summary		Refresh access token
+//	@Description	Exchanges the refresh token cookie for a new access token
+//	@Tags			auth
+//	@Produce		json
+//	@Success		200	{object}	utils.APIResponse[dto.AccessToken]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		401	{object}	utils.APIResponse[any]
+//	@Router			/auth/refresh [post]
 func (h *AuthHandler) Refresh(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
@@ -88,6 +122,15 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, response)
 }
 
+// Logout handles POST /api/auth/logout
+//
+//	@Summary		Log out
+//	@Description	Revokes the refresh token and clears the refresh token cookie
+//	@Tags			auth
+//	@Success		204	{object}	nil
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
 	refreshToken, err := c.Cookie("refresh_token")
 

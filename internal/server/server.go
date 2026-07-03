@@ -13,6 +13,8 @@ import (
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Middlewares struct {
@@ -61,6 +63,10 @@ func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Serve
 }
 
 func (s *Server) routes() {
+	if s.cfg.Env != "production" {
+		s.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
+	}
+
 	// initialize repositories
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)

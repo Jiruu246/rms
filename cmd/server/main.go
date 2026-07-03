@@ -8,12 +8,22 @@ import (
 	"os/signal"
 
 	"github.com/Jiruu246/rms/internal/config"
+	_ "github.com/Jiruu246/rms/internal/docs"
 	"github.com/Jiruu246/rms/internal/middlewares"
 	"github.com/Jiruu246/rms/internal/server"
 	"github.com/Jiruu246/rms/pkg/database"
 	"github.com/joho/godotenv"
 )
 
+// @title						RMS API
+// @version						1.0
+// @description					Restaurant Management System HTTP API.
+// @contact.name				RMS
+// @BasePath					/api
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
+// @description					Type "Bearer" followed by a space and the JWT access token.
 func main() {
 	ctx := context.Background()
 

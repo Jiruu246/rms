@@ -23,6 +23,17 @@ func NewCategoryHandler(service services.CategoryService) *CategoryHandler {
 }
 
 // CreateCategory handles POST /api/categories
+//
+//	@Summary		Create a category
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		dto.CreateCategoryRequest	true	"Category details"
+//	@Success		201		{object}	utils.APIResponse[dto.Category]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/categories [post]
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 	var req dto.CreateCategoryRequest
 
@@ -41,6 +52,17 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 }
 
 // GetCategory handles GET /api/categories/{id}
+//
+//	@Summary		Get a category by ID
+//	@Tags			categories
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id	path		string	true	"Category ID"	format(uuid)
+//	@Success		200	{object}	utils.APIResponse[dto.Category]
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/categories/{id} [get]
 func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -62,7 +84,20 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, category)
 }
 
-// UpdateCategory handles PATCH /api/categories/{id}
+// UpdateCategory handles PUT /api/categories/{id}
+//
+//	@Summary		Update a category
+//	@Tags			categories
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string						true	"Category ID"	format(uuid)
+//	@Param			request	body		dto.UpdateCategoryRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.Category]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/categories/{id} [put]
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -91,6 +126,16 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 }
 
 // DeleteCategory handles DELETE /api/categories/{id}
+//
+//	@Summary		Delete a category
+//	@Tags			categories
+//	@Security		BearerAuth
+//	@Param			id	path	string	true	"Category ID"	format(uuid)
+//	@Success		204	"No Content"
+//	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Failure		500	{object}	utils.APIResponse[any]
+//	@Router			/categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -113,6 +158,19 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 }
 
 // GetCategories handles GET /api/categories
+//
+//	@Summary		List categories
+//	@Description	Cursor-paginated list of categories. Sort format: "field:asc,field2:desc" (supported fields: display_order, create_time).
+//	@Tags			categories
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			limit	query		int		false	"Page size"		default(20)
+//	@Param			cursor	query		string	false	"Opaque pagination cursor"
+//	@Param			sort	query		string	false	"Sort spec, e.g. display_order:asc"
+//	@Success		200		{object}	utils.APIResponse[pagination.PageResponse[dto.Category]]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/categories [get]
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
 	req, err := pagination.ParsePageRequest(c.Query("limit"), c.Query("cursor"), c.Query("sort"))
 	if err != nil {

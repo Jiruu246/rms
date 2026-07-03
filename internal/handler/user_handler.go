@@ -15,6 +15,15 @@ func NewUserHandler(service services.UserService) *UserHandler {
 	return &UserHandler{service: service}
 }
 
+// GetProfile handles GET /api/users/profile
+//
+//	@Summary		Get the current user's profile
+//	@Tags			users
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Success		200	{object}	utils.APIResponse[dto.User]
+//	@Failure		404	{object}	utils.APIResponse[any]
+//	@Router			/users/profile [get]
 func (h *UserHandler) GetProfile(c *gin.Context) {
 	claims := c.MustGet("claims").(utils.JWTClaims)
 
@@ -27,6 +36,19 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, user)
 }
 
+// UpdateProfile handles PUT /api/users/profile
+//
+//	@Summary		Update the current user's profile
+//	@Tags			users
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			request	body		dto.UpdateUserRequest	true	"Fields to update"
+//	@Success		200		{object}	utils.APIResponse[dto.User]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		401		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/users/profile [put]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	claims, ok := c.Get("claims")
 	if !ok {

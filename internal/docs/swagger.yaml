@@ -1,0 +1,1760 @@
+basePath: /api
+definitions:
+  github_com_Jiruu246_rms_internal_dto.AccessToken:
+    properties:
+      expires_at:
+        type: string
+      token:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.Category:
+    properties:
+      description:
+        type: string
+      display_order:
+        type: integer
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.CreateCategoryRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      display_order:
+        minimum: 0
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      restaurant_id:
+        type: string
+    required:
+    - name
+    - restaurant_id
+    type: object
+  github_com_Jiruu246_rms_internal_dto.CreateMenuItemRequest:
+    properties:
+      category_id:
+        type: string
+      description:
+        type: string
+      is_available:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+      restaurant_id:
+        type: string
+    required:
+    - name
+    - price
+    - restaurant_id
+    type: object
+  github_com_Jiruu246_rms_internal_dto.CreateModifierOptionRequest:
+    properties:
+      available:
+        type: boolean
+      image_url:
+        type: string
+      modifier_id:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      pre_select:
+        type: boolean
+      price:
+        minimum: 0
+        type: number
+    required:
+    - modifier_id
+    - name
+    type: object
+  github_com_Jiruu246_rms_internal_dto.CreateModifierRequest:
+    properties:
+      max:
+        minimum: 0
+        type: integer
+      multi_select:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      required:
+        type: boolean
+      restaurant_id:
+        type: string
+    required:
+    - name
+    - restaurant_id
+    type: object
+  github_com_Jiruu246_rms_internal_dto.CreateRestaurantRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      cover_image_url:
+        type: string
+      currency:
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      email:
+        type: string
+      logo_url:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      operating_hours:
+        additionalProperties: {}
+        type: object
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - closed
+        type: string
+      zip_code:
+        type: string
+    required:
+    - address
+    - city
+    - country
+    - currency
+    - email
+    - name
+    - phone
+    - state
+    - zip_code
+    type: object
+  github_com_Jiruu246_rms_internal_dto.LoginUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - password
+    type: object
+  github_com_Jiruu246_rms_internal_dto.MenuItem:
+    properties:
+      category_id:
+        type: string
+      description:
+        type: string
+      id:
+        type: integer
+      is_available:
+        type: boolean
+      modifiers:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Modifier'
+        type: array
+      name:
+        type: string
+      price:
+        type: number
+      restaurant_id:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.Modifier:
+    properties:
+      id:
+        type: string
+      max:
+        type: integer
+      multi_select:
+        type: boolean
+      name:
+        type: string
+      required:
+        type: boolean
+      restaurant_id:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.ModifierOption:
+    properties:
+      available:
+        type: boolean
+      id:
+        type: string
+      image_url:
+        type: string
+      modifier_id:
+        type: string
+      name:
+        type: string
+      pre_select:
+        type: boolean
+      price:
+        type: number
+      quantity:
+        type: integer
+    type: object
+  github_com_Jiruu246_rms_internal_dto.Order:
+    properties:
+      id:
+        type: string
+      order_items:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.OrderItem'
+        type: array
+      order_number:
+        type: string
+      order_status:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.OrderStatus'
+      order_type:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.OrderType'
+      restaurant_id:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.OrderItem:
+    properties:
+      id:
+        type: string
+      item_name:
+        type: string
+      item_price:
+        type: number
+      menu_item_id:
+        type: integer
+      modifier_options:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.OrderItemModifierOption'
+        type: array
+      order_id:
+        type: string
+      quantity:
+        type: integer
+      special_instructions:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.OrderItemModifierOption:
+    properties:
+      modifier_option_id:
+        type: string
+      option_name:
+        type: string
+      option_price:
+        type: number
+      order_item_id:
+        type: string
+      quantity:
+        type: integer
+    type: object
+  github_com_Jiruu246_rms_internal_dto.OrderStatus:
+    enum:
+    - OPEN
+    - CONFIRMED
+    - COMPLETED
+    - CANCELLED
+    type: string
+    x-enum-varnames:
+    - OrderStatusOPEN
+    - OrderStatusCONFIRMED
+    - OrderStatusCOMPLETED
+    - OrderStatusCANCELLED
+  github_com_Jiruu246_rms_internal_dto.OrderType:
+    enum:
+    - DINE_IN
+    - TAKEOUT
+    - DELIVERY
+    type: string
+    x-enum-varnames:
+    - OrderTypeDINE_IN
+    - OrderTypeTAKEOUT
+    - OrderTypeDELIVERY
+  github_com_Jiruu246_rms_internal_dto.RestaurantResponse:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      cover_image_url:
+        type: string
+      currency:
+        type: string
+      description:
+        type: string
+      email:
+        type: string
+      id:
+        type: string
+      logo_url:
+        type: string
+      name:
+        type: string
+      operating_hours:
+        additionalProperties: {}
+        type: object
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        type: string
+      zip_code:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateCategoryRequest:
+    properties:
+      description:
+        maxLength: 1000
+        type: string
+      display_order:
+        minimum: 0
+        type: integer
+      is_active:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateMenuItemRequest:
+    properties:
+      category_id:
+        type: string
+      description:
+        type: string
+      is_available:
+        type: boolean
+      name:
+        type: string
+      price:
+        type: number
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateModifierOptionRequest:
+    properties:
+      available:
+        type: boolean
+      image_url:
+        type: string
+      modifier_id:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      pre_select:
+        type: boolean
+      price:
+        type: number
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateModifierRequest:
+    properties:
+      max:
+        minimum: 1
+        type: integer
+      multi_select:
+        type: boolean
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      required:
+        type: boolean
+      restaurant_id:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateOrderRequest:
+    properties:
+      order_number:
+        type: string
+      order_status:
+        type: string
+      order_type:
+        type: string
+      restaurant_id:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateRestaurantRequest:
+    properties:
+      address:
+        type: string
+      city:
+        type: string
+      country:
+        type: string
+      cover_image_url:
+        type: string
+      currency:
+        type: string
+      description:
+        maxLength: 1000
+        type: string
+      email:
+        type: string
+      logo_url:
+        type: string
+      name:
+        maxLength: 255
+        minLength: 1
+        type: string
+      operating_hours:
+        additionalProperties: {}
+        type: object
+      phone:
+        type: string
+      state:
+        type: string
+      status:
+        enum:
+        - active
+        - inactive
+        - closed
+        type: string
+      zip_code:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateUserRequest:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.User:
+    properties:
+      email:
+        type: string
+      id:
+        type: string
+      name:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_Category:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Category'
+        type: array
+      has_more:
+        type: boolean
+      next_cursor:
+        type: string
+      prev_cursor:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIError:
+    properties:
+      code:
+        type: integer
+      details:
+        additionalProperties: {}
+        type: object
+      message:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-any:
+    properties:
+      data: {}
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_MenuItem:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.MenuItem'
+        type: array
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Modifier:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Modifier'
+        type: array
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_ModifierOption:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.ModifierOption'
+        type: array
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Order:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Order'
+        type: array
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_RestaurantResponse:
+    properties:
+      data:
+        items:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.RestaurantResponse'
+        type: array
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_AccessToken:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.AccessToken'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Category:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Category'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_MenuItem:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.MenuItem'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Modifier:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Modifier'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_ModifierOption:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.ModifierOption'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Order:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Order'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.RestaurantResponse'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_User:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.User'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  ? github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_Category
+  : properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_Category'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  internal_handler.CreateOrderSchema:
+    properties:
+      order_items:
+        items:
+          $ref: '#/definitions/internal_handler.OrderItemSchema'
+        type: array
+      order_type:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.OrderType'
+      restaurant_id:
+        type: string
+    required:
+    - order_type
+    - restaurant_id
+    type: object
+  internal_handler.ModifierOption:
+    properties:
+      modifier_id:
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - modifier_id
+    - quantity
+    type: object
+  internal_handler.OrderItemSchema:
+    properties:
+      menu_item_id:
+        type: integer
+      modifiers:
+        items:
+          $ref: '#/definitions/internal_handler.ModifierOption'
+        type: array
+      notes:
+        maxLength: 255
+        type: string
+      quantity:
+        minimum: 1
+        type: integer
+    required:
+    - menu_item_id
+    - quantity
+    type: object
+  internal_handler.RegisterUserSchema:
+    properties:
+      email:
+        type: string
+      name:
+        type: string
+      password:
+        type: string
+    required:
+    - email
+    - name
+    - password
+    type: object
+info:
+  contact:
+    name: RMS
+  description: Restaurant Management System HTTP API.
+  title: RMS API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user and returns an access token; sets a refresh
+        token cookie
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.LoginUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_AccessToken'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      summary: Log in
+      tags:
+      - auth
+  /auth/logout:
+    post:
+      description: Revokes the refresh token and clears the refresh token cookie
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      summary: Log out
+      tags:
+      - auth
+  /auth/refresh:
+    post:
+      description: Exchanges the refresh token cookie for a new access token
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_AccessToken'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      summary: Refresh access token
+      tags:
+      - auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Creates a new user account
+      parameters:
+      - description: Registration details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.RegisterUserSchema'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      summary: Register a new user
+      tags:
+      - auth
+  /categories:
+    get:
+      description: 'Cursor-paginated list of categories. Sort format: "field:asc,field2:desc"
+        (supported fields: display_order, create_time).'
+      parameters:
+      - default: 20
+        description: Page size
+        in: query
+        name: limit
+        type: integer
+      - description: Opaque pagination cursor
+        in: query
+        name: cursor
+        type: string
+      - description: Sort spec, e.g. display_order:asc
+        in: query
+        name: sort
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: List categories
+      tags:
+      - categories
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CreateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Create a category
+      tags:
+      - categories
+  /categories/{id}:
+    delete:
+      parameters:
+      - description: Category ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Delete a category
+      tags:
+      - categories
+    get:
+      parameters:
+      - description: Category ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get a category by ID
+      tags:
+      - categories
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Category ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateCategoryRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Category'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update a category
+      tags:
+      - categories
+  /menu-items:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_MenuItem'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: List menu items
+      tags:
+      - menu-items
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu item details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CreateMenuItemRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_MenuItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Create a menu item
+      tags:
+      - menu-items
+  /menu-items/{id}:
+    delete:
+      parameters:
+      - description: Menu item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Delete a menu item
+      tags:
+      - menu-items
+    get:
+      parameters:
+      - description: Menu item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_MenuItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get a menu item by ID
+      tags:
+      - menu-items
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Menu item ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateMenuItemRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_MenuItem'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update a menu item
+      tags:
+      - menu-items
+  /modifiers:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Modifier'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: List modifiers
+      tags:
+      - modifiers
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CreateModifierRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Modifier'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Create a modifier
+      tags:
+      - modifiers
+  /modifiers/{id}:
+    delete:
+      parameters:
+      - description: Modifier ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Delete a modifier
+      tags:
+      - modifiers
+    get:
+      parameters:
+      - description: Modifier ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Modifier'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get a modifier by ID
+      tags:
+      - modifiers
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateModifierRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Modifier'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update a modifier
+      tags:
+      - modifiers
+  /modifiers/options:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_ModifierOption'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: List modifier options
+      tags:
+      - modifier-options
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier option details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CreateModifierOptionRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_ModifierOption'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Create a modifier option
+      tags:
+      - modifier-options
+  /modifiers/options/{id}:
+    delete:
+      parameters:
+      - description: Modifier option ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Delete a modifier option
+      tags:
+      - modifier-options
+    get:
+      parameters:
+      - description: Modifier option ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_ModifierOption'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get a modifier option by ID
+      tags:
+      - modifier-options
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Modifier option ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateModifierOptionRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_ModifierOption'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update a modifier option
+      tags:
+      - modifier-options
+  /orders:
+    get:
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: query
+        name: restaurant_id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: List orders for a restaurant
+      tags:
+      - orders
+    post:
+      consumes:
+      - application/json
+      description: Creates an order. Mounted both as an authenticated endpoint and
+        as a public (no-auth) endpoint for customer-facing ordering.
+      parameters:
+      - description: Order details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CreateOrderSchema'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      summary: Create an order
+      tags:
+      - orders
+  /orders/{id}:
+    delete:
+      parameters:
+      - description: Order ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Delete an order
+      tags:
+      - orders
+    get:
+      parameters:
+      - description: Order ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get an order by ID
+      tags:
+      - orders
+    patch:
+      consumes:
+      - application/json
+      parameters:
+      - description: Order ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateOrderRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update an order
+      tags:
+      - orders
+  /public/order:
+    post:
+      consumes:
+      - application/json
+      description: Creates an order. Mounted both as an authenticated endpoint and
+        as a public (no-auth) endpoint for customer-facing ordering.
+      parameters:
+      - description: Order details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/internal_handler.CreateOrderSchema'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Order'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      summary: Create an order
+      tags:
+      - orders
+  /restaurants:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: List restaurants
+      tags:
+      - restaurants
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: Restaurant details
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CreateRestaurantRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Create a restaurant
+      tags:
+      - restaurants
+  /restaurants/{id}:
+    delete:
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: No Content
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Delete a restaurant
+      tags:
+      - restaurants
+    get:
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get a restaurant by ID
+      tags:
+      - restaurants
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateRestaurantRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update a restaurant
+      tags:
+      - restaurants
+  /users/profile:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_User'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Get the current user's profile
+      tags:
+      - users
+    put:
+      consumes:
+      - application/json
+      parameters:
+      - description: Fields to update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_User'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Update the current user's profile
+      tags:
+      - users
+securityDefinitions:
+  BearerAuth:
+    description: Type "Bearer" followed by a space and the JWT access token.
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

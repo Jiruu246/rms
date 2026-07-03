@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -45,12 +46,12 @@ func (m *MockCategoryRepository) Delete(ctx context.Context, id uuid.UUID) error
 	return args.Error(0)
 }
 
-func (m *MockCategoryRepository) GetAll(ctx context.Context) ([]*dto.Category, error) {
-	args := m.Called(ctx)
+func (m *MockCategoryRepository) List(ctx context.Context, req pagination.PageRequest) (*pagination.PageResponse[*dto.Category], error) {
+	args := m.Called(ctx, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*dto.Category), args.Error(1)
+	return args.Get(0).(*pagination.PageResponse[*dto.Category]), args.Error(1)
 }
 
 func TestCategoryService_Create(t *testing.T) {
@@ -296,7 +297,9 @@ func TestCategoryService_Delete(t *testing.T) {
 	}
 }
 
-func TestCategoryService_GetAll(t *testing.T) {
+func TestCategoryService_List(t *testing.T) {
+	req := pagination.PageRequest{Limit: 20}
+
 	testCases := []struct {
 		name          string
 		mockSetup     func(*MockCategoryRepository)
@@ -306,21 +309,13 @@ func TestCategoryService_GetAll(t *testing.T) {
 		{
 			name: "successful retrieval with categories",
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				categories := []*dto.Category{
-					{
-						Name:         "Category 1",
-						Description:  "Description 1",
-						DisplayOrder: 1,
-						IsActive:     true,
-					},
-					{
-						Name:         "Category 2",
-						Description:  "Description 2",
-						DisplayOrder: 2,
-						IsActive:     true,
+				page := &pagination.PageResponse[*dto.Category]{
+					Data: []*dto.Category{
+						{Name: "Category 1"},
+						{Name: "Category 2"},
 					},
 				}
-				mockRepo.On("GetAll", mock.Anything).Return(categories, nil)
+				mockRepo.On("List", mock.Anything, req).Return(page, nil)
 			},
 			expectedError: "",
 			expectedCount: 2,
@@ -328,7 +323,8 @@ func TestCategoryService_GetAll(t *testing.T) {
 		{
 			name: "successful retrieval with empty result",
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("GetAll", mock.Anything).Return([]*dto.Category{}, nil)
+				page := &pagination.PageResponse[*dto.Category]{Data: []*dto.Category{}}
+				mockRepo.On("List", mock.Anything, req).Return(page, nil)
 			},
 			expectedError: "",
 			expectedCount: 0,
@@ -336,7 +332,7 @@ func TestCategoryService_GetAll(t *testing.T) {
 		{
 			name: "repository error",
 			mockSetup: func(mockRepo *MockCategoryRepository) {
-				mockRepo.On("GetAll", mock.Anything).Return(nil, errors.New("database error"))
+				mockRepo.On("List", mock.Anything, req).Return(nil, errors.New("database error"))
 			},
 			expectedError: "database error",
 			expectedCount: 0,
@@ -349,7 +345,7 @@ func TestCategoryService_GetAll(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewCategoryService(mockRepo)
-			result, err := service.GetAll(context.Background())
+			result, err := service.List(context.Background(), req)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -358,7 +354,7 @@ func TestCategoryService_GetAll(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.Len(t, result, testCase.expectedCount)
+				assert.Len(t, result.Data, testCase.expectedCount)
 			}
 
 			mockRepo.AssertExpectations(t)

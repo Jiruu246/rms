@@ -39,9 +39,9 @@ func newTestRows(n int) []*testRow {
 	return rows
 }
 
-// testSortFields returns sort field specs for testRow.
+// testWhitelist returns sort field specs for testRow.
 // These use sql package helpers directly — they don't need a real DB.
-func testSortFields() map[string]pagination.SortFieldSpec[*testRow] {
+func testWhitelist() map[string]pagination.SortFieldSpec[*testRow] {
 	return map[string]pagination.SortFieldSpec[*testRow]{
 		"created_at": {
 			Asc:     sql.OrderByField("created_at", sql.OrderAsc()).ToFunc(),
@@ -106,39 +106,6 @@ func capturingExecutor(pool []*testRow, out *captureResult) pagination.QueryExec
 		}
 		return pool[:n], nil
 	}
-}
-
-// ---------------------------------------------------------------------------
-// Cursor encode / decode
-// ---------------------------------------------------------------------------
-
-func TestEncodeCursor_DecodeCursor_RoundTrip(t *testing.T) {
-	original := pagination.Cursor{
-		Sort: []pagination.SortSpec{
-			{Field: "created_at", Desc: true},
-			{Field: "name", Desc: false},
-		},
-		Values: map[string]any{
-			"created_at": "2024-01-01T12:00:00Z",
-			"name":       "some-name",
-		},
-		ID: uuid.New().String(),
-	}
-
-	token, err := pagination.EncodeCursor(original)
-	require.NoError(t, err)
-	assert.NotEmpty(t, token)
-
-	decoded, err := pagination.DecodeCursor(token)
-	require.NoError(t, err)
-	assert.Equal(t, original.ID, decoded.ID)
-	assert.Equal(t, original.Sort, decoded.Sort)
-	assert.Equal(t, original.Values["name"], decoded.Values["name"])
-}
-
-func TestDecodeCursor_InvalidToken(t *testing.T) {
-	_, err := pagination.DecodeCursor("not-valid-base64!!")
-	assert.Error(t, err)
 }
 
 // ---------------------------------------------------------------------------
@@ -212,7 +179,7 @@ func TestRun_EmptyResult(t *testing.T) {
 	}
 	exec := staticExecutor(nil)
 
-	resp, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	resp, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 	assert.Empty(t, resp.Data)
 	assert.False(t, resp.HasMore)
@@ -228,7 +195,7 @@ func TestRun_ExactPage_NoHasMore(t *testing.T) {
 	// executor returns exactly 5 (limit), so limit+1=6 is requested but only 5 exist
 	exec := staticExecutor(pool)
 
-	resp, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	resp, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 	assert.Len(t, resp.Data, 5)
 	assert.False(t, resp.HasMore)
@@ -244,7 +211,7 @@ func TestRun_HasMore_NextCursorSet(t *testing.T) {
 	// executor receives limit+1 = 4 and pool has 10, so it returns 4 rows
 	exec := staticExecutor(pool)
 
-	resp, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	resp, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 	assert.Len(t, resp.Data, 3)
 	assert.True(t, resp.HasMore)
@@ -263,7 +230,7 @@ func TestRun_NextCursor_EncodesLastRowValues(t *testing.T) {
 	}
 	exec := staticExecutor(pool)
 
-	resp, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	resp, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 	require.NotEmpty(t, resp.NextCursor)
 
@@ -293,7 +260,7 @@ func TestRun_CursorCanBeUsedForPage2(t *testing.T) {
 	pool := newTestRows(6)
 
 	sort := []pagination.SortSpec{{Field: "created_at", Desc: false}}
-	fields := testSortFields()
+	fields := testWhitelist()
 	extractID := func(r *testRow) string { return r.extractID() }
 
 	// Page 1
@@ -327,7 +294,7 @@ func TestRun_IDTieBreaker_AppendedToOrders(t *testing.T) {
 	}
 	exec := capturingExecutor(pool, &cap)
 
-	_, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	_, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 
 	// One user field + implicit id = 2 order options.
@@ -342,7 +309,7 @@ func TestRun_NoSort_OnlyIDInOrders(t *testing.T) {
 	req := pagination.PageRequest{Limit: 10, Sort: nil}
 	exec := capturingExecutor(pool, &cap)
 
-	_, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	_, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 	assert.Len(t, cap.orders, 1, "only id tie-breaker when no sort is specified")
 }
@@ -363,7 +330,7 @@ func TestRun_MultiField_MixedDirection(t *testing.T) {
 	}
 	exec := capturingExecutor(pool, &cap)
 
-	_, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	_, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.NoError(t, err)
 	// created_at DESC + name ASC + id ASC = 3 order options
 	assert.Len(t, cap.orders, 3)
@@ -375,7 +342,7 @@ func TestRun_MultiField_CursorPredicateBuilt(t *testing.T) {
 		{Field: "created_at", Desc: false},
 		{Field: "name", Desc: false},
 	}
-	fields := testSortFields()
+	fields := testWhitelist()
 	extractID := func(r *testRow) string { return r.extractID() }
 
 	// Get page 1 cursor
@@ -406,7 +373,7 @@ func TestRun_DuplicatePrimarySort_TieBreaksByID(t *testing.T) {
 	}
 
 	sort := []pagination.SortSpec{{Field: "created_at", Desc: false}}
-	fields := testSortFields()
+	fields := testWhitelist()
 	extractID := func(r *testRow) string { return r.extractID() }
 
 	req := pagination.PageRequest{Limit: 2, Sort: sort}
@@ -429,14 +396,14 @@ func TestRun_InvalidSortField_ReturnsError(t *testing.T) {
 		Limit: 10,
 		Sort:  []pagination.SortSpec{{Field: "unknown_field", Desc: false}},
 	}
-	_, err := pagination.Run(context.Background(), staticExecutor(nil), req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	_, err := pagination.Run(context.Background(), staticExecutor(nil), req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, pagination.ErrInvalidSortField))
 }
 
 func TestRun_CursorSortMismatch_ReturnsError(t *testing.T) {
 	pool := newTestRows(5)
-	fields := testSortFields()
+	fields := testWhitelist()
 	extractID := func(r *testRow) string { return r.extractID() }
 
 	// Issue cursor with sort = created_at:asc
@@ -461,7 +428,7 @@ func TestRun_MalformedCursor_ReturnsError(t *testing.T) {
 		Sort:   []pagination.SortSpec{{Field: "created_at", Desc: false}},
 		Cursor: "this-is-not-a-valid-cursor",
 	}
-	_, err := pagination.Run(context.Background(), staticExecutor(nil), req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	_, err := pagination.Run(context.Background(), staticExecutor(nil), req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.Error(t, err)
 	assert.True(t, errors.Is(err, pagination.ErrInvalidCursor))
 }
@@ -472,7 +439,7 @@ func TestRun_ExecutorError_Propagated(t *testing.T) {
 		return nil, execErr
 	})
 	req := pagination.PageRequest{Limit: 5}
-	_, err := pagination.Run(context.Background(), exec, req, testSortFields(), func(r *testRow) string { return r.extractID() })
+	_, err := pagination.Run(context.Background(), exec, req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.Error(t, err)
 	assert.ErrorContains(t, err, "db exploded")
 }

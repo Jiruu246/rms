@@ -48,7 +48,7 @@ func Run[Row any](
 	ctx context.Context,
 	exec QueryExecutor[Row],
 	req PageRequest,
-	sortFields map[string]SortFieldSpec[Row],
+	whitelist map[string]SortFieldSpec[Row],
 	extractID func(Row) string,
 ) (*PageResponse[Row], error) {
 	sortSpecs := req.Sort
@@ -56,7 +56,7 @@ func Run[Row any](
 	// 1. Resolve requested sort fields against the whitelist.
 	resolved := make([]resolvedField[Row], 0, len(sortSpecs)+1)
 	for _, spec := range sortSpecs {
-		sf, ok := sortFields[spec.Field]
+		sf, ok := whitelist[spec.Field]
 		if !ok {
 			return nil, fmt.Errorf("%w: %q", ErrInvalidSortField, spec.Field)
 		}
@@ -115,7 +115,7 @@ func Run[Row any](
 			if !ok {
 				return nil, fmt.Errorf("%w: missing value for field %q", ErrInvalidCursor, resolved[i].name)
 			}
-			sf := sortFields[resolved[i].name]
+			sf := whitelist[resolved[i].name]
 			val, err := sf.Decode(rawVal)
 			if err != nil {
 				return nil, fmt.Errorf("%w: field %q: %v", ErrInvalidCursor, resolved[i].name, err)
@@ -153,7 +153,7 @@ func Run[Row any](
 
 	var nextCursor string
 	if hasMore && len(rows) > 0 {
-		nextCursor, err = buildNextCursor(rows[len(rows)-1], sortSpecs, sortFields, extractID)
+		nextCursor, err = buildNextCursor(rows[len(rows)-1], sortSpecs, whitelist, extractID)
 		if err != nil {
 			return nil, fmt.Errorf("build next cursor: %w", err)
 		}

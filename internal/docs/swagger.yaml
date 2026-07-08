@@ -935,7 +935,7 @@ paths:
       summary: Get a category by ID
       tags:
       - categories
-    put:
+    patch:
       consumes:
       - application/json
       parameters:

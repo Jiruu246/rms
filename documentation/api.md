@@ -96,7 +96,6 @@ PUT    /api/v1/restaurants/:id/settings    [JWT: Owner, Manager]
 | `POST` | `/api/categories` | Create a new category |
 | `GET` | `/api/categories` | Get all categories |
 | `GET` | `/api/categories/{id}` | Get a specific category |
-| `PUT` | `/api/categories/{id}` | Update a category |
 | `PATCH` | `/api/categories/{id}` | Partial update a category |
 | `DELETE` | `/api/categories/{id}` | Delete a category |
 | `GET` | `/api/categories/{id}/items` | Get all menu items in a category |

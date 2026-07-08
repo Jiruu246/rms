@@ -110,7 +110,7 @@ The route is only registered when `cfg.Env != "production"` (see `Server.routes(
 - Each handler method has its own `@Summary`/`@Tags`/`@Param`/`@Success`/`@Failure`/`@Router` block directly above the function — keep it next to the code it documents, not in a separate file.
 - Response bodies are documented as the real generic envelope types, e.g. `utils.APIResponse[dto.Category]` or `utils.APIResponse[pagination.PageResponse[dto.Category]]` — swag resolves Go generics natively.
 - Routes requiring `JwtMiddleware` (see `internal/server/server.go`) get `@Security BearerAuth`; public routes (e.g. `/public/order`) omit it.
-- `@Router` paths are relative to `BasePath` (`/api`) and must match the method registered in `internal/server/server.go` exactly (categories/restaurants/menu-items use `PUT` for update; modifiers/modifier-options/orders use `PATCH` — don't assume PATCH everywhere).
+- `@Router` paths are relative to `BasePath` (`/api`) and must match the method registered in `internal/server/server.go` exactly (restaurants/menu-items use `PUT` for update; categories/modifiers/modifier-options/orders use `PATCH` — don't assume one verb everywhere).
 
 Regenerate after changing any handler annotation or DTO:
 

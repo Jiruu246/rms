@@ -4,6 +4,7 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
+	"entgo.io/ent/schema/index"
 	"entgo.io/ent/schema/mixin"
 	"github.com/google/uuid"
 )
@@ -41,6 +42,15 @@ func (Category) Fields() []ent.Field {
 			Comment("Whether the category is active"),
 		field.UUID("restaurant_id", uuid.UUID{}).
 			Comment("ID of the restaurant this category belongs to"),
+	}
+}
+
+// Indexes declares composite indexes to support cursor pagination.
+// create_time is the default sort key (internal/repos/category_repo.go);
+// this composite index lets keyset seeks avoid a full table scan.
+func (Category) Indexes() []ent.Index {
+	return []ent.Index{
+		index.Fields("create_time", "id"),
 	}
 }
 

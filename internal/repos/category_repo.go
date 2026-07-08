@@ -3,6 +3,7 @@ package repos
 import (
 	"context"
 	"fmt"
+	"math"
 	"strings"
 	"time"
 
@@ -19,7 +20,7 @@ import (
 // "id" is NOT listed here — the engine appends it automatically as a tie-breaker.
 // Each new sortable field also needs a composite DB index (field, id).
 var categorySortFields = map[string]pagination.SortFieldSpec[*ent.Category]{
-	"create_time": {
+	category.FieldCreateTime: {
 		Asc:     category.ByCreateTime(sql.OrderAsc()),
 		Desc:    category.ByCreateTime(sql.OrderDesc()),
 		Extract: func(r *ent.Category) any { return r.CreateTime },
@@ -38,7 +39,7 @@ var categorySortFields = map[string]pagination.SortFieldSpec[*ent.Category]{
 			return t, nil
 		},
 	},
-	"name": {
+	category.FieldName: {
 		Asc:     category.ByName(sql.OrderAsc()),
 		Desc:    category.ByName(sql.OrderDesc()),
 		Extract: func(r *ent.Category) any { return r.Name },
@@ -53,7 +54,7 @@ var categorySortFields = map[string]pagination.SortFieldSpec[*ent.Category]{
 			return s, nil
 		},
 	},
-	"display_order": {
+	category.FieldDisplayOrder: {
 		Asc:     category.ByDisplayOrder(sql.OrderAsc()),
 		Desc:    category.ByDisplayOrder(sql.OrderDesc()),
 		Extract: func(r *ent.Category) any { return r.DisplayOrder },
@@ -66,9 +67,16 @@ var categorySortFields = map[string]pagination.SortFieldSpec[*ent.Category]{
 			if !ok {
 				return nil, fmt.Errorf("display_order: expected number, got %T", v)
 			}
+			if f < 0 || f > math.MaxInt || f != math.Trunc(f) {
+				return nil, fmt.Errorf("display_order: expected non-negative integer, got %v", v)
+			}
 			return int(f), nil
 		},
 	},
+}
+
+var defaultSortFields = []pagination.SortSpec{
+	{Field: category.FieldCreateTime, Desc: true},
 }
 
 type CategoryRepository interface {
@@ -230,7 +238,7 @@ func (r *categoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
 // and must remain stable across pages (changing filters between pages is undefined).
 func ListCategories(ctx context.Context, client *ent.Client, req pagination.PageRequest, filters CategoryListFilters) (*pagination.PageResponse[*ent.Category], error) {
 	if len(req.Sort) == 0 {
-		req.Sort = []pagination.SortSpec{{Field: "create_time", Desc: true}}
+		req.Sort = defaultSortFields
 	}
 
 	q := client.Category.Query()

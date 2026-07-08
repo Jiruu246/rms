@@ -123,7 +123,7 @@ func (s *Server) routes() {
 			categories.POST("", categoryHandler.CreateCategory)
 			categories.GET("", categoryHandler.GetCategories)
 			categories.GET("/:id", categoryHandler.GetCategory)
-			categories.PUT("/:id", categoryHandler.UpdateCategory)
+			categories.PATCH("/:id", categoryHandler.UpdateCategory)
 			categories.DELETE("/:id", categoryHandler.DeleteCategory)
 		}
 

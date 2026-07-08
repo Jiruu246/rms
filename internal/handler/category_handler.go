@@ -84,7 +84,7 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, category)
 }
 
-// UpdateCategory handles PUT /api/categories/{id}
+// UpdateCategory handles PATCH /api/categories/{id}
 //
 //	@Summary		Update a category
 //	@Tags			categories
@@ -97,7 +97,7 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 //	@Failure		400		{object}	utils.APIResponse[any]
 //	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
-//	@Router			/categories/{id} [put]
+//	@Router			/categories/{id} [patch]
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
@@ -180,10 +180,16 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 
 	page, err := h.service.List(c.Request.Context(), req)
 	if err != nil {
-		if errors.Is(err, pagination.ErrInvalidSortField) ||
-			errors.Is(err, pagination.ErrCursorSortMismatch) ||
-			errors.Is(err, pagination.ErrInvalidCursor) {
-			utils.WriteBadRequest(c.Writer, err.Error())
+		if errors.Is(err, pagination.ErrInvalidSortField) {
+			utils.WriteBadRequest(c.Writer, pagination.ErrInvalidSortField.Error())
+			return
+		}
+		if errors.Is(err, pagination.ErrCursorSortMismatch) {
+			utils.WriteBadRequest(c.Writer, pagination.ErrCursorSortMismatch.Error())
+			return
+		}
+		if errors.Is(err, pagination.ErrInvalidCursor) {
+			utils.WriteBadRequest(c.Writer, pagination.ErrInvalidCursor.Error())
 			return
 		}
 		utils.WriteInternalError(c.Writer, "Failed to retrieve categories")

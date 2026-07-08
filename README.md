@@ -63,7 +63,7 @@ install go lint and runs before create pr
 # Hassle free container launching workflow for dev
 ## First time, or after changing Go code
 ```
-docker compose -f docker-compose.local.yml up --build
+docker compose -f docker-compose.local.yml up --build -d
 ```
 If your Go source code changes, the Docker image must be rebuilt so the new binary gets copied into the image.
 

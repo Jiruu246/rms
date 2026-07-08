@@ -32,6 +32,13 @@ var (
 				OnDelete:   schema.NoAction,
 			},
 		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "category_create_time_id",
+				Unique:  false,
+				Columns: []*schema.Column{CategoriesColumns[2], CategoriesColumns[0]},
+			},
+		},
 	}
 	// MenuItemsColumns holds the columns for the "menu_items" table.
 	MenuItemsColumns = []*schema.Column{

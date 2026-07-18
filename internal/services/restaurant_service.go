@@ -3,26 +3,35 @@ package services
 import (
 	"context"
 
+	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/google/uuid"
 )
 
+const (
+	ActionReadRestaurant   authz.Action = "restaurant:read"
+	ActionUpdateRestaurant authz.Action = "restaurant:update"
+	ActionDeleteRestaurant authz.Action = "restaurant:delete"
+)
+
 type RestaurantService interface {
 	Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.RestaurantResponse, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*dto.RestaurantResponse, error)
+	GetByID(ctx context.Context, actor authz.Actor, id uuid.UUID) (*dto.RestaurantResponse, error)
 	GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error)
-	Update(ctx context.Context, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error)
-	Delete(ctx context.Context, id uuid.UUID) error
+	Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error)
+	Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error
 }
 
 type restaurantService struct {
-	repo repos.RestaurantRepository
+	repo       repos.RestaurantRepository
+	authorizer authz.Authorizer
 }
 
 func NewRestaurantService(repo repos.RestaurantRepository) RestaurantService {
 	return &restaurantService{
-		repo: repo,
+		repo:       repo,
+		authorizer: authz.NewPolicyAuthorizer(),
 	}
 }
 
@@ -30,7 +39,10 @@ func (s *restaurantService) Create(ctx context.Context, data *dto.CreateRestaura
 	return s.repo.Create(ctx, data)
 }
 
-func (s *restaurantService) GetByID(ctx context.Context, id uuid.UUID) (*dto.RestaurantResponse, error) {
+func (s *restaurantService) GetByID(ctx context.Context, actor authz.Actor, id uuid.UUID) (*dto.RestaurantResponse, error) {
+	if err := s.authorize(ctx, actor, ActionReadRestaurant, id); err != nil {
+		return nil, err
+	}
 	return s.repo.GetByID(ctx, id)
 }
 
@@ -38,13 +50,33 @@ func (s *restaurantService) GetAll(ctx context.Context) ([]*dto.RestaurantRespon
 	return s.repo.GetAll(ctx)
 }
 
-func (s *restaurantService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error) {
+func (s *restaurantService) Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error) {
+	if err := s.authorize(ctx, actor, ActionUpdateRestaurant, id); err != nil {
+		return nil, err
+	}
 	return s.repo.Update(ctx, &dto.UpdateRestaurantData{
 		Request: req,
 		ID:      id,
 	})
 }
 
-func (s *restaurantService) Delete(ctx context.Context, id uuid.UUID) error {
+func (s *restaurantService) Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error {
+	if err := s.authorize(ctx, actor, ActionDeleteRestaurant, id); err != nil {
+		return err
+	}
 	return s.repo.Delete(ctx, id)
+}
+
+func (s *restaurantService) authorize(ctx context.Context, actor authz.Actor, action authz.Action, id uuid.UUID) error {
+	resource, err := s.repo.GetAuthorizationResource(ctx, id)
+	if err != nil {
+		return err
+	}
+
+	_, err = s.authorizer.Authorize(ctx, authz.Request{
+		Actor:    actor,
+		Action:   action,
+		Resource: resource,
+	})
+	return err
 }

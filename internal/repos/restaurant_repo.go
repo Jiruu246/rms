@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
@@ -16,6 +17,7 @@ type RestaurantRepository interface {
 	Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.RestaurantResponse, error)
 	Delete(ctx context.Context, id uuid.UUID) error
 	GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error)
+	GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error)
 }
 
 type restaurantRepository struct {
@@ -146,6 +148,27 @@ func (r *restaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		return fmt.Errorf("failed to delete restaurant: %w", err)
 	}
 	return nil
+}
+
+func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error) {
+	row, err := r.client.Restaurant.Query().
+		Where(restaurant.IDEQ(id)).
+		Select(restaurant.FieldID, restaurant.FieldUserID).
+		Only(ctx)
+
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return authz.Resource{}, fmt.Errorf("restaurant not found with id %s", id)
+		}
+		return authz.Resource{}, fmt.Errorf("failed to get restaurant: %w", err)
+	}
+
+	return authz.Resource{
+		Type:         "restaurant",
+		ID:           row.ID,
+		RestaurantID: row.ID,
+		OwnerUserID:  row.UserID,
+	}, nil
 }
 
 func (r *restaurantRepository) GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error) {

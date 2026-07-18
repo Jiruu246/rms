@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -75,7 +76,7 @@ func (h *OrderHandler) CreateOrderPub(c *gin.Context) {
 	}
 	created, err := h.service.Create(c.Request.Context(), input)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to create order")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create order")
 		return
 	}
 	utils.WriteCreated(c.Writer, created)
@@ -101,7 +102,7 @@ func (h *OrderHandler) GetOrder(c *gin.Context) {
 	}
 	order, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		utils.WriteNotFound(c.Writer, "Order not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve order")
 		return
 	}
 	utils.WriteSuccess(c.Writer, order)
@@ -131,7 +132,7 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 	}
 	orders, err := h.service.GetAllByRestaurant(c.Request.Context(), restaurantID)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to fetch orders")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to fetch orders")
 		return
 	}
 	utils.WriteSuccess(c.Writer, orders)
@@ -148,6 +149,7 @@ func (h *OrderHandler) GetOrders(c *gin.Context) {
 //	@Param			request	body		dto.UpdateOrderRequest	true	"Fields to update"
 //	@Success		200		{object}	utils.APIResponse[dto.Order]
 //	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/orders/{id} [patch]
 func (h *OrderHandler) UpdateOrder(c *gin.Context) {
@@ -164,7 +166,7 @@ func (h *OrderHandler) UpdateOrder(c *gin.Context) {
 	}
 	updated, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to update order")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update order")
 		return
 	}
 	utils.WriteSuccess(c.Writer, updated)
@@ -188,7 +190,7 @@ func (h *OrderHandler) DeleteOrder(c *gin.Context) {
 		return
 	}
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		utils.WriteNotFound(c.Writer, "Order not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to delete order")
 		return
 	}
 	utils.WriteNoContent(c.Writer)

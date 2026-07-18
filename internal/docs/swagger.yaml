@@ -748,6 +748,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "401":
+          description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -797,6 +801,10 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_User'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
@@ -1038,6 +1046,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1098,6 +1110,10 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_MenuItem'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
@@ -1173,6 +1189,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1235,6 +1255,10 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Modifier'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
@@ -1310,6 +1334,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1372,6 +1400,10 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_ModifierOption'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
@@ -1522,6 +1554,10 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":
           description: Internal Server Error
           schema:
@@ -1654,10 +1690,6 @@ paths:
           description: Bad Request
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
-        "403":
-          description: Forbidden
-          schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "404":
           description: Not Found
           schema:
@@ -1692,10 +1724,6 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
         "400":
           description: Bad Request
-          schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
-        "403":
-          description: Forbidden
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "404":
@@ -1752,6 +1780,14 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "401":
           description: Unauthorized
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "409":
+          description: Conflict
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":

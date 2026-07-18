@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -39,7 +40,7 @@ func (h *ModifierHandler) CreateModifier(c *gin.Context) {
 	data := &dto.CreateModifierData{Request: &req}
 	created, err := h.service.Create(c.Request.Context(), data)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to create modifier")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create modifier")
 		return
 	}
 	utils.WriteCreated(c.Writer, created)
@@ -65,7 +66,7 @@ func (h *ModifierHandler) GetModifier(c *gin.Context) {
 	}
 	modifier, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		utils.WriteNotFound(c.Writer, "Modifier not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve modifier")
 		return
 	}
 	utils.WriteSuccess(c.Writer, modifier)
@@ -83,7 +84,7 @@ func (h *ModifierHandler) GetModifier(c *gin.Context) {
 func (h *ModifierHandler) GetAllModifiers(c *gin.Context) {
 	modifiers, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to get modifiers")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to get modifiers")
 		return
 	}
 	utils.WriteSuccess(c.Writer, modifiers)
@@ -100,6 +101,7 @@ func (h *ModifierHandler) GetAllModifiers(c *gin.Context) {
 //	@Param			request	body		dto.UpdateModifierRequest	true	"Fields to update"
 //	@Success		200		{object}	utils.APIResponse[dto.Modifier]
 //	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/modifiers/{id} [patch]
 func (h *ModifierHandler) UpdateModifier(c *gin.Context) {
@@ -116,7 +118,7 @@ func (h *ModifierHandler) UpdateModifier(c *gin.Context) {
 	}
 	updated, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to update modifier")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update modifier")
 		return
 	}
 	utils.WriteSuccess(c.Writer, updated)
@@ -130,6 +132,7 @@ func (h *ModifierHandler) UpdateModifier(c *gin.Context) {
 //	@Param			id	path	string	true	"Modifier ID"	format(uuid)
 //	@Success		204	"No Content"
 //	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/modifiers/{id} [delete]
 func (h *ModifierHandler) DeleteModifier(c *gin.Context) {
@@ -140,7 +143,7 @@ func (h *ModifierHandler) DeleteModifier(c *gin.Context) {
 		return
 	}
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to delete modifier")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to delete modifier")
 		return
 	}
 	utils.WriteNoContent(c.Writer)

@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"errors"
-	"strings"
-
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/pagination"
@@ -44,7 +42,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to create category")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create category")
 		return
 	}
 
@@ -73,11 +71,7 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 
 	category, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			utils.WriteNotFound(c.Writer, "Category not found")
-			return
-		}
-		utils.WriteInternalError(c.Writer, "Failed to retrieve category")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve category")
 		return
 	}
 
@@ -114,11 +108,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			utils.WriteNotFound(c.Writer, "Category not found")
-			return
-		}
-		utils.WriteInternalError(c.Writer, "Failed to update category")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update category")
 		return
 	}
 
@@ -146,11 +136,7 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 
 	err = h.service.Delete(c.Request.Context(), id)
 	if err != nil {
-		if strings.Contains(err.Error(), "not found") {
-			utils.WriteNotFound(c.Writer, "Category not found")
-			return
-		}
-		utils.WriteInternalError(c.Writer, "Failed to delete category")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to delete category")
 		return
 	}
 
@@ -180,19 +166,7 @@ func (h *CategoryHandler) GetCategories(c *gin.Context) {
 
 	page, err := h.service.List(c.Request.Context(), req)
 	if err != nil {
-		if errors.Is(err, pagination.ErrInvalidSortField) {
-			utils.WriteBadRequest(c.Writer, pagination.ErrInvalidSortField.Error())
-			return
-		}
-		if errors.Is(err, pagination.ErrCursorSortMismatch) {
-			utils.WriteBadRequest(c.Writer, pagination.ErrCursorSortMismatch.Error())
-			return
-		}
-		if errors.Is(err, pagination.ErrInvalidCursor) {
-			utils.WriteBadRequest(c.Writer, pagination.ErrInvalidCursor.Error())
-			return
-		}
-		utils.WriteInternalError(c.Writer, "Failed to retrieve categories")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve categories")
 		return
 	}
 

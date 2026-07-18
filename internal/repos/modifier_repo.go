@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
@@ -47,7 +48,10 @@ func (r *modifierRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Mo
 		Where(modifier.IDEQ(id)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("modifier not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("modifier %s", id)
+		}
+		return nil, fmt.Errorf("failed to get modifier: %w", err)
 	}
 	return mapToModifier(m), nil
 }
@@ -77,7 +81,14 @@ func (r *modifierRepository) Update(ctx context.Context, data *dto.UpdateModifie
 }
 
 func (r *modifierRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.client.Modifier.DeleteOneID(id).Exec(ctx)
+	err := r.client.Modifier.DeleteOneID(id).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return apperr.NotFound("modifier %s", id)
+		}
+		return fmt.Errorf("failed to delete modifier: %w", err)
+	}
+	return nil
 }
 
 func (r *modifierRepository) GetAll(ctx context.Context) ([]*dto.Modifier, error) {

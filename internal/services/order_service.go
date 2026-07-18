@@ -2,8 +2,10 @@ package services
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	ds "github.com/Jiruu246/rms/internal/data_structures"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/repos"
@@ -57,7 +59,7 @@ func NewOrderService(
 
 func (s *orderService) Create(ctx context.Context, input CreateOrderInput) (*dto.Order, error) {
 	if len(input.OrderItems) == 0 {
-		return nil, fmt.Errorf("order must contain at least one item")
+		return nil, apperr.Invalid("order must contain at least one item")
 	}
 
 	uniqueItemIDs := ds.NewSet[int64]()
@@ -71,11 +73,17 @@ func (s *orderService) Create(ctx context.Context, input CreateOrderInput) (*dto
 
 	menuItemsFromDB, err := s.MenuItemRepo.GetByIDsStrict(ctx, *uniqueItemIDs, repos.WithModifierOptions())
 	if err != nil {
+		if errors.Is(err, apperr.ErrNotFound) {
+			return nil, apperr.Invalid("one or more menu items do not exist")
+		}
 		return nil, fmt.Errorf("failed to get menu items: %w", err)
 	}
 
 	modifierOptionsFromDB, err := s.ModifierOptionRepo.GetByIDsStrict(ctx, *uniqueModifierIDs)
 	if err != nil {
+		if errors.Is(err, apperr.ErrNotFound) {
+			return nil, apperr.Invalid("one or more modifier options do not exist")
+		}
 		return nil, fmt.Errorf("failed to get modifier options: %w", err)
 	}
 
@@ -142,13 +150,13 @@ func (s *orderService) validateOrderItems(
 	for _, item := range items {
 		menuItem, exists := menuItemsFromDB[item.MenuItemID]
 		if !exists {
-			return fmt.Errorf("menu item with ID %d does not exist", item.MenuItemID)
+			return apperr.Invalid("menu item with ID %d does not exist", item.MenuItemID)
 		}
 		if menuItem.RestaurantID != restaurantID {
-			return fmt.Errorf("menu item with ID %d does not belong to restaurant %s", item.MenuItemID, restaurantID)
+			return apperr.Invalid("menu item with ID %d does not belong to restaurant %s", item.MenuItemID, restaurantID)
 		}
 		if !menuItem.IsAvailable {
-			return fmt.Errorf("menu item with ID %d is not available", item.MenuItemID)
+			return apperr.Invalid("menu item with ID %d is not available", item.MenuItemID)
 		}
 		if menuItem.Modifiers == nil {
 			return fmt.Errorf("INTERNAL ERROR: menu item with ID %d has no modifiers loaded", item.MenuItemID)
@@ -163,16 +171,16 @@ func (s *orderService) validateOrderItems(
 		for _, modOpt := range item.ModifierOptions {
 			modifierOption, exists := modifierOptionsFromDB[modOpt.ModifierOptionID]
 			if !exists {
-				return fmt.Errorf("modifier option with ID %s does not exist", modOpt.ModifierOptionID)
+				return apperr.Invalid("modifier option with ID %s does not exist", modOpt.ModifierOptionID)
 			}
 			if !modifierOption.Available {
-				return fmt.Errorf("modifier option with ID %s is not available", modOpt.ModifierOptionID)
+				return apperr.Invalid("modifier option with ID %s is not available", modOpt.ModifierOptionID)
 			}
 			if modOpt.Quantity < 1 {
-				return fmt.Errorf("modifier option with ID %s has invalid quantity %d", modOpt.ModifierOptionID, modOpt.Quantity)
+				return apperr.Invalid("modifier option with ID %s has invalid quantity %d", modOpt.ModifierOptionID, modOpt.Quantity)
 			}
 			if !ModifiersIds.Contains(modifierOption.ModifierID) {
-				return fmt.Errorf("modifier option with ID %s does not belong to menu item with ID %d", modOpt.ModifierOptionID, item.MenuItemID)
+				return apperr.Invalid("modifier option with ID %s does not belong to menu item with ID %d", modOpt.ModifierOptionID, item.MenuItemID)
 			}
 			modifierGroup[modifierOption.ModifierID] = append(modifierGroup[modifierOption.ModifierID], modOpt)
 		}
@@ -180,7 +188,7 @@ func (s *orderService) validateOrderItems(
 		for _, mod := range menuItem.Modifiers {
 			if mod.Required {
 				if _, exists := modifierGroup[mod.ID]; !exists {
-					return fmt.Errorf("required modifier group with ID %s has no selected options", mod.ID)
+					return apperr.Invalid("required modifier group with ID %s has no selected options", mod.ID)
 				}
 			}
 		}
@@ -204,7 +212,7 @@ func (s *orderService) validateOrderItems(
 				if modifier.Required {
 					min = 1
 				}
-				return fmt.Errorf("number of selected modifier options for modifier ID %s violates constraints (%d selected, min %d, max %d)",
+				return apperr.Invalid("number of selected modifier options for modifier ID %s violates constraints (%d selected, min %d, max %d)",
 					groupId,
 					NumSelected,
 					min,

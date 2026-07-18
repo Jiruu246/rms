@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
@@ -64,7 +65,7 @@ func (r *restaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("restaurant not found with id %s", id)
+			return nil, apperr.NotFound("restaurant %s", id)
 		}
 		return nil, fmt.Errorf("failed to get restaurant: %w", err)
 	}
@@ -143,7 +144,7 @@ func (r *restaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	err := r.client.Restaurant.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("restaurant not found with id %s", id)
+			return apperr.NotFound("restaurant %s", id)
 		}
 		return fmt.Errorf("failed to delete restaurant: %w", err)
 	}
@@ -158,7 +159,7 @@ func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id 
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return authz.Resource{}, fmt.Errorf("restaurant not found with id %s", id)
+			return authz.Resource{}, apperr.NotFound("restaurant %s", id)
 		}
 		return authz.Resource{}, fmt.Errorf("failed to get restaurant: %w", err)
 	}

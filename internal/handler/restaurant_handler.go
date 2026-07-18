@@ -1,9 +1,7 @@
 package handler
 
 import (
-	"errors"
-	"net/http"
-
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
@@ -51,7 +49,7 @@ func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 
 	created, err := h.service.Create(c.Request.Context(), data)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to create restaurant")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create restaurant")
 		return
 	}
 
@@ -67,7 +65,6 @@ func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 //	@Param			id	path		string	true	"Restaurant ID"	format(uuid)
 //	@Success		200	{object}	utils.APIResponse[dto.RestaurantResponse]
 //	@Failure		400	{object}	utils.APIResponse[any]
-//	@Failure		403	{object}	utils.APIResponse[any]
 //	@Failure		404	{object}	utils.APIResponse[any]
 //	@Router			/restaurants/{id} [get]
 func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
@@ -82,7 +79,7 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 
 	restaurant, err := h.service.GetByID(c.Request.Context(), authz.NewActorFromClaims(claims), id)
 	if err != nil {
-		writeAuthzError(c, err, utils.WriteNotFound, "Restaurant not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve restaurant")
 		return
 	}
 
@@ -101,7 +98,7 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 	restaurants, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to fetch restaurants")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to fetch restaurants")
 		return
 	}
 
@@ -119,7 +116,6 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 //	@Param			request	body		dto.UpdateRestaurantRequest	true	"Fields to update"
 //	@Success		200		{object}	utils.APIResponse[dto.RestaurantResponse]
 //	@Failure		400		{object}	utils.APIResponse[any]
-//	@Failure		403		{object}	utils.APIResponse[any]
 //	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/restaurants/{id} [put]
@@ -141,7 +137,7 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 
 	updated, err := h.service.Update(c.Request.Context(), authz.NewActorFromClaims(claims), id, &req)
 	if err != nil {
-		writeAuthzError(c, err, utils.WriteInternalError, "Failed to update restaurant")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update restaurant")
 		return
 	}
 
@@ -169,21 +165,9 @@ func (h *RestaurantHandler) DeleteRestaurant(c *gin.Context) {
 	}
 
 	if err := h.service.Delete(c.Request.Context(), authz.NewActorFromClaims(claims), id); err != nil {
-		writeAuthzError(c, err, utils.WriteNotFound, "Restaurant not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to delete restaurant")
 		return
 	}
 
 	utils.WriteNoContent(c.Writer)
-}
-
-// writeAuthzError maps an authz.ErrForbidden to a 403; every other error
-// (e.g. a resource that doesn't exist, or a downstream repo failure) falls
-// back to onOther, so each call site keeps whatever status it used before
-// ownership checks were added.
-func writeAuthzError(c *gin.Context, err error, onOther func(w http.ResponseWriter, message string), message string) {
-	if errors.Is(err, authz.ErrForbidden) {
-		utils.WriteForbidden(c.Writer, "You do not have permission to access this restaurant")
-		return
-	}
-	onOther(c.Writer, message)
 }

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -40,7 +41,10 @@ func (r *EntUserRepository) Create(ctx context.Context, req *RegisterUserData) (
 		SetPasswordHash(req.Password).
 		Save(ctx)
 	if err != nil {
-		return nil, err
+		if ent.IsConstraintError(err) {
+			return nil, apperr.Conflict("a user with email %s already exists", req.Email)
+		}
+		return nil, fmt.Errorf("failed to create user: %w", err)
 	}
 
 	return &dto.User{
@@ -56,7 +60,10 @@ func (r *EntUserRepository) GetByEmail(ctx context.Context, email string) (*dto.
 		Where(user.EmailEQ(email)).
 		Only(ctx)
 	if err != nil {
-		return nil, err
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("user with email %s", email)
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	return &dto.User{
@@ -70,7 +77,10 @@ func (r *EntUserRepository) GetByEmail(ctx context.Context, email string) (*dto.
 func (r *EntUserRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.User, error) {
 	user, err := r.client.User.Get(ctx, id)
 	if err != nil {
-		return nil, err
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("user %s", id)
+		}
+		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
 	return &dto.User{
@@ -97,12 +107,18 @@ func (r *EntUserRepository) Update(ctx context.Context, id uuid.UUID, user *dto.
 	}
 
 	if !hasUpdates {
-		return nil, fmt.Errorf("no valid fields to update")
+		return nil, apperr.Invalid("no valid fields to update")
 	}
 
 	updated, err := updateBuilder.Save(ctx)
 	if err != nil {
-		return nil, err
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("user %s", id)
+		}
+		if ent.IsConstraintError(err) {
+			return nil, apperr.Conflict("a user with that email already exists")
+		}
+		return nil, fmt.Errorf("failed to update user: %w", err)
 	}
 
 	return &dto.User{
@@ -114,5 +130,12 @@ func (r *EntUserRepository) Update(ctx context.Context, id uuid.UUID, user *dto.
 }
 
 func (r *EntUserRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.client.User.DeleteOneID(id).Exec(ctx)
+	err := r.client.User.DeleteOneID(id).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return apperr.NotFound("user %s", id)
+		}
+		return fmt.Errorf("failed to delete user: %w", err)
+	}
+	return nil
 }

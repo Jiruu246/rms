@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
@@ -338,7 +339,7 @@ func TestRestaurantService_GetByID(t *testing.T) {
 				mockRepo.On("GetAuthorizationResource", mock.Anything, testId).
 					Return(authz.Resource{ID: testId, RestaurantID: testId, OwnerUserID: ownerId}, nil)
 			},
-			expectedError: authz.ErrForbidden.Error(),
+			expectedError: apperr.ErrForbidden.Error(),
 		},
 	}
 
@@ -454,7 +455,7 @@ func TestRestaurantService_Update(t *testing.T) {
 			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
 				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
 			},
-			expectedError: authz.ErrForbidden.Error(),
+			expectedError: apperr.ErrForbidden.Error(),
 		},
 		{
 			name:  "restaurant not found",
@@ -536,7 +537,7 @@ func TestRestaurantService_Delete(t *testing.T) {
 			mockSetup: func(mockRepo *MockRestaurantRepository) {
 				mockRepo.On("GetAuthorizationResource", mock.Anything, id).Return(resource, nil)
 			},
-			expectedError: authz.ErrForbidden.Error(),
+			expectedError: apperr.ErrForbidden.Error(),
 		},
 		{
 			name:  "repository error",

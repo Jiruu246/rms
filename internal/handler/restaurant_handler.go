@@ -96,7 +96,9 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/restaurants [get]
 func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
-	restaurants, err := h.service.GetAll(c.Request.Context())
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
+	restaurants, err := h.service.GetAll(c.Request.Context(), authz.NewActorFromClaims(claims))
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to fetch restaurants")
 		return

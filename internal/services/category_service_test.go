@@ -86,8 +86,8 @@ func (m *MockRestaurantService) GetByID(ctx context.Context, actor authz.Actor, 
 	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
 }
 
-func (m *MockRestaurantService) GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error) {
-	args := m.Called(ctx)
+func (m *MockRestaurantService) GetAll(ctx context.Context, actor authz.Actor) ([]*dto.RestaurantResponse, error) {
+	args := m.Called(ctx, actor)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}

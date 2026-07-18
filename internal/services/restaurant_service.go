@@ -18,7 +18,7 @@ const (
 type RestaurantService interface {
 	Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.RestaurantResponse, error)
 	GetByID(ctx context.Context, actor authz.Actor, id uuid.UUID) (*dto.RestaurantResponse, error)
-	GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error)
+	GetAll(ctx context.Context, actor authz.Actor) ([]*dto.RestaurantResponse, error)
 	Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error)
 	Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error
 	// AuthorizeOwnership lets other entity services (e.g. category) check the
@@ -50,8 +50,8 @@ func (s *restaurantService) GetByID(ctx context.Context, actor authz.Actor, id u
 	return s.repo.GetByID(ctx, id)
 }
 
-func (s *restaurantService) GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error) {
-	return s.repo.GetAll(ctx)
+func (s *restaurantService) GetAll(ctx context.Context, actor authz.Actor) ([]*dto.RestaurantResponse, error) {
+	return s.repo.GetAllForUser(ctx, actor.UserID)
 }
 
 func (s *restaurantService) Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error) {

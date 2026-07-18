@@ -47,8 +47,8 @@ func (m *MockRestaurantRepository) Delete(ctx context.Context, id uuid.UUID) err
 	return args.Error(0)
 }
 
-func (m *MockRestaurantRepository) GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error) {
-	args := m.Called(ctx)
+func (m *MockRestaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.RestaurantResponse, error) {
+	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -600,13 +600,17 @@ func TestRestaurantService_Delete(t *testing.T) {
 }
 
 func TestRestaurantService_GetAll(t *testing.T) {
+	ownerID := uuid.New()
+
 	testCases := []struct {
 		name          string
+		actor         authz.Actor
 		expected      []*dto.RestaurantResponse
 		expectedError string
 	}{
 		{
-			name: "successful retrieval with restaurants",
+			name:  "scoped to actor's own restaurants",
+			actor: authz.Actor{UserID: ownerID, Role: "owner"},
 			expected: []*dto.RestaurantResponse{
 				{
 					ID:       uuid.New(),
@@ -628,12 +632,29 @@ func TestRestaurantService_GetAll(t *testing.T) {
 			expectedError: "",
 		},
 		{
+			name:  "admin is scoped too — no sees-all support yet",
+			actor: authz.Actor{UserID: ownerID, Role: authz.RoleAdmin},
+			expected: []*dto.RestaurantResponse{
+				{
+					ID:       uuid.New(),
+					Name:     "Restaurant 1",
+					Phone:    "+1234567890",
+					Email:    "rest1@example.com",
+					Currency: "USD",
+					Status:   restaurant.StatusActive.String(),
+				},
+			},
+			expectedError: "",
+		},
+		{
 			name:          "successful retrieval with empty result",
+			actor:         authz.Actor{UserID: ownerID, Role: "owner"},
 			expected:      []*dto.RestaurantResponse{},
 			expectedError: "",
 		},
 		{
 			name:          "repository error",
+			actor:         authz.Actor{UserID: ownerID, Role: "owner"},
 			expected:      nil,
 			expectedError: "database error",
 		},
@@ -644,13 +665,13 @@ func TestRestaurantService_GetAll(t *testing.T) {
 			mockRepo := new(MockRestaurantRepository)
 
 			if testCase.expectedError != "" {
-				mockRepo.On("GetAll", mock.Anything).Return(nil, errors.New(testCase.expectedError))
+				mockRepo.On("GetAllForUser", mock.Anything, testCase.actor.UserID).Return(nil, errors.New(testCase.expectedError))
 			} else {
-				mockRepo.On("GetAll", mock.Anything).Return(testCase.expected, nil)
+				mockRepo.On("GetAllForUser", mock.Anything, testCase.actor.UserID).Return(testCase.expected, nil)
 			}
 
 			service := NewRestaurantService(mockRepo)
-			result, err := service.GetAll(t.Context())
+			result, err := service.GetAll(t.Context(), testCase.actor)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)

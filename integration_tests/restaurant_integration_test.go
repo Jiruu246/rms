@@ -3,6 +3,7 @@ package integration_tests
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"path"
@@ -120,7 +121,19 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
-	_, err = SetupRestaurant(s.client, s.T().Context())
+	_, err = s.client.Restaurant.Create().
+		SetName("Test Restaurant").
+		SetPhone("123-456-7890").
+		SetEmail(fmt.Sprintf("testrestaurant_%s@example.com", uuid.NewString())).
+		SetAddress("123 Main St").
+		SetCity("Test City").
+		SetState("TS").
+		SetZipCode("12345").
+		SetCountry("Test Country").
+		SetCurrency("USD").
+		SetStatus(restaurant.StatusActive).
+		SetUserID(initialRestaurant1.UserID).
+		Save(s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {

@@ -20,6 +20,15 @@ definitions:
       name:
         type: string
     type: object
+  github_com_Jiruu246_rms_internal_dto.CategoryListItem:
+    properties:
+      id:
+        type: string
+      is_active:
+        type: boolean
+      name:
+        type: string
+    type: object
   github_com_Jiruu246_rms_internal_dto.CreateCategoryRequest:
     properties:
       description:
@@ -447,11 +456,11 @@ definitions:
       name:
         type: string
     type: object
-  github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_Category:
+  github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Category'
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CategoryListItem'
         type: array
       has_more:
         type: boolean
@@ -633,10 +642,10 @@ definitions:
       timestamp:
         type: string
     type: object
-  ? github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_Category
+  ? github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem
   : properties:
       data:
-        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_Category'
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem'
       error:
         $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
       success:
@@ -816,9 +825,16 @@ paths:
       - auth
   /categories:
     get:
-      description: 'Cursor-paginated list of categories. Sort format: "field:asc,field2:desc"
-        (supported fields: display_order, create_time).'
+      description: 'Cursor-paginated list of categories for a restaurant the caller
+        owns. Sort format: "field:asc,field2:desc" (supported fields: display_order,
+        create_time).'
       parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: query
+        name: restaurant_id
+        required: true
+        type: string
       - default: 20
         description: Page size
         in: query
@@ -838,9 +854,13 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_Category'
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem'
         "400":
           description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
           schema:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
         "500":

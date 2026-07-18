@@ -2,6 +2,7 @@ package handler
 
 import (
 	"github.com/Jiruu246/rms/internal/apperr"
+	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/pagination"
@@ -33,6 +34,8 @@ func NewCategoryHandler(service services.CategoryService) *CategoryHandler {
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/categories [post]
 func (h *CategoryHandler) CreateCategory(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	var req dto.CreateCategoryRequest
 
 	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
@@ -40,7 +43,7 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 		return
 	}
 
-	created, err := h.service.Create(c.Request.Context(), &req)
+	created, err := h.service.Create(c.Request.Context(), authz.NewActorFromClaims(claims), &req)
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to create category")
 		return
@@ -62,6 +65,8 @@ func (h *CategoryHandler) CreateCategory(c *gin.Context) {
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/categories/{id} [get]
 func (h *CategoryHandler) GetCategory(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -69,7 +74,7 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 		return
 	}
 
-	category, err := h.service.GetByID(c.Request.Context(), id)
+	category, err := h.service.GetByID(c.Request.Context(), authz.NewActorFromClaims(claims), id)
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve category")
 		return
@@ -93,6 +98,8 @@ func (h *CategoryHandler) GetCategory(c *gin.Context) {
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/categories/{id} [patch]
 func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -106,7 +113,7 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 		return
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), id, &req)
+	updated, err := h.service.Update(c.Request.Context(), authz.NewActorFromClaims(claims), id, &req)
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to update category")
 		return
@@ -127,6 +134,8 @@ func (h *CategoryHandler) UpdateCategory(c *gin.Context) {
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/categories/{id} [delete]
 func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -134,7 +143,7 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 		return
 	}
 
-	err = h.service.Delete(c.Request.Context(), id)
+	err = h.service.Delete(c.Request.Context(), authz.NewActorFromClaims(claims), id)
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to delete category")
 		return
@@ -146,25 +155,35 @@ func (h *CategoryHandler) DeleteCategory(c *gin.Context) {
 // GetCategories handles GET /api/categories
 //
 //	@Summary		List categories
-//	@Description	Cursor-paginated list of categories. Sort format: "field:asc,field2:desc" (supported fields: display_order, create_time).
+//	@Description	Cursor-paginated list of categories for a restaurant the caller owns. Sort format: "field:asc,field2:desc" (supported fields: display_order, create_time).
 //	@Tags			categories
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Param			limit	query		int		false	"Page size"		default(20)
-//	@Param			cursor	query		string	false	"Opaque pagination cursor"
-//	@Param			sort	query		string	false	"Sort spec, e.g. display_order:asc"
-//	@Success		200		{object}	utils.APIResponse[pagination.PageResponse[dto.Category]]
-//	@Failure		400		{object}	utils.APIResponse[any]
-//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Param			restaurant_id	query		string	true	"Restaurant ID"	format(uuid)
+//	@Param			limit			query		int		false	"Page size"		default(20)
+//	@Param			cursor			query		string	false	"Opaque pagination cursor"
+//	@Param			sort			query		string	false	"Sort spec, e.g. display_order:asc"
+//	@Success		200				{object}	utils.APIResponse[pagination.PageResponse[dto.CategoryListItem]]
+//	@Failure		400				{object}	utils.APIResponse[any]
+//	@Failure		404				{object}	utils.APIResponse[any]
+//	@Failure		500				{object}	utils.APIResponse[any]
 //	@Router			/categories [get]
 func (h *CategoryHandler) GetCategories(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
+	restaurantID, err := uuid.Parse(c.Query("restaurant_id"))
+	if err != nil {
+		utils.WriteBadRequest(c.Writer, "Invalid restaurant ID format")
+		return
+	}
+
 	req, err := pagination.ParsePageRequest(c.Query("limit"), c.Query("cursor"), c.Query("sort"))
 	if err != nil {
 		utils.WriteBadRequest(c.Writer, err.Error())
 		return
 	}
 
-	page, err := h.service.List(c.Request.Context(), req)
+	page, err := h.service.List(c.Request.Context(), authz.NewActorFromClaims(claims), restaurantID, req)
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve categories")
 		return

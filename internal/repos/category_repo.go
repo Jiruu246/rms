@@ -9,10 +9,12 @@ import (
 
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/apperr"
+	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/category"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
+	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/google/uuid"
 )
@@ -82,10 +84,11 @@ var defaultSortFields = []pagination.SortSpec{
 
 type CategoryRepository interface {
 	Create(ctx context.Context, category *dto.CreateCategoryRequest) (*dto.Category, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*dto.Category, error)
-	List(ctx context.Context, req pagination.PageRequest) (*pagination.PageResponse[*dto.Category], error)
-	Update(ctx context.Context, id uuid.UUID, category *dto.UpdateCategoryRequest) (*dto.Category, error)
-	Delete(ctx context.Context, id uuid.UUID) error
+	GetByID(ctx context.Context, restaurantID, id uuid.UUID) (*dto.Category, error)
+	List(ctx context.Context, restaurantID uuid.UUID, req pagination.PageRequest) (*pagination.PageResponse[*dto.CategoryListItem], error)
+	Update(ctx context.Context, restaurantID, id uuid.UUID, category *dto.UpdateCategoryRequest) (*dto.Category, error)
+	Delete(ctx context.Context, restaurantID, id uuid.UUID) error
+	GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error)
 }
 
 type categoryRepository struct {
@@ -126,10 +129,10 @@ func (r *categoryRepository) Create(ctx context.Context, cat *dto.CreateCategory
 	}, nil
 }
 
-func (r *categoryRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Category, error) {
+func (r *categoryRepository) GetByID(ctx context.Context, restaurantID, id uuid.UUID) (*dto.Category, error) {
 	cat, err := r.client.Category.
 		Query().
-		Where(category.ID(id)).
+		Where(category.ID(id), category.RestaurantIDEQ(restaurantID)).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -147,24 +150,22 @@ func (r *categoryRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Ca
 	}, nil
 }
 
-func (r *categoryRepository) List(ctx context.Context, req pagination.PageRequest) (*pagination.PageResponse[*dto.Category], error) {
-	page, err := ListCategories(ctx, r.client, req, CategoryListFilters{})
+func (r *categoryRepository) List(ctx context.Context, restaurantID uuid.UUID, req pagination.PageRequest) (*pagination.PageResponse[*dto.CategoryListItem], error) {
+	page, err := ListCategories(ctx, r.client, req, CategoryListFilters{RestaurantID: &restaurantID})
 	if err != nil {
 		return nil, err
 	}
 
-	data := make([]*dto.Category, len(page.Data))
+	data := make([]*dto.CategoryListItem, len(page.Data))
 	for i, cat := range page.Data {
-		data[i] = &dto.Category{
-			ID:           cat.ID,
-			Name:         cat.Name,
-			Description:  cat.Description,
-			DisplayOrder: cat.DisplayOrder,
-			IsActive:     cat.IsActive,
+		data[i] = &dto.CategoryListItem{
+			ID:       cat.ID,
+			Name:     cat.Name,
+			IsActive: cat.IsActive,
 		}
 	}
 
-	return &pagination.PageResponse[*dto.Category]{
+	return &pagination.PageResponse[*dto.CategoryListItem]{
 		Data:       data,
 		NextCursor: page.NextCursor,
 		PrevCursor: page.PrevCursor,
@@ -172,8 +173,8 @@ func (r *categoryRepository) List(ctx context.Context, req pagination.PageReques
 	}, nil
 }
 
-func (r *categoryRepository) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCategoryRequest) (*dto.Category, error) {
-	updateBuilder := r.client.Category.UpdateOneID(id)
+func (r *categoryRepository) Update(ctx context.Context, restaurantID, id uuid.UUID, req *dto.UpdateCategoryRequest) (*dto.Category, error) {
+	updateBuilder := r.client.Category.UpdateOneID(id).Where(category.RestaurantIDEQ(restaurantID))
 
 	hasUpdates := false
 
@@ -206,6 +207,9 @@ func (r *categoryRepository) Update(ctx context.Context, id uuid.UUID, req *dto.
 
 	updatedCat, err := updateBuilder.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("category %s", id)
+		}
 		return nil, fmt.Errorf("failed to update category: %w", err)
 	}
 
@@ -218,9 +222,10 @@ func (r *categoryRepository) Update(ctx context.Context, id uuid.UUID, req *dto.
 	}, nil
 }
 
-func (r *categoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
+func (r *categoryRepository) Delete(ctx context.Context, restaurantID, id uuid.UUID) error {
 	err := r.client.Category.
 		DeleteOneID(id).
+		Where(category.RestaurantIDEQ(restaurantID)).
 		Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -230,6 +235,33 @@ func (r *categoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	}
 
 	return nil
+}
+
+// GetAuthorizationResource resolves the authz.Resource for a category. Category
+// has no owner field of its own, so OwnerUserID is resolved by joining through
+// restaurant_id up to the owning restaurant (see documentation/AuthzFramework.md).
+// QueryRestaurant compiles to a single SQL statement (a subquery on the category's
+// restaurant_id column), not a second round trip.
+func (r *categoryRepository) GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error) {
+	rest, err := r.client.Category.
+		Query().
+		Where(category.ID(id)).
+		QueryRestaurant().
+		Select(restaurant.FieldID, restaurant.FieldUserID).
+		Only(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return authz.Resource{}, apperr.NotFound("category %s", id)
+		}
+		return authz.Resource{}, fmt.Errorf("failed to get category: %w", err)
+	}
+
+	return authz.Resource{
+		Type:         "category",
+		ID:           id,
+		RestaurantID: rest.ID,
+		OwnerUserID:  rest.UserID,
+	}, nil
 }
 
 // ListCategories executes a cursor-paginated category query with optional filters.

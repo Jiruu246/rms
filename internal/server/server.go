@@ -78,10 +78,10 @@ func (s *Server) routes() {
 	orderRepo := repos.NewEntOrderRepository(s.client)
 
 	// initialize services
-	categoryService := services.NewCategoryService(categoryRepo)
+	restaurantService := services.NewRestaurantService(restaurantRepo)
+	categoryService := services.NewCategoryService(categoryRepo, restaurantService)
 	authService := services.NewAuthService(s.cfg.AuthConfig, userRepo, refreshTokenRepo)
 	userService := services.NewUserService(userRepo)
-	restaurantService := services.NewRestaurantService(restaurantRepo)
 	menuItemService := services.NewMenuItemService(menuitemRepo)
 	modifierService := services.NewModifierService(modifierRepo)
 	modifierOptionService := services.NewModifierOptionService(modifierOptionRepo)

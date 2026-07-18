@@ -12,6 +12,12 @@ type Category struct {
 	IsActive     bool      `json:"is_active"`
 }
 
+type CategoryListItem struct {
+	ID       uuid.UUID `json:"id"`
+	Name     string    `json:"name"`
+	IsActive bool      `json:"is_active"`
+}
+
 // CreateCategoryRequest represents the request body for creating a category
 type CreateCategoryRequest struct {
 	Name         string    `json:"name" validate:"required,min=1,max=255" binding:"required"`

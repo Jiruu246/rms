@@ -417,6 +417,20 @@ func TestRestaurantService_Update(t *testing.T) {
 						Currency:    currencyNew,
 					}, nil)
 			},
+			expected: &dto.RestaurantResponse{
+				ID:          restaurantId,
+				Name:        nameNew,
+				Description: descriptionNew,
+				Phone:       phoneNew,
+				Email:       emailNew,
+				Address:     "123 Test St",
+				City:        "Test City",
+				State:       "Test State",
+				ZipCode:     "12345",
+				Country:     "Test Country",
+				Status:      restaurant.StatusInactive.String(),
+				Currency:    currencyNew,
+			},
 			expectedError: "",
 		},
 		{
@@ -443,6 +457,20 @@ func TestRestaurantService_Update(t *testing.T) {
 						Status:      restaurant.StatusActive.String(),
 						Currency:    "USD",
 					}, nil)
+			},
+			expected: &dto.RestaurantResponse{
+				ID:          restaurantId,
+				Name:        nameNew,
+				Description: "Old Description",
+				Phone:       "+1234567890",
+				Email:       emailNew,
+				Address:     "123 Test St",
+				City:        "Test City",
+				State:       "Test State",
+				ZipCode:     "12345",
+				Country:     "Test Country",
+				Status:      restaurant.StatusActive.String(),
+				Currency:    "USD",
 			},
 			expectedError: "",
 		},
@@ -498,7 +526,7 @@ func TestRestaurantService_Update(t *testing.T) {
 				assert.Nil(t, result)
 			} else {
 				assert.NoError(t, err)
-				assert.NotNil(t, result)
+				assert.Equal(t, testCase.expected, result)
 			}
 
 			mockRepo.AssertExpectations(t)

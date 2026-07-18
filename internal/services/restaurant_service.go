@@ -21,6 +21,10 @@ type RestaurantService interface {
 	GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error)
 	Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error)
 	Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error
+	// AuthorizeOwnership lets other entity services (e.g. category) check the
+	// actor may act on a restaurant without duplicating the
+	// GetAuthorizationResource + Authorizer.Authorize dance themselves.
+	AuthorizeOwnership(ctx context.Context, actor authz.Actor, action authz.Action, restaurantID uuid.UUID) error
 }
 
 type restaurantService struct {
@@ -40,7 +44,7 @@ func (s *restaurantService) Create(ctx context.Context, data *dto.CreateRestaura
 }
 
 func (s *restaurantService) GetByID(ctx context.Context, actor authz.Actor, id uuid.UUID) (*dto.RestaurantResponse, error) {
-	if err := s.authorize(ctx, actor, ActionReadRestaurant, id); err != nil {
+	if err := s.AuthorizeOwnership(ctx, actor, ActionReadRestaurant, id); err != nil {
 		return nil, err
 	}
 	return s.repo.GetByID(ctx, id)
@@ -51,7 +55,7 @@ func (s *restaurantService) GetAll(ctx context.Context) ([]*dto.RestaurantRespon
 }
 
 func (s *restaurantService) Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error) {
-	if err := s.authorize(ctx, actor, ActionUpdateRestaurant, id); err != nil {
+	if err := s.AuthorizeOwnership(ctx, actor, ActionUpdateRestaurant, id); err != nil {
 		return nil, err
 	}
 	return s.repo.Update(ctx, &dto.UpdateRestaurantData{
@@ -61,14 +65,14 @@ func (s *restaurantService) Update(ctx context.Context, actor authz.Actor, id uu
 }
 
 func (s *restaurantService) Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error {
-	if err := s.authorize(ctx, actor, ActionDeleteRestaurant, id); err != nil {
+	if err := s.AuthorizeOwnership(ctx, actor, ActionDeleteRestaurant, id); err != nil {
 		return err
 	}
 	return s.repo.Delete(ctx, id)
 }
 
-func (s *restaurantService) authorize(ctx context.Context, actor authz.Actor, action authz.Action, id uuid.UUID) error {
-	resource, err := s.repo.GetAuthorizationResource(ctx, id)
+func (s *restaurantService) AuthorizeOwnership(ctx context.Context, actor authz.Actor, action authz.Action, restaurantID uuid.UUID) error {
+	resource, err := s.repo.GetAuthorizationResource(ctx, restaurantID)
 	if err != nil {
 		return err
 	}

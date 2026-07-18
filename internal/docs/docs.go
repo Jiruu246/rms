@@ -186,7 +186,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Cursor-paginated list of categories. Sort format: \"field:asc,field2:desc\" (supported fields: display_order, create_time).",
+                "description": "Cursor-paginated list of categories for a restaurant the caller owns. Sort format: \"field:asc,field2:desc\" (supported fields: display_order, create_time).",
                 "produces": [
                     "application/json"
                 ],
@@ -195,6 +195,14 @@ const docTemplate = `{
                 ],
                 "summary": "List categories",
                 "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Restaurant ID",
+                        "name": "restaurant_id",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "type": "integer",
                         "default": 20,
@@ -219,11 +227,17 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_Category"
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
@@ -1765,6 +1779,20 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_Jiruu246_rms_internal_dto.CategoryListItem": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "string"
+                },
+                "is_active": {
+                    "type": "boolean"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_Jiruu246_rms_internal_dto.CreateCategoryRequest": {
             "type": "object",
             "required": [
@@ -2388,13 +2416,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_Category": {
+        "github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.Category"
+                        "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.CategoryListItem"
                     }
                 },
                 "has_more": {
@@ -2674,11 +2702,11 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_Category": {
+        "github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_pkg_pagination_PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_Category"
+                    "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_pagination.PageResponse-github_com_Jiruu246_rms_internal_dto_CategoryListItem"
                 },
                 "error": {
                     "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError"

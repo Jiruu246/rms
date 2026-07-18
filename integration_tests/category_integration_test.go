@@ -10,8 +10,10 @@ import (
 	"testing"
 
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/server"
 	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/Jiruu246/rms/pkg/utils"
+	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/suite"
 )
@@ -33,8 +35,24 @@ func TestCategoryTestSuite(t *testing.T) {
 	suite.Run(t, new(CategoryTestSuite))
 }
 
+// middlewareForUser builds a Middlewares set whose JWTMiddleware injects claims
+// for the given user, matching the pattern used in restaurant_integration_test.go.
+func middlewareForUser(userID uuid.UUID) server.Middlewares {
+	mockMiddlewares := DefaultMiddleware()
+	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			c.Set("claims", utils.JWTClaims{UserID: userID})
+			c.Next()
+		}
+	}
+	return mockMiddlewares
+}
+
 // TestCategoryAPI tests the category API endpoints
 func (s *CategoryTestSuite) TestCreateCategory() {
+	restaurant, err := SetupRestaurant(s.client, s.T().Context())
+	s.Require().NoError(err)
+
 	tests := []struct {
 		testName string
 		body     any
@@ -44,13 +62,9 @@ func (s *CategoryTestSuite) TestCreateCategory() {
 		{
 			testName: "CreateCategory",
 			body: dto.CreateCategoryRequest{
-				Name:        "Test Category",
-				Description: "A test category description",
-				RestaurantID: func() uuid.UUID {
-					restaurant, err := SetupRestaurant(s.client, s.T().Context())
-					s.Require().NoError(err)
-					return restaurant.ID
-				}(),
+				Name:         "Test Category",
+				Description:  "A test category description",
+				RestaurantID: restaurant.ID,
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
@@ -63,6 +77,8 @@ func (s *CategoryTestSuite) TestCreateCategory() {
 			},
 		},
 	}
+
+	mockMiddlewares := middlewareForUser(restaurant.UserID)
 
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
@@ -77,7 +93,7 @@ func (s *CategoryTestSuite) TestCreateCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
@@ -95,7 +111,24 @@ func (s *CategoryTestSuite) TestGetCategory() {
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
-	_, err = SetupCategory(s.client, s.T().Context())
+	owningRestaurant, err := initialCategory1.QueryRestaurant().Only(s.T().Context())
+	s.Require().NoError(err)
+
+	// A second category owned by the same restaurant/user — should appear in the
+	// owner's category list alongside initialCategory1.
+	sameOwnerCategory, err := s.client.Category.Create().
+		SetName("Same Owner Category").
+		SetDescription("Belongs to owningRestaurant too").
+		SetRestaurant(owningRestaurant).
+		Save(s.T().Context())
+	s.Require().NoError(err)
+
+	// A category owned by a different restaurant/user — must NOT appear in
+	// owningRestaurant's category list.
+	otherOwnerCategory, err := SetupCategory(s.client, s.T().Context())
+	s.Require().NoError(err)
+
+	otherRestaurant, err := otherOwnerCategory.QueryRestaurant().Only(s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -133,17 +166,46 @@ func (s *CategoryTestSuite) TestGetCategory() {
 		},
 		{
 			testName: "GetAllCategories",
-			url:      categoryAPIBase,
+			url:      categoryAPIBase + "?restaurant_id=" + owningRestaurant.ID.String(),
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[pagination.PageResponse[dto.Category]]
+				var response utils.APIResponse[pagination.PageResponse[dto.CategoryListItem]]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.True(response.Success)
-				s.True(len(response.Data.Data) >= 2)
+
+				ids := make([]uuid.UUID, len(response.Data.Data))
+				for i, c := range response.Data.Data {
+					ids[i] = c.ID
+				}
+				s.Contains(ids, initialCategory1.ID)
+				s.Contains(ids, sameOwnerCategory.ID)
+				s.NotContains(ids, otherOwnerCategory.ID)
 			},
 		},
+		{
+			testName: "GetAllCategories_MissingRestaurantID",
+			url:      categoryAPIBase,
+			expected: http.StatusBadRequest,
+			validate: func(w *httptest.ResponseRecorder) {},
+		},
+		{
+			// ErrForbidden renders as 404, not 403 — see apperr/http.go: this API
+			// never confirms a restaurant exists to a non-owner.
+			testName: "GetAllCategories_OtherRestaurant_NotFound",
+			url:      categoryAPIBase + "?restaurant_id=" + otherRestaurant.ID.String(),
+			expected: http.StatusNotFound,
+			validate: func(w *httptest.ResponseRecorder) {},
+		},
+		{
+			testName: "GetAllCategories_UnknownRestaurant_NotFound",
+			url:      categoryAPIBase + "?restaurant_id=" + uuid.New().String(),
+			expected: http.StatusNotFound,
+			validate: func(w *httptest.ResponseRecorder) {},
+		},
 	}
+
+	mockMiddlewares := middlewareForUser(owningRestaurant.UserID)
 
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
@@ -151,7 +213,7 @@ func (s *CategoryTestSuite) TestGetCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
@@ -171,6 +233,9 @@ func (s *CategoryTestSuite) TestUpdateCategory() {
 	s.Require().NoError(err)
 
 	_, err = SetupCategory(s.client, s.T().Context())
+	s.Require().NoError(err)
+
+	owningRestaurant, err := initialCategory1.QueryRestaurant().Only(s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -201,6 +266,8 @@ func (s *CategoryTestSuite) TestUpdateCategory() {
 		},
 	}
 
+	mockMiddlewares := middlewareForUser(owningRestaurant.UserID)
+
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
 			var body []byte
@@ -214,7 +281,7 @@ func (s *CategoryTestSuite) TestUpdateCategory() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
@@ -225,6 +292,9 @@ func (s *CategoryTestSuite) TestUpdateCategory() {
 
 func (s *CategoryTestSuite) TestDeleteCategory() {
 	initialCategory, err := SetupCategory(s.client, s.T().Context())
+	s.Require().NoError(err)
+
+	owningRestaurant, err := initialCategory.QueryRestaurant().Only(s.T().Context())
 	s.Require().NoError(err)
 
 	tests := []struct {
@@ -239,13 +309,15 @@ func (s *CategoryTestSuite) TestDeleteCategory() {
 		},
 	}
 
+	mockMiddlewares := middlewareForUser(owningRestaurant.UserID)
+
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
 			req := httptest.NewRequest(http.MethodDelete, tt.url, nil)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})
@@ -254,6 +326,9 @@ func (s *CategoryTestSuite) TestDeleteCategory() {
 
 // TestCategoryValidation tests input validation
 func (s *CategoryTestSuite) TestCategoryValidation() {
+	user, err := SetupUser(s.client, s.T().Context())
+	s.Require().NoError(err)
+
 	tests := []struct {
 		testName string
 		method   string
@@ -277,13 +352,15 @@ func (s *CategoryTestSuite) TestCategoryValidation() {
 		},
 	}
 
+	mockMiddlewares := middlewareForUser(user.ID)
+
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
 			req := httptest.NewRequest(tt.method, tt.url, bytes.NewBufferString(tt.body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})

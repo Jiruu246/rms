@@ -1,6 +1,10 @@
 package handler
 
 import (
+	"errors"
+	"net/http"
+
+	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -63,9 +67,12 @@ func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 //	@Param			id	path		string	true	"Restaurant ID"	format(uuid)
 //	@Success		200	{object}	utils.APIResponse[dto.RestaurantResponse]
 //	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		403	{object}	utils.APIResponse[any]
 //	@Failure		404	{object}	utils.APIResponse[any]
 //	@Router			/restaurants/{id} [get]
 func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -73,9 +80,9 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 		return
 	}
 
-	restaurant, err := h.service.GetByID(c.Request.Context(), id)
+	restaurant, err := h.service.GetByID(c.Request.Context(), authz.NewActorFromClaims(claims), id)
 	if err != nil {
-		utils.WriteNotFound(c.Writer, "Restaurant not found")
+		writeAuthzError(c, err, utils.WriteNotFound, "Restaurant not found")
 		return
 	}
 
@@ -112,9 +119,13 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 //	@Param			request	body		dto.UpdateRestaurantRequest	true	"Fields to update"
 //	@Success		200		{object}	utils.APIResponse[dto.RestaurantResponse]
 //	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		403		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/restaurants/{id} [put]
 func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -128,9 +139,9 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 		return
 	}
 
-	updated, err := h.service.Update(c.Request.Context(), id, &req)
+	updated, err := h.service.Update(c.Request.Context(), authz.NewActorFromClaims(claims), id, &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to update restaurant")
+		writeAuthzError(c, err, utils.WriteInternalError, "Failed to update restaurant")
 		return
 	}
 
@@ -148,6 +159,8 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 //	@Failure		404	{object}	utils.APIResponse[any]
 //	@Router			/restaurants/{id} [delete]
 func (h *RestaurantHandler) DeleteRestaurant(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
@@ -155,10 +168,22 @@ func (h *RestaurantHandler) DeleteRestaurant(c *gin.Context) {
 		return
 	}
 
-	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		utils.WriteNotFound(c.Writer, "Restaurant not found")
+	if err := h.service.Delete(c.Request.Context(), authz.NewActorFromClaims(claims), id); err != nil {
+		writeAuthzError(c, err, utils.WriteNotFound, "Restaurant not found")
 		return
 	}
 
 	utils.WriteNoContent(c.Writer)
+}
+
+// writeAuthzError maps an authz.ErrForbidden to a 403; every other error
+// (e.g. a resource that doesn't exist, or a downstream repo failure) falls
+// back to onOther, so each call site keeps whatever status it used before
+// ownership checks were added.
+func writeAuthzError(c *gin.Context, err error, onOther func(w http.ResponseWriter, message string), message string) {
+	if errors.Is(err, authz.ErrForbidden) {
+		utils.WriteForbidden(c.Writer, "You do not have permission to access this restaurant")
+		return
+	}
+	onOther(c.Writer, message)
 }

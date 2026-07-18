@@ -177,13 +177,21 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 		},
 	}
 
+	mockMiddlewares := DefaultMiddleware()
+	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant1.UserID})
+			c.Next()
+		}
+	}
+
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
 			req := httptest.NewRequest(http.MethodGet, tt.url, nil)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
@@ -251,6 +259,14 @@ func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 		},
 	}
 
+	mockMiddlewares := DefaultMiddleware()
+	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant1.UserID})
+			c.Next()
+		}
+	}
+
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
 			var body []byte
@@ -264,7 +280,7 @@ func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 
@@ -289,13 +305,21 @@ func (s *RestaurantTestSuite) TestDeleteRestaurant() {
 		},
 	}
 
+	mockMiddlewares := DefaultMiddleware()
+	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
+		return func(c *gin.Context) {
+			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant.UserID})
+			c.Next()
+		}
+	}
+
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
 			req := httptest.NewRequest(http.MethodDelete, tt.url, nil)
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 
-			server := s.CreateServer()
+			server := s.CreateServerWithMiddleware(mockMiddlewares)
 			server.Engine().ServeHTTP(w, req)
 			s.Equal(tt.expected, w.Code)
 		})

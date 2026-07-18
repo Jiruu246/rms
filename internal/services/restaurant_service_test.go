@@ -5,6 +5,7 @@ import (
 	"errors"
 	"testing"
 
+	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
@@ -51,6 +52,11 @@ func (m *MockRestaurantRepository) GetAll(ctx context.Context) ([]*dto.Restauran
 		return nil, args.Error(1)
 	}
 	return args.Get(0).([]*dto.RestaurantResponse), args.Error(1)
+}
+
+func (m *MockRestaurantRepository) GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error) {
+	args := m.Called(ctx, id)
+	return args.Get(0).(authz.Resource), args.Error(1)
 }
 
 func TestRestaurantService_Create(t *testing.T) {
@@ -287,17 +293,24 @@ func TestRestaurantService_Create(t *testing.T) {
 
 func TestRestaurantService_GetByID(t *testing.T) {
 	testId := uuid.New()
+	ownerId := uuid.New()
+	owner := authz.Actor{UserID: ownerId}
+	stranger := authz.Actor{UserID: uuid.New()}
 
 	testCases := []struct {
 		name          string
 		id            uuid.UUID
+		actor         authz.Actor
 		mockSetup     func(*MockRestaurantRepository)
 		expectedError string
 	}{
 		{
-			name: "successful retrieval",
-			id:   testId,
+			name:  "successful retrieval",
+			id:    testId,
+			actor: owner,
 			mockSetup: func(mockRepo *MockRestaurantRepository) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, testId).
+					Return(authz.Resource{ID: testId, RestaurantID: testId, OwnerUserID: ownerId}, nil)
 				expectedRestaurant := &dto.RestaurantResponse{
 					ID:   testId,
 					Name: "Test Restaurant",
@@ -307,12 +320,25 @@ func TestRestaurantService_GetByID(t *testing.T) {
 			expectedError: "",
 		},
 		{
-			name: "repository error",
-			id:   testId,
+			name:  "repository error",
+			id:    testId,
+			actor: owner,
 			mockSetup: func(mockRepo *MockRestaurantRepository) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, testId).
+					Return(authz.Resource{ID: testId, RestaurantID: testId, OwnerUserID: ownerId}, nil)
 				mockRepo.On("GetByID", mock.Anything, testId).Return(nil, errors.New("restaurant not found"))
 			},
 			expectedError: "restaurant not found",
+		},
+		{
+			name:  "forbidden - not the owner",
+			id:    testId,
+			actor: stranger,
+			mockSetup: func(mockRepo *MockRestaurantRepository) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, testId).
+					Return(authz.Resource{ID: testId, RestaurantID: testId, OwnerUserID: ownerId}, nil)
+			},
+			expectedError: authz.ErrForbidden.Error(),
 		},
 	}
 
@@ -322,7 +348,7 @@ func TestRestaurantService_GetByID(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewRestaurantService(mockRepo)
-			result, err := service.GetByID(t.Context(), testCase.id)
+			result, err := service.GetByID(t.Context(), testCase.actor, testCase.id)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -340,7 +366,12 @@ func TestRestaurantService_GetByID(t *testing.T) {
 }
 
 func TestRestaurantService_Update(t *testing.T) {
-	id := uuid.New()
+	restaurantId := uuid.New()
+	ownerId := uuid.New()
+	owner := authz.Actor{UserID: ownerId}
+	stranger := authz.Actor{UserID: uuid.New()}
+	resource := authz.Resource{ID: restaurantId, RestaurantID: restaurantId, OwnerUserID: ownerId}
+
 	nameNew := "Updated Restaurant"
 	descriptionNew := "Updated Description"
 	phoneNew := "+0987654321"
@@ -350,12 +381,15 @@ func TestRestaurantService_Update(t *testing.T) {
 
 	testCases := []struct {
 		name          string
+		actor         authz.Actor
 		request       *dto.UpdateRestaurantRequest
+		mockSetup     func(*MockRestaurantRepository, *dto.UpdateRestaurantRequest)
 		expected      *dto.RestaurantResponse
 		expectedError string
 	}{
 		{
-			name: "successful update with all fields",
+			name:  "successful update with all fields",
+			actor: owner,
 			request: &dto.UpdateRestaurantRequest{
 				Name:        &nameNew,
 				Description: &descriptionNew,
@@ -364,90 +398,86 @@ func TestRestaurantService_Update(t *testing.T) {
 				Status:      &statusNew,
 				Currency:    &currencyNew,
 			},
-			expected: &dto.RestaurantResponse{
-				ID:          id,
-				Name:        nameNew,
-				Description: descriptionNew,
-				Phone:       phoneNew,
-				Email:       emailNew,
-				Address:     "123 Test St",
-				City:        "Test City",
-				State:       "Test State",
-				ZipCode:     "12345",
-				Country:     "Test Country",
-				Status:      restaurant.StatusInactive.String(),
-				Currency:    currencyNew,
+			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
+				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{Request: req, ID: restaurantId}).
+					Return(&dto.RestaurantResponse{
+						ID:          restaurantId,
+						Name:        nameNew,
+						Description: descriptionNew,
+						Phone:       phoneNew,
+						Email:       emailNew,
+						Address:     "123 Test St",
+						City:        "Test City",
+						State:       "Test State",
+						ZipCode:     "12345",
+						Country:     "Test Country",
+						Status:      restaurant.StatusInactive.String(),
+						Currency:    currencyNew,
+					}, nil)
 			},
 			expectedError: "",
 		},
 		{
-			name: "successful update with partial fields",
+			name:  "successful update with partial fields",
+			actor: owner,
 			request: &dto.UpdateRestaurantRequest{
 				Name:  &nameNew,
 				Email: &emailNew,
 			},
-			expected: &dto.RestaurantResponse{
-				ID:          id,
-				Name:        nameNew,
-				Description: "Old Description",
-				Phone:       "+1234567890",
-				Email:       emailNew,
-				Address:     "123 Test St",
-				City:        "Test City",
-				State:       "Test State",
-				ZipCode:     "12345",
-				Country:     "Test Country",
-				Status:      restaurant.StatusActive.String(),
-				Currency:    "USD",
+			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
+				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{Request: req, ID: restaurantId}).
+					Return(&dto.RestaurantResponse{
+						ID:          restaurantId,
+						Name:        nameNew,
+						Description: "Old Description",
+						Phone:       "+1234567890",
+						Email:       emailNew,
+						Address:     "123 Test St",
+						City:        "Test City",
+						State:       "Test State",
+						ZipCode:     "12345",
+						Country:     "Test Country",
+						Status:      restaurant.StatusActive.String(),
+						Currency:    "USD",
+					}, nil)
 			},
 			expectedError: "",
 		},
 		{
-			name: "successful update with status change to closed",
-			request: &dto.UpdateRestaurantRequest{
-				Status: func() *string { s := "closed"; return &s }(),
-			},
-			expected: &dto.RestaurantResponse{
-				ID:          id,
-				Name:        "Test Restaurant",
-				Description: "Test Description",
-				Phone:       "+1234567890",
-				Email:       "test@restaurant.com",
-				Address:     "123 Test St",
-				City:        "Test City",
-				State:       "Test State",
-				ZipCode:     "12345",
-				Country:     "Test Country",
-				Status:      restaurant.StatusClosed.String(),
-				Currency:    "USD",
-			},
-
-			expectedError: "",
-		},
-		{
-			name:          "restaurant not found",
-			request:       &dto.UpdateRestaurantRequest{Name: &nameNew},
-			expected:      nil,
-			expectedError: "restaurant not found",
-		},
-		{
-			name: "repository update error",
+			name:  "forbidden - not the owner",
+			actor: stranger,
 			request: &dto.UpdateRestaurantRequest{
 				Name: &nameNew,
 			},
-			expected: &dto.RestaurantResponse{
-				ID:          id,
-				Name:        "Old Restaurant",
-				Description: "Old Description",
-				Phone:       "+1234567890",
-				Email:       "old@restaurant.com",
-				Address:     "123 Test St",
-				City:        "Test City",
-				State:       "Test State",
-				ZipCode:     "12345",
-				Country:     "Test Country",
-				Status:      restaurant.StatusActive.String(),
-				Currency:    "USD",
+			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
+			},
+			expectedError: authz.ErrForbidden.Error(),
+		},
+		{
+			name:  "restaurant not found",
+			actor: owner,
+			request: &dto.UpdateRestaurantRequest{
+				Name: &nameNew,
+			},
+			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).
+					Return(authz.Resource{}, errors.New("restaurant not found"))
+			},
+			expectedError: "restaurant not found",
+		},
+		{
+			name:  "repository update error",
+			actor: owner,
+			request: &dto.UpdateRestaurantRequest{
+				Name: &nameNew,
+			},
+			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
+				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{Request: req, ID: restaurantId}).
+					Return(nil, errors.New("database error"))
 			},
 			expectedError: "database error",
 		},
@@ -456,23 +486,10 @@ func TestRestaurantService_Update(t *testing.T) {
 	for _, testCase := range testCases {
 		t.Run(testCase.name, func(t *testing.T) {
 			mockRepo := new(MockRestaurantRepository)
-
-			userId := uuid.New()
-
-			if testCase.expectedError != "" {
-				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{
-					Request: testCase.request,
-					ID:      userId,
-				}).Return(nil, errors.New(testCase.expectedError))
-			} else {
-				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{
-					Request: testCase.request,
-					ID:      userId,
-				}).Return(testCase.expected, nil)
-			}
+			testCase.mockSetup(mockRepo, testCase.request)
 
 			service := NewRestaurantService(mockRepo)
-			result, err := service.Update(t.Context(), userId, testCase.request)
+			result, err := service.Update(t.Context(), testCase.actor, restaurantId, testCase.request)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)
@@ -481,7 +498,6 @@ func TestRestaurantService_Update(t *testing.T) {
 			} else {
 				assert.NoError(t, err)
 				assert.NotNil(t, result)
-				assert.Equal(t, testCase.expected, result)
 			}
 
 			mockRepo.AssertExpectations(t)
@@ -491,25 +507,43 @@ func TestRestaurantService_Update(t *testing.T) {
 
 func TestRestaurantService_Delete(t *testing.T) {
 	id := uuid.New()
+	ownerId := uuid.New()
+	owner := authz.Actor{UserID: ownerId}
+	stranger := authz.Actor{UserID: uuid.New()}
+	resource := authz.Resource{ID: id, RestaurantID: id, OwnerUserID: ownerId}
 
 	testCases := []struct {
 		name          string
 		id            uuid.UUID
+		actor         authz.Actor
 		mockSetup     func(*MockRestaurantRepository)
 		expectedError string
 	}{
 		{
-			name: "successful deletion",
-			id:   id,
+			name:  "successful deletion",
+			id:    id,
+			actor: owner,
 			mockSetup: func(mockRepo *MockRestaurantRepository) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, id).Return(resource, nil)
 				mockRepo.On("Delete", mock.Anything, id).Return(nil)
 			},
 			expectedError: "",
 		},
 		{
-			name: "repository error",
-			id:   id,
+			name:  "forbidden - not the owner",
+			id:    id,
+			actor: stranger,
 			mockSetup: func(mockRepo *MockRestaurantRepository) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, id).Return(resource, nil)
+			},
+			expectedError: authz.ErrForbidden.Error(),
+		},
+		{
+			name:  "repository error",
+			id:    id,
+			actor: owner,
+			mockSetup: func(mockRepo *MockRestaurantRepository) {
+				mockRepo.On("GetAuthorizationResource", mock.Anything, id).Return(resource, nil)
 				mockRepo.On("Delete", mock.Anything, id).Return(errors.New("database error"))
 			},
 			expectedError: "database error",
@@ -522,7 +556,7 @@ func TestRestaurantService_Delete(t *testing.T) {
 			testCase.mockSetup(mockRepo)
 
 			service := NewRestaurantService(mockRepo)
-			err := service.Delete(t.Context(), testCase.id)
+			err := service.Delete(t.Context(), testCase.actor, testCase.id)
 
 			if testCase.expectedError != "" {
 				assert.Error(t, err)

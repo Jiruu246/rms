@@ -80,6 +80,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
                     },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -154,6 +160,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
@@ -600,6 +612,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -633,6 +651,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
@@ -877,6 +901,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -929,6 +959,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
@@ -1017,6 +1053,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1069,6 +1111,12 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
@@ -1303,6 +1351,12 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
                     },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
@@ -1473,12 +1527,6 @@ const docTemplate = `{
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
                     },
-                    "403": {
-                        "description": "Forbidden",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
-                        }
-                    },
                     "404": {
                         "description": "Not Found",
                         "schema": {
@@ -1531,12 +1579,6 @@ const docTemplate = `{
                     },
                     "400": {
                         "description": "Bad Request",
-                        "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
-                        }
-                    },
-                    "403": {
-                        "description": "Forbidden",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }
@@ -1665,6 +1707,18 @@ const docTemplate = `{
                     },
                     "401": {
                         "description": "Unauthorized",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
                         "schema": {
                             "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
                         }

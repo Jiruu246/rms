@@ -447,7 +447,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 				RestaurantID: restaurant1.ID,
 				OrderItems:   []handler.OrderItemSchema{},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "DuplicateMenuItems",
@@ -485,7 +485,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "MenuItemFromAnotherRestaurant",
@@ -499,7 +499,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "MenuItemUnavailable",
@@ -513,7 +513,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "ZeroQuantityItem",
@@ -566,7 +566,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "ModifierOptionUnavailable",
@@ -583,7 +583,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "ModifierOptionBelongsToDifferentMenuItem",
@@ -600,7 +600,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "ModifierQuantityZero",
@@ -649,7 +649,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "SumOfQuantitiesExceedsMax",
@@ -667,7 +667,7 @@ func (s *OrderTestSuite) TestCreateOrderItemValidations() {
 					},
 				},
 			},
-			expected: http.StatusInternalServerError,
+			expected: http.StatusBadRequest,
 		},
 		{
 			testName: "OptionalModifierGroupZeroSelections",

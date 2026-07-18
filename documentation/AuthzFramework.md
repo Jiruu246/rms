@@ -1,19 +1,5 @@
 # Ownership / Authorization Framework
 
-Status: **Restaurant is wired up** (see "Applied resources" below); every
-other resource still has no ownership check and is wired up one at a time in
-later iterations (see "Applying to a resource" below).
-
-## Why this exists
-
-Ownership checks were either missing or done ad hoc (e.g.
-`restaurant_handler.go`'s `Get`/`Update`/`Delete` used to not check that the
-caller owned the restaurant at all; `Create` read `claims` inline). As more
-resources and roles are added, repeating that logic per-handler drifts out
-of sync. This package gives every resource one shared place to ask "can this
-actor do this action on this resource" and one shared place to change the
-answer.
-
 ## Responsibility split
 
 ```
@@ -46,25 +32,15 @@ Concretely:
 | `actor.go` | `WithActor` / `ActorFromContext` | Optional context plumbing, for when a plain `context.Context` needs to carry the actor deeper than a function argument. |
 | `resource.go` | `Resource{Type, ID, RestaurantID, OwnerUserID, Attributes}` | Describes *what* is being acted on. `RestaurantID` is the tenant boundary — every entity in this system hangs off a restaurant (see root `CLAUDE.md`). `Attributes` is an escape hatch for policy rules that need something beyond ownership/restaurant. |
 | `action.go` | `Action` (string) | Names the operation, `"resource:verb"` (e.g. `"menu_item:update"`). Constants are declared per-resource, next to that resource's service — not in this package. |
-| `decision.go` | `Decision{Reason, Mode}`, `AccessMode` | What was decided and why, for audit logging. `nil` error from `Authorize` = allowed; the sentinel errors in `errors.go` are the only failure signal. |
+| `decision.go` | `Decision{Reason, Mode}`, `AccessMode` | What was decided and why, for audit logging. `nil` error from `Authorize` = allowed; a denied decision fails with `apperr.ErrForbidden` (see `documentation/ErrorHandlingFramework.md`) — this package defines no sentinels of its own. |
 | `authorizer.go` | `Authorizer` interface, `Request{Actor, Action, Resource}` | The single method services call: `Authorize(ctx, Request) (Decision, error)`. |
-| `policy.go` | `PolicyAuthorizer` | Default `Authorizer` impl: admin role bypasses everything; otherwise `Resource.OwnerUserID == Actor.UserID` or deny. |
-| `errors.go` | `ErrUnauthenticated`, `ErrForbidden`, `ErrNotFound`, `AsNotFound(err)` | Sentinels a handler maps to HTTP status. `AsNotFound` turns a forbidden decision into "not found" for endpoints that shouldn't reveal a resource exists. |
-
-## Why `Resource` instead of `OwnerUserID` alone
-
-`PolicyAuthorizer` only reads `Resource.RestaurantID`/`OwnerUserID` today, but
-the field set anticipates the next step being **restaurant memberships**
-(multiple users per restaurant with different roles) rather than a single
-`owner_user_id`. When that lands, only `Resource` construction (in each
-repo) and `PolicyAuthorizer.Authorize` change — `Action`, `Authorizer`, and
-every call site stay the same.
+| `policy.go` | `PolicyAuthorizer` | Default `Authorizer` impl: admin role bypasses everything; otherwise `Resource.OwnerUserID == Actor.UserID` or deny (returns `apperr.ErrForbidden`). |
 
 ## Applied resources
 
 | Resource | Actions | Notes |
 |----------|---------|-------|
-| Restaurant | `restaurant:read`, `restaurant:update`, `restaurant:delete` (in `restaurant_service.go`) | Only the restaurant's `OwnerUserID` (== `Restaurant.user_id`) may read/update/delete it; `Create` has no check (any authenticated actor may create a restaurant they then own). `GetAll` is unscoped — it still lists every restaurant, not just the caller's own; not addressed by this pass. Resource resolution: `RestaurantRepository.GetAuthorizationResource`. Handler maps `authz.ErrForbidden` to 403; every other error keeps its pre-existing status per endpoint (404 for Get/Delete, 500 for Update — see `writeAuthzError` in `restaurant_handler.go`). No scoped repo queries (step 4 below) were added yet — the only defense is the service-layer `Authorize` call. |
+| Restaurant | `restaurant:read`, `restaurant:update`, `restaurant:delete` (in `restaurant_service.go`) | Only the restaurant's `OwnerUserID` (== `Restaurant.user_id`) may read/update/delete it; `Create` has no check (any authenticated actor may create a restaurant they then own). `GetAll` is unscoped — it still lists every restaurant, not just the caller's own; not addressed by this pass. Resource resolution: `RestaurantRepository.GetAuthorizationResource`. Handler status mapping goes through `apperr.WriteHTTPError` (see `documentation/ErrorHandlingFramework.md`) — `apperr.ErrForbidden` renders as 404, like every other resource. No scoped repo queries (step 4 below) were added yet — the only defense is the service-layer `Authorize` call. |
 
 ## Applying to a resource (next iteration, per entity)
 
@@ -86,9 +62,9 @@ For each remaining resource (menu item, category, modifier, order, ...):
 4. Add a scoped repo method (`UpdateInRestaurant(ctx, restaurantID, id, ...)`)
    so the query itself is filtered by the authorized scope — don't rely on
    the service check as the only safeguard.
-5. In the handler, map `authz.ErrForbidden`/`authz.ErrUnauthenticated` to
-   `utils.WriteForbidden`/`utils.WriteUnauthorized` (or run the result
-   through `authz.AsNotFound` first — see "403 vs 404" below).
+5. In the handler, do nothing special — `apperr.WriteHTTPError(c.Writer, err,
+   fallback)` already renders `apperr.ErrForbidden` as a 404 (see "403 vs
+   404" below).
 
 For child resources (menu item, category, ...), step 2's "join up to the
 owning restaurant" is the main new work — `Resource.OwnerUserID` should
@@ -100,9 +76,11 @@ have their own owner field.
 These are open questions the framework doesn't need answered yet, but each
 resource's integration should make an explicit choice:
 
-- **403 vs 404** — whether "not your restaurant" should read as forbidden or
-  not-found, per endpoint. Use `authz.AsNotFound` where existence shouldn't
-  leak.
+  (`errors.Is(err, apperr.ErrForbidden)` keeps working for logging/audit) —
+  only the HTTP response collapses forbidden into not-found. There is no
+  per-endpoint opt-out; if a future endpoint genuinely needs to reveal "this
+  exists but you can't touch it" (e.g. a paywalled resource), that would be a
+  deliberate new sentinel, not a flag on this one.
 - **Roles vs permissions** — `Actor.Role` is a single string today (matching
   the existing `JWTClaims.Role` claim). If more granular roles show up
   (manager, cashier, ...), prefer adding permission checks inside

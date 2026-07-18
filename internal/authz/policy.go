@@ -3,6 +3,7 @@ package authz
 import (
 	"context"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/google/uuid"
 )
 
@@ -30,5 +31,5 @@ func (p *PolicyAuthorizer) Authorize(ctx context.Context, req Request) (Decision
 		return Decision{Mode: AccessOwner, Reason: "resource owner"}, nil
 	}
 
-	return Decision{}, ErrForbidden
+	return Decision{}, apperr.ErrForbidden
 }

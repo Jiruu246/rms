@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"errors"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/google/uuid"
@@ -30,7 +30,7 @@ func (s *userService) GetProfile(ctx context.Context, id uuid.UUID) (*dto.User, 
 
 func (s *userService) UpdateProfile(ctx context.Context, id uuid.UUID, updates *dto.UpdateUserRequest) (*dto.User, error) {
 	if id == uuid.Nil {
-		return nil, errors.New("invalid user id")
+		return nil, apperr.Invalid("invalid user id")
 	}
 
 	return s.repo.Update(ctx, id, updates)

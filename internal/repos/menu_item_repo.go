@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	ds "github.com/Jiruu246/rms/internal/data_structures"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
@@ -77,7 +78,7 @@ func (r *menuItemRepository) GetByID(ctx context.Context, id int64) (*dto.MenuIt
 	item, err := r.client.MenuItem.Query().Where(menuitem.IDEQ(id)).Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("menu item not found with id %d", id)
+			return nil, apperr.NotFound("menu item %d", id)
 		}
 		return nil, fmt.Errorf("failed to get menu item: %w", err)
 	}
@@ -98,7 +99,7 @@ func (r *menuItemRepository) GetByIDsStrict(ctx context.Context, ids ds.Set[int6
 		return nil, fmt.Errorf("failed to get menu items: %w", err)
 	}
 	if len(items) != ids.Size() {
-		return nil, fmt.Errorf("one or more menu items not found")
+		return nil, apperr.NotFound("one or more menu items")
 	}
 	responses := make(map[int64]*dto.MenuItem, len(items))
 	for _, item := range items {
@@ -161,7 +162,7 @@ func (r *menuItemRepository) Delete(ctx context.Context, id int64) error {
 	err := r.client.MenuItem.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("menu item not found with id %d", id)
+			return apperr.NotFound("menu item %d", id)
 		}
 		return fmt.Errorf("failed to delete menu item: %w", err)
 	}

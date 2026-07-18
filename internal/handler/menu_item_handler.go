@@ -3,6 +3,7 @@ package handler
 import (
 	"strconv"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -37,7 +38,7 @@ func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 	}
 	created, err := h.service.Create(c.Request.Context(), &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to create menu item")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create menu item")
 		return
 	}
 	utils.WriteCreated(c.Writer, created)
@@ -55,7 +56,7 @@ func (h *MenuItemHandler) CreateMenuItem(c *gin.Context) {
 func (h *MenuItemHandler) GetMenuItems(c *gin.Context) {
 	items, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to fetch menu items")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to fetch menu items")
 		return
 	}
 	utils.WriteSuccess(c.Writer, items)
@@ -81,7 +82,7 @@ func (h *MenuItemHandler) GetMenuItem(c *gin.Context) {
 	}
 	item, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		utils.WriteNotFound(c.Writer, "Menu item not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve menu item")
 		return
 	}
 	utils.WriteSuccess(c.Writer, item)
@@ -98,6 +99,7 @@ func (h *MenuItemHandler) GetMenuItem(c *gin.Context) {
 //	@Param			request	body		dto.UpdateMenuItemRequest	true	"Fields to update"
 //	@Success		200		{object}	utils.APIResponse[dto.MenuItem]
 //	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/menu-items/{id} [put]
 func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
@@ -114,7 +116,7 @@ func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 	}
 	updated, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to update menu item")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update menu item")
 		return
 	}
 	utils.WriteSuccess(c.Writer, updated)
@@ -128,6 +130,7 @@ func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 //	@Param			id	path	int	true	"Menu item ID"
 //	@Success		204	"No Content"
 //	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/menu-items/{id} [delete]
 func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
@@ -138,7 +141,7 @@ func (h *MenuItemHandler) DeleteMenuItem(c *gin.Context) {
 		return
 	}
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to delete menu item")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to delete menu item")
 		return
 	}
 	utils.WriteNoContent(c.Writer)

@@ -72,10 +72,6 @@ func WriteInternalError(w http.ResponseWriter, message string) {
 	WriteError(w, http.StatusInternalServerError, message, nil)
 }
 
-func WriteForbidden(w http.ResponseWriter, message string) {
-	WriteError(w, http.StatusForbidden, message, nil)
-}
-
 func WriteUnauthorized(w http.ResponseWriter, message string) {
 	WriteError(w, http.StatusUnauthorized, message, nil)
 }

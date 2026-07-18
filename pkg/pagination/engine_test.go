@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/pkg/pagination"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -398,7 +399,8 @@ func TestRun_InvalidSortField_ReturnsError(t *testing.T) {
 	}
 	_, err := pagination.Run(context.Background(), staticExecutor(nil), req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, pagination.ErrInvalidSortField))
+	assert.True(t, errors.Is(err, apperr.ErrInvalid))
+	assert.Contains(t, err.Error(), "invalid sort field")
 }
 
 func TestRun_CursorSortMismatch_ReturnsError(t *testing.T) {
@@ -419,7 +421,8 @@ func TestRun_CursorSortMismatch_ReturnsError(t *testing.T) {
 	}
 	_, err = pagination.Run(context.Background(), staticExecutor(pool), req2, fields, extractID)
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, pagination.ErrCursorSortMismatch))
+	assert.True(t, errors.Is(err, apperr.ErrInvalid))
+	assert.Contains(t, err.Error(), "cursor does not match requested sort")
 }
 
 func TestRun_MalformedCursor_ReturnsError(t *testing.T) {
@@ -430,7 +433,8 @@ func TestRun_MalformedCursor_ReturnsError(t *testing.T) {
 	}
 	_, err := pagination.Run(context.Background(), staticExecutor(nil), req, testWhitelist(), func(r *testRow) string { return r.extractID() })
 	require.Error(t, err)
-	assert.True(t, errors.Is(err, pagination.ErrInvalidCursor))
+	assert.True(t, errors.Is(err, apperr.ErrInvalid))
+	assert.Contains(t, err.Error(), "invalid cursor")
 }
 
 func TestRun_ExecutorError_Propagated(t *testing.T) {

@@ -2,24 +2,11 @@ package pagination
 
 import (
 	"context"
-	"errors"
 	"fmt"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/google/uuid"
-)
-
-var (
-	// ErrInvalidSortField is returned when the client requests a field not present
-	// in the entity's SortFieldSpec map.
-	ErrInvalidSortField = errors.New("invalid sort field")
-
-	// ErrCursorSortMismatch is returned when the cursor's embedded sort signature
-	// differs from the current request's sort parameters.
-	ErrCursorSortMismatch = errors.New("cursor does not match requested sort")
-
-	// ErrInvalidCursor is returned when the cursor token cannot be decoded or is malformed.
-	ErrInvalidCursor = errors.New("invalid cursor")
 )
 
 // QueryExecutor is the function type that Run calls to fetch paginated rows.
@@ -58,7 +45,7 @@ func Run[Row any](
 	for _, spec := range sortSpecs {
 		sf, ok := whitelist[spec.Field]
 		if !ok {
-			return nil, fmt.Errorf("%w: %q", ErrInvalidSortField, spec.Field)
+			return nil, apperr.Invalid("invalid sort field %q", spec.Field)
 		}
 		var order func(*sql.Selector)
 		if spec.Desc {
@@ -92,10 +79,10 @@ func Run[Row any](
 	if req.Cursor != "" {
 		c, err := DecodeCursor(req.Cursor)
 		if err != nil {
-			return nil, fmt.Errorf("%w: %v", ErrInvalidCursor, err)
+			return nil, apperr.Invalid("invalid cursor: %v", err)
 		}
 		if !sortSignaturesMatch(sortSpecs, c.Sort) {
-			return nil, ErrCursorSortMismatch
+			return nil, apperr.Invalid("cursor does not match requested sort")
 		}
 		cursor = &c
 	}
@@ -106,19 +93,19 @@ func Run[Row any](
 			if resolved[i].name == "id" {
 				parsedID, err := uuid.Parse(cursor.ID)
 				if err != nil {
-					return nil, fmt.Errorf("%w: invalid id %q in cursor", ErrInvalidCursor, cursor.ID)
+					return nil, apperr.Invalid("invalid cursor: invalid id %q", cursor.ID)
 				}
 				resolved[i].value = parsedID
 				continue
 			}
 			rawVal, ok := cursor.Values[resolved[i].name]
 			if !ok {
-				return nil, fmt.Errorf("%w: missing value for field %q", ErrInvalidCursor, resolved[i].name)
+				return nil, apperr.Invalid("invalid cursor: missing value for field %q", resolved[i].name)
 			}
 			sf := whitelist[resolved[i].name]
 			val, err := sf.Decode(rawVal)
 			if err != nil {
-				return nil, fmt.Errorf("%w: field %q: %v", ErrInvalidCursor, resolved[i].name, err)
+				return nil, apperr.Invalid("invalid cursor: field %q: %v", resolved[i].name, err)
 			}
 			resolved[i].value = val
 		}

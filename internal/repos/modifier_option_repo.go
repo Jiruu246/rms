@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	ds "github.com/Jiruu246/rms/internal/data_structures"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
@@ -50,7 +51,10 @@ func (r *modifierOptionRepository) GetByID(ctx context.Context, id uuid.UUID) (*
 		Where(modifieroption.IDEQ(id)).
 		Only(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("modifier option not found: %w", err)
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("modifier option %s", id)
+		}
+		return nil, fmt.Errorf("failed to get modifier option: %w", err)
 	}
 	return mapToModifierOptionResponse(m), nil
 }
@@ -63,7 +67,7 @@ func (r *modifierOptionRepository) GetByIDsStrict(ctx context.Context, ids ds.Se
 		return nil, fmt.Errorf("failed to get modifier options: %w", err)
 	}
 	if len(modifierOptions) != ids.Size() {
-		return nil, fmt.Errorf("one or more modifier options not found")
+		return nil, apperr.NotFound("one or more modifier options")
 	}
 	responses := make(map[uuid.UUID]*dto.ModifierOption, len(modifierOptions))
 	for _, m := range modifierOptions {
@@ -100,7 +104,14 @@ func (r *modifierOptionRepository) Update(ctx context.Context, data *dto.UpdateM
 }
 
 func (r *modifierOptionRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	return r.client.ModifierOption.DeleteOneID(id).Exec(ctx)
+	err := r.client.ModifierOption.DeleteOneID(id).Exec(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return apperr.NotFound("modifier option %s", id)
+		}
+		return fmt.Errorf("failed to delete modifier option: %w", err)
+	}
+	return nil
 }
 
 func (r *modifierOptionRepository) GetAll(ctx context.Context) ([]*dto.ModifierOption, error) {

@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -39,7 +40,7 @@ func (h *ModifierOptionHandler) CreateModifierOption(c *gin.Context) {
 	data := &dto.CreateModifierOptionData{Request: &req}
 	created, err := h.service.Create(c.Request.Context(), data)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to create modifier option")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create modifier option")
 		return
 	}
 	utils.WriteCreated(c.Writer, created)
@@ -65,7 +66,7 @@ func (h *ModifierOptionHandler) GetModifierOption(c *gin.Context) {
 	}
 	option, err := h.service.GetByID(c.Request.Context(), id)
 	if err != nil {
-		utils.WriteNotFound(c.Writer, "Modifier option not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve modifier option")
 		return
 	}
 	utils.WriteSuccess(c.Writer, option)
@@ -83,7 +84,7 @@ func (h *ModifierOptionHandler) GetModifierOption(c *gin.Context) {
 func (h *ModifierOptionHandler) GetAllModifierOptions(c *gin.Context) {
 	options, err := h.service.GetAll(c.Request.Context())
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to get modifier options")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to get modifier options")
 		return
 	}
 	utils.WriteSuccess(c.Writer, options)
@@ -100,6 +101,7 @@ func (h *ModifierOptionHandler) GetAllModifierOptions(c *gin.Context) {
 //	@Param			request	body		dto.UpdateModifierOptionRequest	true	"Fields to update"
 //	@Success		200		{object}	utils.APIResponse[dto.ModifierOption]
 //	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/modifiers/options/{id} [patch]
 func (h *ModifierOptionHandler) UpdateModifierOption(c *gin.Context) {
@@ -116,7 +118,7 @@ func (h *ModifierOptionHandler) UpdateModifierOption(c *gin.Context) {
 	}
 	updated, err := h.service.Update(c.Request.Context(), id, &req)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to update modifier option")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update modifier option")
 		return
 	}
 	utils.WriteSuccess(c.Writer, updated)
@@ -130,6 +132,7 @@ func (h *ModifierOptionHandler) UpdateModifierOption(c *gin.Context) {
 //	@Param			id	path	string	true	"Modifier option ID"	format(uuid)
 //	@Success		204	"No Content"
 //	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		404	{object}	utils.APIResponse[any]
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/modifiers/options/{id} [delete]
 func (h *ModifierOptionHandler) DeleteModifierOption(c *gin.Context) {
@@ -140,7 +143,7 @@ func (h *ModifierOptionHandler) DeleteModifierOption(c *gin.Context) {
 		return
 	}
 	if err := h.service.Delete(c.Request.Context(), id); err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to delete modifier option")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to delete modifier option")
 		return
 	}
 	utils.WriteNoContent(c.Writer)

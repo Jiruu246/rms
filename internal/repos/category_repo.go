@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"entgo.io/ent/dialect/sql"
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/category"
@@ -132,7 +133,7 @@ func (r *categoryRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Ca
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("category not found")
+			return nil, apperr.NotFound("category %s", id)
 		}
 		return nil, fmt.Errorf("failed to get category: %w", err)
 	}
@@ -178,7 +179,7 @@ func (r *categoryRepository) Update(ctx context.Context, id uuid.UUID, req *dto.
 
 	if req.Name != nil {
 		if strings.TrimSpace(*req.Name) == "" {
-			return nil, fmt.Errorf("name cannot be empty")
+			return nil, apperr.Invalid("name cannot be empty")
 		}
 		updateBuilder.SetName(*req.Name)
 		hasUpdates = true
@@ -200,7 +201,7 @@ func (r *categoryRepository) Update(ctx context.Context, id uuid.UUID, req *dto.
 	}
 
 	if !hasUpdates {
-		return nil, fmt.Errorf("no valid fields provided for update")
+		return nil, apperr.Invalid("no valid fields provided for update")
 	}
 
 	updatedCat, err := updateBuilder.Save(ctx)
@@ -223,7 +224,7 @@ func (r *categoryRepository) Delete(ctx context.Context, id uuid.UUID) error {
 		Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("category not found")
+			return apperr.NotFound("category %s", id)
 		}
 		return fmt.Errorf("failed to delete category: %w", err)
 	}

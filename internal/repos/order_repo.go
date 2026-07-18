@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/ent"
 	"github.com/Jiruu246/rms/internal/ent/order"
@@ -133,7 +134,7 @@ func (r *orderRepository) GetByID(ctx context.Context, id uuid.UUID, opts ...Ord
 
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return nil, fmt.Errorf("order not found with id %s", id)
+			return nil, apperr.NotFound("order %s", id)
 		}
 		return nil, fmt.Errorf("failed to get order: %w", err)
 	}
@@ -162,7 +163,7 @@ func (r *orderRepository) Delete(ctx context.Context, id uuid.UUID) error {
 	err := r.client.Order.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			return fmt.Errorf("order not found with id %s", id)
+			return apperr.NotFound("order %s", id)
 		}
 		return fmt.Errorf("failed to delete order: %w", err)
 	}

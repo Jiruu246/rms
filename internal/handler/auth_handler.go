@@ -1,9 +1,9 @@
 package handler
 
 import (
-	"log"
 	"time"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/cookies"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
@@ -39,6 +39,7 @@ func NewAuthHandler(cookieFactory *cookies.Factory, service services.AuthService
 //	@Param			request	body		RegisterUserSchema	true	"Registration details"
 //	@Success		201		{object}	utils.APIResponse[dto.User]
 //	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		409		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/auth/register [post]
 func (h *AuthHandler) Register(c *gin.Context) {
@@ -55,9 +56,7 @@ func (h *AuthHandler) Register(c *gin.Context) {
 		Password: req.Password,
 	})
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to register")
-		// TODO: Add structured logging and log the error with more context
-		log.Printf("Error registering user: %v", err)
+		apperr.WriteHTTPError(c.Writer, err, "Failed to register")
 		return
 	}
 
@@ -86,7 +85,7 @@ func (h *AuthHandler) Login(c *gin.Context) {
 
 	accessToken, refreshToken, err := h.service.Login(c.Request.Context(), req)
 	if err != nil {
-		utils.WriteUnauthorized(c.Writer, err.Error())
+		apperr.WriteHTTPError(c.Writer, err, "Failed to log in")
 		return
 	}
 
@@ -115,7 +114,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 
 	response, err := h.service.RefreshAccessToken(c.Request.Context(), refreshToken)
 	if err != nil {
-		utils.WriteUnauthorized(c.Writer, err.Error())
+		apperr.WriteHTTPError(c.Writer, err, "Failed to refresh access token")
 		return
 	}
 
@@ -129,6 +128,7 @@ func (h *AuthHandler) Refresh(c *gin.Context) {
 //	@Tags			auth
 //	@Success		204	{object}	nil
 //	@Failure		400	{object}	utils.APIResponse[any]
+//	@Failure		401	{object}	utils.APIResponse[any]
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/auth/logout [post]
 func (h *AuthHandler) Logout(c *gin.Context) {
@@ -140,7 +140,7 @@ func (h *AuthHandler) Logout(c *gin.Context) {
 	}
 
 	if err := h.service.Logout(c.Request.Context(), refreshToken); err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to logout")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to logout")
 		return
 	}
 

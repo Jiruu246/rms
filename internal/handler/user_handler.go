@@ -1,6 +1,7 @@
 package handler
 
 import (
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/services"
 	"github.com/Jiruu246/rms/pkg/utils"
@@ -29,7 +30,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 
 	user, err := h.service.GetProfile(c.Request.Context(), claims.UserID)
 	if err != nil {
-		utils.WriteNotFound(c.Writer, "user not found")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to retrieve profile")
 		return
 	}
 
@@ -47,6 +48,8 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 //	@Success		200		{object}	utils.APIResponse[dto.User]
 //	@Failure		400		{object}	utils.APIResponse[any]
 //	@Failure		401		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
+//	@Failure		409		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/users/profile [put]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
@@ -66,7 +69,7 @@ func (h *UserHandler) UpdateProfile(c *gin.Context) {
 
 	user, err := h.service.UpdateProfile(c.Request.Context(), userID, &updates)
 	if err != nil {
-		utils.WriteInternalError(c.Writer, "Failed to update profile")
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update profile")
 		return
 	}
 

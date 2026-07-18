@@ -2,8 +2,8 @@ package services
 
 import (
 	"context"
-	"fmt"
 
+	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/dto"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/Jiruu246/rms/pkg/pagination"
@@ -34,7 +34,7 @@ func (s *categoryService) Create(ctx context.Context, req *dto.CreateCategoryReq
 
 func (s *categoryService) GetByID(ctx context.Context, id uuid.UUID) (*dto.Category, error) {
 	if id == uuid.Nil {
-		return nil, fmt.Errorf("invalid category id")
+		return nil, apperr.Invalid("invalid category id")
 	}
 
 	return s.repo.GetByID(ctx, id)
@@ -46,7 +46,7 @@ func (s *categoryService) List(ctx context.Context, req pagination.PageRequest) 
 
 func (s *categoryService) Update(ctx context.Context, id uuid.UUID, req *dto.UpdateCategoryRequest) (*dto.Category, error) {
 	if id == uuid.Nil {
-		return nil, fmt.Errorf("invalid category id")
+		return nil, apperr.Invalid("invalid category id")
 	}
 
 	return s.repo.Update(ctx, id, req)
@@ -54,7 +54,7 @@ func (s *categoryService) Update(ctx context.Context, id uuid.UUID, req *dto.Upd
 
 func (s *categoryService) Delete(ctx context.Context, id uuid.UUID) error {
 	if id == uuid.Nil {
-		return fmt.Errorf("invalid category id")
+		return apperr.Invalid("invalid category id")
 	}
 
 	return s.repo.Delete(ctx, id)

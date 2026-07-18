@@ -17,7 +17,7 @@ type RestaurantRepository interface {
 	GetByID(ctx context.Context, id uuid.UUID) (*dto.RestaurantResponse, error)
 	Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.RestaurantResponse, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error)
+	GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.RestaurantResponse, error)
 	GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error)
 }
 
@@ -134,6 +134,9 @@ func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateResta
 
 	updated, err := update.Save(ctx)
 	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("restaurant %s", data.ID)
+		}
 		return nil, fmt.Errorf("failed to update restaurant: %w", err)
 	}
 
@@ -172,10 +175,12 @@ func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id 
 	}, nil
 }
 
-func (r *restaurantRepository) GetAll(ctx context.Context) ([]*dto.RestaurantResponse, error) {
-	restaurants, err := r.client.Restaurant.Query().All(ctx)
+func (r *restaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.RestaurantResponse, error) {
+	restaurants, err := r.client.Restaurant.Query().
+		Where(restaurant.UserIDEQ(userID)).
+		All(ctx)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get all restaurants: %w", err)
+		return nil, fmt.Errorf("failed to get restaurants for user: %w", err)
 	}
 
 	var responses []*dto.RestaurantResponse

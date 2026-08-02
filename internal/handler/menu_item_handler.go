@@ -88,7 +88,7 @@ func (h *MenuItemHandler) GetMenuItem(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, item)
 }
 
-// UpdateMenuItem handles PUT /api/menu-items/{id}
+// UpdateMenuItem handles PATCH /api/menu-items/{id}
 //
 //	@Summary		Update a menu item
 //	@Tags			menu-items
@@ -101,7 +101,7 @@ func (h *MenuItemHandler) GetMenuItem(c *gin.Context) {
 //	@Failure		400		{object}	utils.APIResponse[any]
 //	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
-//	@Router			/menu-items/{id} [put]
+//	@Router			/menu-items/{id} [patch]
 func (h *MenuItemHandler) UpdateMenuItem(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := strconv.ParseInt(idStr, 10, 64)

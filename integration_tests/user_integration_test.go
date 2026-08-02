@@ -138,7 +138,7 @@ func (s *UserTestSuite) TestUpdateUser() {
 			body, err := json.Marshal(tt.body)
 			s.Require().NoError(err)
 
-			req := httptest.NewRequest(http.MethodPut, tt.url, bytes.NewBuffer(body))
+			req := httptest.NewRequest(http.MethodPatch, tt.url, bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 

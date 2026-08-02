@@ -107,7 +107,7 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, restaurants)
 }
 
-// UpdateRestaurant handles PUT /api/restaurants/{id}
+// UpdateRestaurant handles PATCH /api/restaurants/{id}
 //
 //	@Summary		Update a restaurant
 //	@Tags			restaurants
@@ -120,7 +120,7 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 //	@Failure		400		{object}	utils.APIResponse[any]
 //	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
-//	@Router			/restaurants/{id} [put]
+//	@Router			/restaurants/{id} [patch]
 func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 	claims := c.MustGet("claims").(utils.JWTClaims)
 

@@ -1106,7 +1106,7 @@ paths:
       summary: Get a menu item by ID
       tags:
       - menu-items
-    put:
+    patch:
       consumes:
       - application/json
       parameters:
@@ -1719,7 +1719,7 @@ paths:
       summary: Get a restaurant by ID
       tags:
       - restaurants
-    put:
+    patch:
       consumes:
       - application/json
       parameters:
@@ -1777,7 +1777,7 @@ paths:
       summary: Get the current user's profile
       tags:
       - users
-    put:
+    patch:
       consumes:
       - application/json
       parameters:

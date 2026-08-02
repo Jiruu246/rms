@@ -131,7 +131,7 @@ func (s *Server) routes() {
 		users.Use(JwtMiddleware)
 		{
 			users.GET("/profile", userHandler.GetProfile)
-			users.PUT("/profile", userHandler.UpdateProfile)
+			users.PATCH("/profile", userHandler.UpdateProfile)
 		}
 
 		restaurants := api.Group("/restaurants")
@@ -142,7 +142,7 @@ func (s *Server) routes() {
 			restaurants.POST("", restaurantHandler.CreateRestaurant)
 			restaurants.GET("", restaurantHandler.GetRestaurants)
 			restaurants.GET("/:id", restaurantHandler.GetRestaurant)
-			restaurants.PUT("/:id", restaurantHandler.UpdateRestaurant)
+			restaurants.PATCH("/:id", restaurantHandler.UpdateRestaurant)
 			restaurants.DELETE("/:id", restaurantHandler.DeleteRestaurant)
 		}
 
@@ -154,7 +154,7 @@ func (s *Server) routes() {
 			menuItems.POST("", menuItemHandler.CreateMenuItem)
 			menuItems.GET("", menuItemHandler.GetMenuItems)
 			menuItems.GET("/:id", menuItemHandler.GetMenuItem)
-			menuItems.PUT("/:id", menuItemHandler.UpdateMenuItem)
+			menuItems.PATCH("/:id", menuItemHandler.UpdateMenuItem)
 			menuItems.DELETE("/:id", menuItemHandler.DeleteMenuItem)
 		}
 

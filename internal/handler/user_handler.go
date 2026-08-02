@@ -37,7 +37,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 	utils.WriteSuccess(c.Writer, user)
 }
 
-// UpdateProfile handles PUT /api/users/profile
+// UpdateProfile handles PATCH /api/users/profile
 //
 //	@Summary		Update the current user's profile
 //	@Tags			users
@@ -51,7 +51,7 @@ func (h *UserHandler) GetProfile(c *gin.Context) {
 //	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		409		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
-//	@Router			/users/profile [put]
+//	@Router			/users/profile [patch]
 func (h *UserHandler) UpdateProfile(c *gin.Context) {
 	claims, ok := c.Get("claims")
 	if !ok {

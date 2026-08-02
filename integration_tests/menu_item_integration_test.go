@@ -207,7 +207,7 @@ func (s *MenuItemTestSuite) TestUpdateMenuItem() {
 				s.Require().NoError(err)
 			}
 
-			req := httptest.NewRequest(http.MethodPut, tt.url, bytes.NewBuffer(body))
+			req := httptest.NewRequest(http.MethodPatch, tt.url, bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
 			w := httptest.NewRecorder()
 

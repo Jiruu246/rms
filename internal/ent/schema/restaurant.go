@@ -32,12 +32,18 @@ func (Restaurant) Fields() []ent.Field {
 		field.String("state").NotEmpty(),
 		field.String("zip_code").NotEmpty(),
 		field.String("country").NotEmpty(),
-		field.String("logo_url").Optional(),
-		field.String("cover_image_url").Optional(),
+		field.UUID("logo_media_asset_id", uuid.UUID{}).
+			Optional().
+			Nillable().
+			Comment("MediaAsset backing this restaurant's logo image"),
+		field.UUID("cover_image_media_asset_id", uuid.UUID{}).
+			Optional().
+			Nillable().
+			Comment("MediaAsset backing this restaurant's cover image"),
 		field.Enum("status").Values("active", "inactive", "closed").Default("active"),
 		field.JSON("operating_hours", map[string]any{}).Optional(),
 		field.String("currency"),
-		field.UUID("user_id", uuid.UUID{}),
+		field.UUID("owner_id", uuid.UUID{}),
 	}
 }
 
@@ -47,10 +53,16 @@ func (Restaurant) Edges() []ent.Edge {
 			Ref("restaurants").
 			Unique().
 			Required().
-			Field("user_id"),
+			Field("owner_id"),
 		edge.To("menu_items", MenuItem.Type),
 		edge.To("categories", Category.Type),
 		edge.To("modifiers", Modifier.Type),
 		edge.To("orders", Order.Type),
+		edge.To("logo_asset", MediaAsset.Type).
+			Field("logo_media_asset_id").
+			Unique(),
+		edge.To("cover_image_asset", MediaAsset.Type).
+			Field("cover_image_media_asset_id").
+			Unique(),
 	}
 }

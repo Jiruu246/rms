@@ -78,7 +78,7 @@ func (s *CategoryTestSuite) TestCreateCategory() {
 		},
 	}
 
-	mockMiddlewares := middlewareForUser(restaurant.UserID)
+	mockMiddlewares := middlewareForUser(restaurant.OwnerID)
 
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
@@ -205,7 +205,7 @@ func (s *CategoryTestSuite) TestGetCategory() {
 		},
 	}
 
-	mockMiddlewares := middlewareForUser(owningRestaurant.UserID)
+	mockMiddlewares := middlewareForUser(owningRestaurant.OwnerID)
 
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
@@ -266,7 +266,7 @@ func (s *CategoryTestSuite) TestUpdateCategory() {
 		},
 	}
 
-	mockMiddlewares := middlewareForUser(owningRestaurant.UserID)
+	mockMiddlewares := middlewareForUser(owningRestaurant.OwnerID)
 
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {
@@ -309,7 +309,7 @@ func (s *CategoryTestSuite) TestDeleteCategory() {
 		},
 	}
 
-	mockMiddlewares := middlewareForUser(owningRestaurant.UserID)
+	mockMiddlewares := middlewareForUser(owningRestaurant.OwnerID)
 
 	for _, tt := range tests {
 		s.Run(tt.testName, func() {

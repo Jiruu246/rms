@@ -116,16 +116,12 @@ definitions:
         type: string
       country:
         type: string
-      cover_image_url:
-        type: string
       currency:
         type: string
       description:
         maxLength: 1000
         type: string
       email:
-        type: string
-      logo_url:
         type: string
       name:
         maxLength: 255
@@ -156,6 +152,17 @@ definitions:
     - phone
     - state
     - zip_code
+    type: object
+  github_com_Jiruu246_rms_internal_dto.CreateUploadResult:
+    properties:
+      constraints:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UploadConstraints'
+      expires_at:
+        type: string
+      upload:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UploadGrant'
+      upload_id:
+        type: string
     type: object
   github_com_Jiruu246_rms_internal_dto.LoginUserRequest:
     properties:
@@ -295,7 +302,7 @@ definitions:
     - OrderTypeDINE_IN
     - OrderTypeTAKEOUT
     - OrderTypeDELIVERY
-  github_com_Jiruu246_rms_internal_dto.RestaurantResponse:
+  github_com_Jiruu246_rms_internal_dto.Restaurant:
     properties:
       address:
         type: string
@@ -401,6 +408,13 @@ definitions:
       restaurant_id:
         type: string
     type: object
+  github_com_Jiruu246_rms_internal_dto.UpdateRestaurantImageRequest:
+    properties:
+      upload_id:
+        type: string
+    required:
+    - upload_id
+    type: object
   github_com_Jiruu246_rms_internal_dto.UpdateRestaurantRequest:
     properties:
       address:
@@ -409,16 +423,12 @@ definitions:
         type: string
       country:
         type: string
-      cover_image_url:
-        type: string
       currency:
         type: string
       description:
         maxLength: 1000
         type: string
       email:
-        type: string
-      logo_url:
         type: string
       name:
         maxLength: 255
@@ -445,6 +455,26 @@ definitions:
       email:
         type: string
       name:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UploadConstraints:
+    properties:
+      allowed_content_types:
+        items:
+          type: string
+        type: array
+      max_size_bytes:
+        type: integer
+    type: object
+  github_com_Jiruu246_rms_internal_dto.UploadGrant:
+    properties:
+      headers:
+        additionalProperties:
+          type: string
+        type: object
+      method:
+        type: string
+      url:
         type: string
     type: object
   github_com_Jiruu246_rms_internal_dto.User:
@@ -541,11 +571,11 @@ definitions:
       timestamp:
         type: string
     type: object
-  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_RestaurantResponse:
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Restaurant:
     properties:
       data:
         items:
-          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.RestaurantResponse'
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Restaurant'
         type: array
       error:
         $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
@@ -569,6 +599,17 @@ definitions:
     properties:
       data:
         $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Category'
+      error:
+        $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
+      success:
+        type: boolean
+      timestamp:
+        type: string
+    type: object
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_CreateUploadResult:
+    properties:
+      data:
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.CreateUploadResult'
       error:
         $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
       success:
@@ -620,10 +661,10 @@ definitions:
       timestamp:
         type: string
     type: object
-  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse:
+  github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant:
     properties:
       data:
-        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.RestaurantResponse'
+        $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.Restaurant'
       error:
         $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError'
       success:
@@ -1626,7 +1667,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Restaurant'
         "500":
           description: Internal Server Error
           schema:
@@ -1652,7 +1693,7 @@ paths:
         "201":
           description: Created
           schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant'
         "400":
           description: Bad Request
           schema:
@@ -1705,7 +1746,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant'
         "400":
           description: Bad Request
           schema:
@@ -1722,6 +1763,11 @@ paths:
     patch:
       consumes:
       - application/json
+      description: |-
+        Updates plain restaurant attributes only. Images are a
+        separate subresource
+        /restaurants/{id}/images/{slot} — so an image update never
+        shares a failure boundary with this request.
       parameters:
       - description: Restaurant ID
         format: uuid
@@ -1741,7 +1787,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse'
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant'
         "400":
           description: Bad Request
           schema:
@@ -1756,7 +1802,159 @@ paths:
             $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
       security:
       - BearerAuth: []
-      summary: Update a restaurant
+      summary: Update a restaurant's attributes
+      tags:
+      - restaurants
+  /restaurants/{id}/images/{slot}:
+    delete:
+      description: |-
+        Detaches whatever media asset is assigned to the named
+        slot. Idempotent: clearing an already-empty slot succeeds.
+        The detached asset, if any, is left in storage untouched
+        by this call.
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image slot
+        enum:
+        - logo
+        - cover
+        in: path
+        name: slot
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Clear a restaurant image slot
+      tags:
+      - restaurants
+    put:
+      consumes:
+      - application/json
+      description: |-
+        Consumes the given upload (see
+        POST /restaurants/{id}/images/{slot}/uploads) and assigns
+        the resulting media asset to the named image slot.
+        Whatever was previously assigned to this slot, if
+        anything, is left in storage untouched by this call.
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image slot
+        enum:
+        - logo
+        - cover
+        in: path
+        name: slot
+        required: true
+        type: string
+      - description: Upload to assign
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateRestaurantImageRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "409":
+          description: Conflict
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Assign a restaurant image slot
+      tags:
+      - restaurants
+  /restaurants/{id}/images/{slot}/uploads:
+    post:
+      description: |-
+        Issues a presigned upload grant for the named image slot.
+        The purpose (and its content-type/size constraints) is
+        derived from the slot itself — the client never declares
+        it. Upload the file directly to the returned URL, then
+        call PUT /restaurants/{id}/images/{slot} with the
+        returned upload_id to attach it.
+      parameters:
+      - description: Restaurant ID
+        format: uuid
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Image slot
+        enum:
+        - logo
+        - cover
+        in: path
+        name: slot
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_CreateUploadResult'
+        "400":
+          description: Bad Request
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "404":
+          description: Not Found
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any'
+      security:
+      - BearerAuth: []
+      summary: Request an upload for a restaurant image slot
       tags:
       - restaurants
   /users/profile:

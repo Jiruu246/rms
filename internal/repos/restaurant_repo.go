@@ -3,6 +3,7 @@ package repos
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/authz"
@@ -13,26 +14,34 @@ import (
 )
 
 type RestaurantRepository interface {
-	Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.RestaurantResponse, error)
-	GetByID(ctx context.Context, id uuid.UUID) (*dto.RestaurantResponse, error)
-	Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.RestaurantResponse, error)
+	Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.Restaurant, error)
+	GetByID(ctx context.Context, id uuid.UUID) (*dto.Restaurant, error)
+	Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.Restaurant, error)
 	Delete(ctx context.Context, id uuid.UUID) error
-	GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.RestaurantResponse, error)
+	GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.Restaurant, error)
 	GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error)
+	SetImage(ctx context.Context, data *dto.SetRestaurantImageData) (*dto.Restaurant, error)
+	ClearImage(ctx context.Context, data *dto.ClearRestaurantImageData) (*dto.Restaurant, error)
 }
 
 type restaurantRepository struct {
 	client *ent.Client
+	// mediaPublicBaseURL builds the read-only display URL for an attached
+	// logo/cover MediaAsset from its storage key (see
+	// dto.RestaurantResponse). Empty means objects aren't served publicly —
+	// LogoURL/CoverImageURL are then left blank rather than guessed at.
+	mediaPublicBaseURL string
 }
 
 // NewEntRestaurantRepository creates a new Ent-based restaurant repository
-func NewEntRestaurantRepository(client *ent.Client) RestaurantRepository {
+func NewEntRestaurantRepository(client *ent.Client, mediaPublicBaseURL string) RestaurantRepository {
 	return &restaurantRepository{
-		client: client,
+		client:             client,
+		mediaPublicBaseURL: mediaPublicBaseURL,
 	}
 }
 
-func (r *restaurantRepository) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.RestaurantResponse, error) {
+func (r *restaurantRepository) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.Restaurant, error) {
 	create, err := r.client.Restaurant.Create().
 		SetName(data.Request.Name).
 		SetDescription(data.Request.Description).
@@ -45,22 +54,24 @@ func (r *restaurantRepository) Create(ctx context.Context, data *dto.CreateResta
 		SetCountry(data.Request.Country).
 		SetStatus(restaurant.StatusActive).
 		SetCurrency(data.Request.Currency).
-		SetLogoURL(data.Request.LogoURL).
-		SetCoverImageURL(data.Request.CoverImageURL).
 		SetOperatingHours(data.Request.OperatingHours).
-		SetUserID(data.UserID).
+		SetOwnerID(data.UserID).
 		Save(ctx)
 
 	if err != nil {
 		return nil, fmt.Errorf("failed to create restaurant: %w", err)
 	}
 
-	return mapToRestaurantResponse(create), nil
+	return r.GetByID(ctx, create.ID)
 }
 
-func (r *restaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.RestaurantResponse, error) {
-	restaurant, err := r.client.Restaurant.Query().
+// TODO This should not always join to the assets (e.g. for internal processing, we don't need the assets)
+// We can use query options to control this behavior see menu_item_repo.go for an example
+func (r *restaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Restaurant, error) {
+	row, err := r.client.Restaurant.Query().
 		Where(restaurant.IDEQ(id)).
+		WithLogoAsset().
+		WithCoverImageAsset().
 		Only(ctx)
 
 	if err != nil {
@@ -70,10 +81,10 @@ func (r *restaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.
 		return nil, fmt.Errorf("failed to get restaurant: %w", err)
 	}
 
-	return mapToRestaurantResponse(restaurant), nil
+	return r.mapToRestaurantResponse(row), nil
 }
 
-func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.RestaurantResponse, error) {
+func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.Restaurant, error) {
 	update := r.client.Restaurant.UpdateOneID(data.ID)
 
 	if data.Request.Name != nil {
@@ -112,14 +123,6 @@ func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateResta
 		update.SetCountry(*data.Request.Country)
 	}
 
-	if data.Request.LogoURL != nil {
-		update.SetLogoURL(*data.Request.LogoURL)
-	}
-
-	if data.Request.CoverImageURL != nil {
-		update.SetCoverImageURL(*data.Request.CoverImageURL)
-	}
-
 	if data.Request.Status != nil {
 		update.SetStatus(restaurant.Status(*data.Request.Status))
 	}
@@ -140,7 +143,56 @@ func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateResta
 		return nil, fmt.Errorf("failed to update restaurant: %w", err)
 	}
 
-	return mapToRestaurantResponse(updated), nil
+	return r.GetByID(ctx, updated.ID)
+}
+
+// SetImage overwrites one image slot's column with the given asset. Whatever
+// asset (if any) was previously in that slot is left completely alone here —
+// callers decide separately whether/when that old asset is reconciled (see
+// RestaurantService.UpdateImage).
+func (r *restaurantRepository) SetImage(ctx context.Context, data *dto.SetRestaurantImageData) (*dto.Restaurant, error) {
+	update := r.client.Restaurant.UpdateOneID(data.RestaurantID)
+
+	switch data.Slot {
+	case dto.RestaurantImageSlotLogo:
+		update.SetLogoMediaAssetID(data.MediaAssetID)
+	case dto.RestaurantImageSlotCover:
+		update.SetCoverImageMediaAssetID(data.MediaAssetID)
+	}
+
+	updated, err := update.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("restaurant %s", data.RestaurantID)
+		}
+		return nil, fmt.Errorf("failed to set restaurant image: %w", err)
+	}
+
+	return r.GetByID(ctx, updated.ID)
+}
+
+// ClearImage detaches whatever asset is assigned to one image slot. Setting
+// an already-nil column to nil again is not an error, so a repeated clear on
+// an already-empty slot succeeds the same way.
+func (r *restaurantRepository) ClearImage(ctx context.Context, data *dto.ClearRestaurantImageData) (*dto.Restaurant, error) {
+	update := r.client.Restaurant.UpdateOneID(data.RestaurantID)
+
+	switch data.Slot {
+	case dto.RestaurantImageSlotLogo:
+		update.ClearLogoMediaAssetID()
+	case dto.RestaurantImageSlotCover:
+		update.ClearCoverImageMediaAssetID()
+	}
+
+	updated, err := update.Save(ctx)
+	if err != nil {
+		if ent.IsNotFound(err) {
+			return nil, apperr.NotFound("restaurant %s", data.RestaurantID)
+		}
+		return nil, fmt.Errorf("failed to clear restaurant image: %w", err)
+	}
+
+	return r.GetByID(ctx, updated.ID)
 }
 
 func (r *restaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
@@ -157,7 +209,7 @@ func (r *restaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
 func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error) {
 	row, err := r.client.Restaurant.Query().
 		Where(restaurant.IDEQ(id)).
-		Select(restaurant.FieldID, restaurant.FieldUserID).
+		Select(restaurant.FieldID, restaurant.FieldOwnerID).
 		Only(ctx)
 
 	if err != nil {
@@ -171,42 +223,58 @@ func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id 
 		Type:         "restaurant",
 		ID:           row.ID,
 		RestaurantID: row.ID,
-		OwnerUserID:  row.UserID,
+		OwnerUserID:  row.OwnerID,
 	}, nil
 }
 
-func (r *restaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.RestaurantResponse, error) {
+func (r *restaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.Restaurant, error) {
 	restaurants, err := r.client.Restaurant.Query().
-		Where(restaurant.UserIDEQ(userID)).
+		Where(restaurant.OwnerIDEQ(userID)).
+		WithLogoAsset().
+		WithCoverImageAsset().
 		All(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to get restaurants for user: %w", err)
 	}
 
-	var responses []*dto.RestaurantResponse
+	var responses []*dto.Restaurant
 	for _, res := range restaurants {
-		responses = append(responses, mapToRestaurantResponse(res))
+		responses = append(responses, r.mapToRestaurantResponse(res))
 	}
 
 	return responses, nil
 }
 
-func mapToRestaurantResponse(restaurant *ent.Restaurant) *dto.RestaurantResponse {
-	return &dto.RestaurantResponse{
-		ID:             restaurant.ID,
-		Name:           restaurant.Name,
-		Description:    restaurant.Description,
-		Phone:          restaurant.Phone,
-		Email:          restaurant.Email,
-		Address:        restaurant.Address,
-		City:           restaurant.City,
-		State:          restaurant.State,
-		ZipCode:        restaurant.ZipCode,
-		Country:        restaurant.Country,
-		LogoURL:        restaurant.LogoURL,
-		CoverImageURL:  restaurant.CoverImageURL,
-		Status:         restaurant.Status.String(),
-		OperatingHours: restaurant.OperatingHours,
-		Currency:       restaurant.Currency,
+// buildAssetURL derives a read-only display URL for a MediaAsset's storage
+// key. Returns "" when no public base URL is configured, or when there is no
+// asset to build one for — the storage key itself must never reach the
+// client (see documentation/MediaUploadFramework.md).
+func (r *restaurantRepository) buildAssetURL(asset *ent.MediaAsset) string {
+	if asset == nil || r.mediaPublicBaseURL == "" {
+		return ""
 	}
+	return strings.TrimSuffix(r.mediaPublicBaseURL, "/") + "/" + asset.StorageKey
+}
+
+func (r *restaurantRepository) mapToRestaurantResponse(restaurant *ent.Restaurant) *dto.Restaurant {
+	resp := &dto.Restaurant{
+		ID:                     restaurant.ID,
+		Name:                   restaurant.Name,
+		Description:            restaurant.Description,
+		Phone:                  restaurant.Phone,
+		Email:                  restaurant.Email,
+		Address:                restaurant.Address,
+		City:                   restaurant.City,
+		State:                  restaurant.State,
+		ZipCode:                restaurant.ZipCode,
+		Country:                restaurant.Country,
+		LogoMediaAssetID:       restaurant.LogoMediaAssetID,
+		LogoURL:                r.buildAssetURL(restaurant.Edges.LogoAsset),
+		CoverImageMediaAssetID: restaurant.CoverImageMediaAssetID,
+		CoverImageURL:          r.buildAssetURL(restaurant.Edges.CoverImageAsset),
+		Status:                 restaurant.Status.String(),
+		OperatingHours:         restaurant.OperatingHours,
+		Currency:               restaurant.Currency,
+	}
+	return resp
 }

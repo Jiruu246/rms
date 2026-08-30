@@ -8,6 +8,7 @@ import (
 	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
 	"github.com/stretchr/testify/assert"
@@ -18,28 +19,28 @@ type MockRestaurantRepository struct {
 	mock.Mock
 }
 
-func (m *MockRestaurantRepository) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.RestaurantResponse, error) {
+func (m *MockRestaurantRepository) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.Restaurant, error) {
 	args := m.Called(ctx, data)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
-func (m *MockRestaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.RestaurantResponse, error) {
+func (m *MockRestaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Restaurant, error) {
 	args := m.Called(ctx, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
-func (m *MockRestaurantRepository) Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.RestaurantResponse, error) {
+func (m *MockRestaurantRepository) Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.Restaurant, error) {
 	args := m.Called(ctx, data)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
 func (m *MockRestaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
@@ -47,17 +48,58 @@ func (m *MockRestaurantRepository) Delete(ctx context.Context, id uuid.UUID) err
 	return args.Error(0)
 }
 
-func (m *MockRestaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.RestaurantResponse, error) {
+func (m *MockRestaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.Restaurant, error) {
 	args := m.Called(ctx, userID)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).([]*dto.Restaurant), args.Error(1)
 }
 
 func (m *MockRestaurantRepository) GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error) {
 	args := m.Called(ctx, id)
 	return args.Get(0).(authz.Resource), args.Error(1)
+}
+
+func (m *MockRestaurantRepository) SetImage(ctx context.Context, data *dto.SetRestaurantImageData) (*dto.Restaurant, error) {
+	args := m.Called(ctx, data)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
+}
+
+func (m *MockRestaurantRepository) ClearImage(ctx context.Context, data *dto.ClearRestaurantImageData) (*dto.Restaurant, error) {
+	args := m.Called(ctx, data)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
+}
+
+type MockMediaService struct {
+	mock.Mock
+}
+
+func (m *MockMediaService) CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose) (*dto.CreateUploadResult, error) {
+	args := m.Called(ctx, actor, purpose)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.CreateUploadResult), args.Error(1)
+}
+
+func (m *MockMediaService) ConsumeUpload(ctx context.Context, actor authz.Actor, uploadID uuid.UUID, expectedPurpose mediaupload.Purpose) (*dto.MediaAsset, error) {
+	args := m.Called(ctx, actor, uploadID, expectedPurpose)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.MediaAsset), args.Error(1)
+}
+
+func (m *MockMediaService) DeleteMedia(ctx context.Context, actor authz.Actor, mediaID uuid.UUID) error {
+	args := m.Called(ctx, actor, mediaID)
+	return args.Error(0)
 }
 
 func TestRestaurantService_Create(t *testing.T) {
@@ -71,7 +113,7 @@ func TestRestaurantService_Create(t *testing.T) {
 	type testCase struct {
 		name          string
 		input         *dto.CreateRestaurantData
-		expected      *dto.RestaurantResponse
+		expected      *dto.Restaurant
 		expectedError string
 	}
 
@@ -96,15 +138,13 @@ func TestRestaurantService_Create(t *testing.T) {
 					State:          "Test State",
 					ZipCode:        "12345",
 					Country:        "Test Country",
-					LogoURL:        "https://example.com/logo.png",
-					CoverImageURL:  "https://example.com/cover.jpg",
 					Status:         restaurant.StatusActive.String(),
 					OperatingHours: operatingHours,
 					Currency:       "USD",
 				},
 				UserID: uuid1,
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				Name:           "Test Restaurant",
 				Description:    "A wonderful test restaurant",
 				Phone:          "+1234567890",
@@ -138,7 +178,7 @@ func TestRestaurantService_Create(t *testing.T) {
 				},
 				UserID: uuid2,
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				Name:     "Test Restaurant",
 				Phone:    "+1234567890",
 				Email:    "test@restaurant.com",
@@ -169,7 +209,7 @@ func TestRestaurantService_Create(t *testing.T) {
 				},
 				UserID: uuid3,
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				Name:     "Test Restaurant",
 				Phone:    "+1234567890",
 				Email:    "test@restaurant.com",
@@ -200,7 +240,7 @@ func TestRestaurantService_Create(t *testing.T) {
 				},
 				UserID: uuid4,
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				Name:     "Test Restaurant",
 				Phone:    "+1234567890",
 				Email:    "test@restaurant.com",
@@ -231,7 +271,7 @@ func TestRestaurantService_Create(t *testing.T) {
 				},
 				UserID: uuid5,
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				Name:     "Test Restaurant",
 				Phone:    "+1234567890",
 				Email:    "test@restaurant.com",
@@ -275,7 +315,8 @@ func TestRestaurantService_Create(t *testing.T) {
 				mockRepo.On("Create", mock.Anything, tc.input).Return(tc.expected, nil)
 			}
 
-			service := NewRestaurantService(mockRepo)
+			mockMediaService := new(MockMediaService)
+			service := NewRestaurantService(mockRepo, mockMediaService)
 			result, err := service.Create(t.Context(), tc.input)
 
 			if tc.expectedError != "" {
@@ -312,7 +353,7 @@ func TestRestaurantService_GetByID(t *testing.T) {
 			mockSetup: func(mockRepo *MockRestaurantRepository) {
 				mockRepo.On("GetAuthorizationResource", mock.Anything, testId).
 					Return(authz.Resource{ID: testId, RestaurantID: testId, OwnerUserID: ownerId}, nil)
-				expectedRestaurant := &dto.RestaurantResponse{
+				expectedRestaurant := &dto.Restaurant{
 					ID:   testId,
 					Name: "Test Restaurant",
 				}
@@ -348,7 +389,8 @@ func TestRestaurantService_GetByID(t *testing.T) {
 			mockRepo := new(MockRestaurantRepository)
 			testCase.mockSetup(mockRepo)
 
-			service := NewRestaurantService(mockRepo)
+			mockMediaService := new(MockMediaService)
+			service := NewRestaurantService(mockRepo, mockMediaService)
 			result, err := service.GetByID(t.Context(), testCase.actor, testCase.id)
 
 			if testCase.expectedError != "" {
@@ -385,7 +427,7 @@ func TestRestaurantService_Update(t *testing.T) {
 		actor         authz.Actor
 		request       *dto.UpdateRestaurantRequest
 		mockSetup     func(*MockRestaurantRepository, *dto.UpdateRestaurantRequest)
-		expected      *dto.RestaurantResponse
+		expected      *dto.Restaurant
 		expectedError string
 	}{
 		{
@@ -402,7 +444,7 @@ func TestRestaurantService_Update(t *testing.T) {
 			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
 				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
 				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{Request: req, ID: restaurantId}).
-					Return(&dto.RestaurantResponse{
+					Return(&dto.Restaurant{
 						ID:          restaurantId,
 						Name:        nameNew,
 						Description: descriptionNew,
@@ -417,7 +459,7 @@ func TestRestaurantService_Update(t *testing.T) {
 						Currency:    currencyNew,
 					}, nil)
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				ID:          restaurantId,
 				Name:        nameNew,
 				Description: descriptionNew,
@@ -443,7 +485,7 @@ func TestRestaurantService_Update(t *testing.T) {
 			mockSetup: func(mockRepo *MockRestaurantRepository, req *dto.UpdateRestaurantRequest) {
 				mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantId).Return(resource, nil)
 				mockRepo.On("Update", mock.Anything, &dto.UpdateRestaurantData{Request: req, ID: restaurantId}).
-					Return(&dto.RestaurantResponse{
+					Return(&dto.Restaurant{
 						ID:          restaurantId,
 						Name:        nameNew,
 						Description: "Old Description",
@@ -458,7 +500,7 @@ func TestRestaurantService_Update(t *testing.T) {
 						Currency:    "USD",
 					}, nil)
 			},
-			expected: &dto.RestaurantResponse{
+			expected: &dto.Restaurant{
 				ID:          restaurantId,
 				Name:        nameNew,
 				Description: "Old Description",
@@ -517,7 +559,8 @@ func TestRestaurantService_Update(t *testing.T) {
 			mockRepo := new(MockRestaurantRepository)
 			testCase.mockSetup(mockRepo, testCase.request)
 
-			service := NewRestaurantService(mockRepo)
+			mockMediaService := new(MockMediaService)
+			service := NewRestaurantService(mockRepo, mockMediaService)
 			result, err := service.Update(t.Context(), testCase.actor, restaurantId, testCase.request)
 
 			if testCase.expectedError != "" {
@@ -584,7 +627,8 @@ func TestRestaurantService_Delete(t *testing.T) {
 			mockRepo := new(MockRestaurantRepository)
 			testCase.mockSetup(mockRepo)
 
-			service := NewRestaurantService(mockRepo)
+			mockMediaService := new(MockMediaService)
+			service := NewRestaurantService(mockRepo, mockMediaService)
 			err := service.Delete(t.Context(), testCase.actor, testCase.id)
 
 			if testCase.expectedError != "" {
@@ -605,13 +649,13 @@ func TestRestaurantService_GetAll(t *testing.T) {
 	testCases := []struct {
 		name          string
 		actor         authz.Actor
-		expected      []*dto.RestaurantResponse
+		expected      []*dto.Restaurant
 		expectedError string
 	}{
 		{
 			name:  "scoped to actor's own restaurants",
 			actor: authz.Actor{UserID: ownerID, Role: "owner"},
-			expected: []*dto.RestaurantResponse{
+			expected: []*dto.Restaurant{
 				{
 					ID:       uuid.New(),
 					Name:     "Restaurant 1",
@@ -634,7 +678,7 @@ func TestRestaurantService_GetAll(t *testing.T) {
 		{
 			name:  "admin is scoped too — no sees-all support yet",
 			actor: authz.Actor{UserID: ownerID, Role: authz.RoleAdmin},
-			expected: []*dto.RestaurantResponse{
+			expected: []*dto.Restaurant{
 				{
 					ID:       uuid.New(),
 					Name:     "Restaurant 1",
@@ -649,7 +693,7 @@ func TestRestaurantService_GetAll(t *testing.T) {
 		{
 			name:          "successful retrieval with empty result",
 			actor:         authz.Actor{UserID: ownerID, Role: "owner"},
-			expected:      []*dto.RestaurantResponse{},
+			expected:      []*dto.Restaurant{},
 			expectedError: "",
 		},
 		{
@@ -670,7 +714,8 @@ func TestRestaurantService_GetAll(t *testing.T) {
 				mockRepo.On("GetAllForUser", mock.Anything, testCase.actor.UserID).Return(testCase.expected, nil)
 			}
 
-			service := NewRestaurantService(mockRepo)
+			mockMediaService := new(MockMediaService)
+			service := NewRestaurantService(mockRepo, mockMediaService)
 			result, err := service.GetAll(t.Context(), testCase.actor)
 
 			if testCase.expectedError != "" {
@@ -686,4 +731,214 @@ func TestRestaurantService_GetAll(t *testing.T) {
 			mockRepo.AssertExpectations(t)
 		})
 	}
+}
+
+// The following cover the Restaurant image-slot subresource described in
+// documentation/MediaUploadFramework.md: Create never touches MediaService,
+// and the general Update never touches an image slot — both are handled by
+// UpdateImage/ClearImage, which live on their own failure boundary
+// (PUT/DELETE /restaurants/{id}/images/{slot}).
+
+func TestRestaurantService_CreateImageUpload_Succeeds(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	owner := authz.Actor{UserID: ownerID}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	expected := &dto.CreateUploadResult{UploadID: uuid.New()}
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+	mockMediaService.On("CreateUpload", mock.Anything, owner, mediaupload.PurposeRestaurantLogo).
+		Return(expected, nil)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.CreateImageUpload(t.Context(), owner, restaurantID, dto.RestaurantImageSlotLogo)
+
+	assert.NoError(t, err)
+	assert.Same(t, expected, result)
+	mockRepo.AssertExpectations(t)
+	mockMediaService.AssertExpectations(t)
+}
+
+func TestRestaurantService_CreateImageUpload_Forbidden(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	stranger := authz.Actor{UserID: uuid.New()}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.CreateImageUpload(t.Context(), stranger, restaurantID, dto.RestaurantImageSlotCover)
+
+	assert.ErrorIs(t, err, apperr.ErrForbidden)
+	assert.Nil(t, result)
+	mockMediaService.AssertNotCalled(t, "CreateUpload")
+	mockRepo.AssertExpectations(t)
+}
+
+func TestRestaurantService_UpdateImage_Succeeds(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	owner := authz.Actor{UserID: ownerID}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	uploadID := uuid.New()
+	newAssetID := uuid.New()
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+	mockMediaService.On("ConsumeUpload", mock.Anything, owner, uploadID, mediaupload.PurposeRestaurantLogo).
+		Return(&dto.MediaAsset{ID: newAssetID}, nil)
+	mockRepo.On("SetImage", mock.Anything, &dto.SetRestaurantImageData{
+		RestaurantID: restaurantID,
+		Slot:         dto.RestaurantImageSlotLogo,
+		MediaAssetID: newAssetID,
+	}).Return(&dto.Restaurant{ID: restaurantID, LogoMediaAssetID: &newAssetID}, nil)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.UpdateImage(t.Context(), owner, restaurantID, dto.RestaurantImageSlotLogo, uploadID)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	mockRepo.AssertExpectations(t)
+	// Whatever was previously in the slot (if anything) is left completely
+	// alone — no read of the current row, no compensating delete.
+	mockRepo.AssertNotCalled(t, "GetByID")
+	mockMediaService.AssertNotCalled(t, "DeleteMedia")
+	mockMediaService.AssertExpectations(t)
+}
+
+func TestRestaurantService_UpdateImage_ConsumeFails(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	owner := authz.Actor{UserID: ownerID}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	uploadID := uuid.New()
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+	mockMediaService.On("ConsumeUpload", mock.Anything, owner, uploadID, mediaupload.PurposeRestaurantCoverImage).
+		Return(nil, apperr.Invalid("uploaded object content type %q does not match expected %q", "application/pdf", "image/jpeg"))
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.UpdateImage(t.Context(), owner, restaurantID, dto.RestaurantImageSlotCover, uploadID)
+
+	assert.Error(t, err)
+	assert.ErrorIs(t, err, apperr.ErrInvalid)
+	assert.Nil(t, result)
+	mockRepo.AssertNotCalled(t, "SetImage")
+	mockRepo.AssertExpectations(t)
+	mockMediaService.AssertExpectations(t)
+}
+
+func TestRestaurantService_UpdateImage_SetImageFailsCompensatesNewAsset(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	owner := authz.Actor{UserID: ownerID}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	uploadID := uuid.New()
+	newAssetID := uuid.New()
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+	mockMediaService.On("ConsumeUpload", mock.Anything, owner, uploadID, mediaupload.PurposeRestaurantLogo).
+		Return(&dto.MediaAsset{ID: newAssetID}, nil)
+	mockRepo.On("SetImage", mock.Anything, mock.Anything).
+		Return(nil, errors.New("database error"))
+	mockMediaService.On("DeleteMedia", mock.Anything, owner, newAssetID).Return(nil)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.UpdateImage(t.Context(), owner, restaurantID, dto.RestaurantImageSlotLogo, uploadID)
+
+	assert.Error(t, err)
+	assert.Nil(t, result)
+	mockRepo.AssertExpectations(t)
+	mockMediaService.AssertExpectations(t)
+}
+
+func TestRestaurantService_UpdateImage_ConsumeConflictIsSurfaced(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	owner := authz.Actor{UserID: ownerID}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	uploadID := uuid.New()
+	conflict := apperr.Conflict("media upload %s has already been consumed", uploadID)
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+	mockMediaService.On("ConsumeUpload", mock.Anything, owner, uploadID, mediaupload.PurposeRestaurantLogo).
+		Return(nil, conflict)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.UpdateImage(t.Context(), owner, restaurantID, dto.RestaurantImageSlotLogo, uploadID)
+
+	assert.ErrorIs(t, err, apperr.ErrConflict)
+	assert.Nil(t, result)
+	mockRepo.AssertNotCalled(t, "SetImage")
+	mockRepo.AssertNotCalled(t, "GetByID")
+	mockRepo.AssertExpectations(t)
+	mockMediaService.AssertExpectations(t)
+}
+
+func TestRestaurantService_ClearImage_Succeeds(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	owner := authz.Actor{UserID: ownerID}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+	mockRepo.On("ClearImage", mock.Anything, &dto.ClearRestaurantImageData{
+		RestaurantID: restaurantID,
+		Slot:         dto.RestaurantImageSlotCover,
+	}).Return(&dto.Restaurant{ID: restaurantID}, nil)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.ClearImage(t.Context(), owner, restaurantID, dto.RestaurantImageSlotCover)
+
+	assert.NoError(t, err)
+	assert.NotNil(t, result)
+	mockRepo.AssertExpectations(t)
+	mockMediaService.AssertNotCalled(t, "DeleteMedia")
+	mockMediaService.AssertExpectations(t)
+}
+
+func TestRestaurantService_ClearImage_Forbidden(t *testing.T) {
+	restaurantID := uuid.New()
+	ownerID := uuid.New()
+	stranger := authz.Actor{UserID: uuid.New()}
+	resource := authz.Resource{ID: restaurantID, RestaurantID: restaurantID, OwnerUserID: ownerID}
+
+	mockRepo := new(MockRestaurantRepository)
+	mockMediaService := new(MockMediaService)
+
+	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
+
+	service := NewRestaurantService(mockRepo, mockMediaService)
+	result, err := service.ClearImage(t.Context(), stranger, restaurantID, dto.RestaurantImageSlotCover)
+
+	assert.ErrorIs(t, err, apperr.ErrForbidden)
+	assert.Nil(t, result)
+	mockRepo.AssertNotCalled(t, "ClearImage")
+	mockRepo.AssertExpectations(t)
 }

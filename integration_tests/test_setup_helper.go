@@ -3,8 +3,10 @@ package integration_tests
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Jiruu246/rms/internal/ent"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/order"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/google/uuid"
@@ -142,6 +144,47 @@ func SetupOrder(client *ent.Client, ctx context.Context) (*ent.Order, error) {
 	return client.Order.Create().
 		SetOrderType(order.OrderTypeDINE_IN).
 		SetRestaurant(restaurant).
+		Save(ctx)
+}
+
+func SetupMediaUpload(client *ent.Client, ctx context.Context) (*ent.MediaUpload, error) {
+	user, err := SetupUser(client, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return SetupMediaUploadForOwner(client, ctx, user.ID)
+}
+
+func SetupMediaUploadForOwner(client *ent.Client, ctx context.Context, ownerID uuid.UUID) (*ent.MediaUpload, error) {
+	return client.MediaUpload.Create().
+		SetOwnerID(ownerID).
+		SetPurpose(mediaupload.PurposeMenuItemImage).
+		SetObjectKey(fmt.Sprintf("uploads/%s", uuid.NewString())).
+		SetExpiresAt(time.Now().Add(time.Hour)).
+		Save(ctx)
+}
+
+// SetupMediaAsset creates a consumed upload and its resulting asset directly
+// (bypassing MediaUploadRepository.Consume), for tests that only need an
+// existing asset fixture rather than exercising the finalize flow itself.
+func SetupMediaAsset(client *ent.Client, ctx context.Context) (*ent.MediaAsset, error) {
+	upload, err := SetupMediaUpload(client, ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	upload, err = upload.Update().SetStatus(mediaupload.StatusConsumed).Save(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	return client.MediaAsset.Create().
+		SetUploadedByUserID(upload.OwnerID).
+		SetUploadID(upload.ID).
+		SetStorageKey(upload.ObjectKey).
+		SetContentType("image/png").
+		SetSizeBytes(1024).
 		Save(ctx)
 }
 

@@ -99,7 +99,7 @@ func (s *IntegrationTestSuite) TearDownSuite() {
 }
 
 func (s *IntegrationTestSuite) CreateServerWithMiddleware(middlewares server.Middlewares) *server.Server {
-	return server.New(s.cfg, s.client, middlewares)
+	return server.New(s.cfg, s.client, newFakeStorageProvider(), middlewares)
 }
 
 func (s *IntegrationTestSuite) CreateServer() *server.Server {
@@ -184,5 +184,15 @@ func (s *IntegrationTestSuite) cleanupTestData() {
 	_, err := s.client.Category.Delete().Exec(ctx)
 	if err != nil {
 		log.Printf("Warning: failed to delete categories: %v", err)
+	}
+
+	// media_assets references media_uploads via upload_id — delete children first.
+	_, err = s.client.MediaAsset.Delete().Exec(ctx)
+	if err != nil {
+		log.Printf("Warning: failed to delete media assets: %v", err)
+	}
+	_, err = s.client.MediaUpload.Delete().Exec(ctx)
+	if err != nil {
+		log.Printf("Warning: failed to delete media uploads: %v", err)
 	}
 }

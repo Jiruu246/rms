@@ -52,7 +52,7 @@ func (s *RestaurantTestSuite) TestCreateRestaurant() {
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.RestaurantResponse]
+				var response utils.APIResponse[dto.Restaurant]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal("Test Restaurant", response.Data.Name)
@@ -132,7 +132,7 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 		SetCountry("Test Country").
 		SetCurrency("USD").
 		SetStatus(restaurant.StatusActive).
-		SetUserID(initialRestaurant1.UserID).
+		SetUserID(initialRestaurant1.OwnerID).
 		Save(s.T().Context())
 	s.Require().NoError(err)
 
@@ -159,7 +159,7 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 			url:      path.Join(restaurantAPIBase, initialRestaurant1.ID.String()),
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[dto.RestaurantResponse]
+				var response utils.APIResponse[dto.Restaurant]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.Equal(initialRestaurant1.ID, response.Data.ID)
@@ -181,7 +181,7 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 			url:      restaurantAPIBase,
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var response utils.APIResponse[[]dto.RestaurantResponse]
+				var response utils.APIResponse[[]dto.Restaurant]
 				err := json.Unmarshal(w.Body.Bytes(), &response)
 				s.Require().NoError(err)
 				s.True(response.Success)
@@ -193,7 +193,7 @@ func (s *RestaurantTestSuite) TestGetRestaurant() {
 	mockMiddlewares := DefaultMiddleware()
 	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
 		return func(c *gin.Context) {
-			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant1.UserID})
+			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant1.OwnerID})
 			c.Next()
 		}
 	}
@@ -252,7 +252,7 @@ func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 			},
 			expected: http.StatusOK,
 			validate: func(w *httptest.ResponseRecorder) {
-				var updatedRestaurant utils.APIResponse[dto.RestaurantResponse]
+				var updatedRestaurant utils.APIResponse[dto.Restaurant]
 				err := json.Unmarshal(w.Body.Bytes(), &updatedRestaurant)
 				s.Require().NoError(err)
 				s.Equal(initialRestaurant1.ID, updatedRestaurant.Data.ID)
@@ -275,7 +275,7 @@ func (s *RestaurantTestSuite) TestUpdateRestaurant() {
 	mockMiddlewares := DefaultMiddleware()
 	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
 		return func(c *gin.Context) {
-			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant1.UserID})
+			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant1.OwnerID})
 			c.Next()
 		}
 	}
@@ -321,7 +321,7 @@ func (s *RestaurantTestSuite) TestDeleteRestaurant() {
 	mockMiddlewares := DefaultMiddleware()
 	mockMiddlewares.JWTMiddleware = func(secretKey []byte) gin.HandlerFunc {
 		return func(c *gin.Context) {
-			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant.UserID})
+			c.Set("claims", utils.JWTClaims{UserID: initialRestaurant.OwnerID})
 			c.Next()
 		}
 	}

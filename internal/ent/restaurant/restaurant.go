@@ -36,18 +36,18 @@ const (
 	FieldZipCode = "zip_code"
 	// FieldCountry holds the string denoting the country field in the database.
 	FieldCountry = "country"
-	// FieldLogoURL holds the string denoting the logo_url field in the database.
-	FieldLogoURL = "logo_url"
-	// FieldCoverImageURL holds the string denoting the cover_image_url field in the database.
-	FieldCoverImageURL = "cover_image_url"
+	// FieldLogoMediaAssetID holds the string denoting the logo_media_asset_id field in the database.
+	FieldLogoMediaAssetID = "logo_media_asset_id"
+	// FieldCoverImageMediaAssetID holds the string denoting the cover_image_media_asset_id field in the database.
+	FieldCoverImageMediaAssetID = "cover_image_media_asset_id"
 	// FieldStatus holds the string denoting the status field in the database.
 	FieldStatus = "status"
 	// FieldOperatingHours holds the string denoting the operating_hours field in the database.
 	FieldOperatingHours = "operating_hours"
 	// FieldCurrency holds the string denoting the currency field in the database.
 	FieldCurrency = "currency"
-	// FieldUserID holds the string denoting the user_id field in the database.
-	FieldUserID = "user_id"
+	// FieldOwnerID holds the string denoting the owner_id field in the database.
+	FieldOwnerID = "owner_id"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// EdgeMenuItems holds the string denoting the menu_items edge name in mutations.
@@ -58,6 +58,10 @@ const (
 	EdgeModifiers = "modifiers"
 	// EdgeOrders holds the string denoting the orders edge name in mutations.
 	EdgeOrders = "orders"
+	// EdgeLogoAsset holds the string denoting the logo_asset edge name in mutations.
+	EdgeLogoAsset = "logo_asset"
+	// EdgeCoverImageAsset holds the string denoting the cover_image_asset edge name in mutations.
+	EdgeCoverImageAsset = "cover_image_asset"
 	// Table holds the table name of the restaurant in the database.
 	Table = "restaurants"
 	// UserTable is the table that holds the user relation/edge.
@@ -66,7 +70,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "user" package.
 	UserInverseTable = "users"
 	// UserColumn is the table column denoting the user relation/edge.
-	UserColumn = "user_id"
+	UserColumn = "owner_id"
 	// MenuItemsTable is the table that holds the menu_items relation/edge.
 	MenuItemsTable = "menu_items"
 	// MenuItemsInverseTable is the table name for the MenuItem entity.
@@ -95,6 +99,20 @@ const (
 	OrdersInverseTable = "orders"
 	// OrdersColumn is the table column denoting the orders relation/edge.
 	OrdersColumn = "restaurant_id"
+	// LogoAssetTable is the table that holds the logo_asset relation/edge.
+	LogoAssetTable = "restaurants"
+	// LogoAssetInverseTable is the table name for the MediaAsset entity.
+	// It exists in this package in order to avoid circular dependency with the "mediaasset" package.
+	LogoAssetInverseTable = "media_assets"
+	// LogoAssetColumn is the table column denoting the logo_asset relation/edge.
+	LogoAssetColumn = "logo_media_asset_id"
+	// CoverImageAssetTable is the table that holds the cover_image_asset relation/edge.
+	CoverImageAssetTable = "restaurants"
+	// CoverImageAssetInverseTable is the table name for the MediaAsset entity.
+	// It exists in this package in order to avoid circular dependency with the "mediaasset" package.
+	CoverImageAssetInverseTable = "media_assets"
+	// CoverImageAssetColumn is the table column denoting the cover_image_asset relation/edge.
+	CoverImageAssetColumn = "cover_image_media_asset_id"
 )
 
 // Columns holds all SQL columns for restaurant fields.
@@ -110,12 +128,12 @@ var Columns = []string{
 	FieldState,
 	FieldZipCode,
 	FieldCountry,
-	FieldLogoURL,
-	FieldCoverImageURL,
+	FieldLogoMediaAssetID,
+	FieldCoverImageMediaAssetID,
 	FieldStatus,
 	FieldOperatingHours,
 	FieldCurrency,
-	FieldUserID,
+	FieldOwnerID,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -238,14 +256,14 @@ func ByCountry(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCountry, opts...).ToFunc()
 }
 
-// ByLogoURL orders the results by the logo_url field.
-func ByLogoURL(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldLogoURL, opts...).ToFunc()
+// ByLogoMediaAssetID orders the results by the logo_media_asset_id field.
+func ByLogoMediaAssetID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldLogoMediaAssetID, opts...).ToFunc()
 }
 
-// ByCoverImageURL orders the results by the cover_image_url field.
-func ByCoverImageURL(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldCoverImageURL, opts...).ToFunc()
+// ByCoverImageMediaAssetID orders the results by the cover_image_media_asset_id field.
+func ByCoverImageMediaAssetID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldCoverImageMediaAssetID, opts...).ToFunc()
 }
 
 // ByStatus orders the results by the status field.
@@ -258,9 +276,9 @@ func ByCurrency(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldCurrency, opts...).ToFunc()
 }
 
-// ByUserID orders the results by the user_id field.
-func ByUserID(opts ...sql.OrderTermOption) OrderOption {
-	return sql.OrderByField(FieldUserID, opts...).ToFunc()
+// ByOwnerID orders the results by the owner_id field.
+func ByOwnerID(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldOwnerID, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.
@@ -325,6 +343,20 @@ func ByOrders(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newOrdersStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByLogoAssetField orders the results by logo_asset field.
+func ByLogoAssetField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newLogoAssetStep(), sql.OrderByField(field, opts...))
+	}
+}
+
+// ByCoverImageAssetField orders the results by cover_image_asset field.
+func ByCoverImageAssetField(field string, opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCoverImageAssetStep(), sql.OrderByField(field, opts...))
+	}
+}
 func newUserStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -358,5 +390,19 @@ func newOrdersStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(OrdersInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, OrdersTable, OrdersColumn),
+	)
+}
+func newLogoAssetStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(LogoAssetInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, LogoAssetTable, LogoAssetColumn),
+	)
+}
+func newCoverImageAssetStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CoverImageAssetInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.M2O, false, CoverImageAssetTable, CoverImageAssetColumn),
 	)
 }

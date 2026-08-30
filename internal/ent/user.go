@@ -46,9 +46,13 @@ type UserEdges struct {
 	AuthProviders []*UserAuthProvider `json:"auth_providers,omitempty"`
 	// RefreshTokens holds the value of the refresh_tokens edge.
 	RefreshTokens []*RefreshToken `json:"refresh_tokens,omitempty"`
+	// MediaUploads holds the value of the media_uploads edge.
+	MediaUploads []*MediaUpload `json:"media_uploads,omitempty"`
+	// UploadedMediaAssets holds the value of the uploaded_media_assets edge.
+	UploadedMediaAssets []*MediaAsset `json:"uploaded_media_assets,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [5]bool
 }
 
 // RestaurantsOrErr returns the Restaurants value or an error if the edge
@@ -76,6 +80,24 @@ func (e UserEdges) RefreshTokensOrErr() ([]*RefreshToken, error) {
 		return e.RefreshTokens, nil
 	}
 	return nil, &NotLoadedError{edge: "refresh_tokens"}
+}
+
+// MediaUploadsOrErr returns the MediaUploads value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) MediaUploadsOrErr() ([]*MediaUpload, error) {
+	if e.loadedTypes[3] {
+		return e.MediaUploads, nil
+	}
+	return nil, &NotLoadedError{edge: "media_uploads"}
+}
+
+// UploadedMediaAssetsOrErr returns the UploadedMediaAssets value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) UploadedMediaAssetsOrErr() ([]*MediaAsset, error) {
+	if e.loadedTypes[4] {
+		return e.UploadedMediaAssets, nil
+	}
+	return nil, &NotLoadedError{edge: "uploaded_media_assets"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -181,6 +203,16 @@ func (_m *User) QueryAuthProviders() *UserAuthProviderQuery {
 // QueryRefreshTokens queries the "refresh_tokens" edge of the User entity.
 func (_m *User) QueryRefreshTokens() *RefreshTokenQuery {
 	return NewUserClient(_m.config).QueryRefreshTokens(_m)
+}
+
+// QueryMediaUploads queries the "media_uploads" edge of the User entity.
+func (_m *User) QueryMediaUploads() *MediaUploadQuery {
+	return NewUserClient(_m.config).QueryMediaUploads(_m)
+}
+
+// QueryUploadedMediaAssets queries the "uploaded_media_assets" edge of the User entity.
+func (_m *User) QueryUploadedMediaAssets() *MediaAssetQuery {
+	return NewUserClient(_m.config).QueryUploadedMediaAssets(_m)
 }
 
 // Update returns a builder for updating this User.

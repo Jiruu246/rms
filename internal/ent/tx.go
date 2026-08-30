@@ -14,6 +14,10 @@ type Tx struct {
 	config
 	// Category is the client for interacting with the Category builders.
 	Category *CategoryClient
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// MediaUpload is the client for interacting with the MediaUpload builders.
+	MediaUpload *MediaUploadClient
 	// MenuItem is the client for interacting with the MenuItem builders.
 	MenuItem *MenuItemClient
 	// Modifier is the client for interacting with the Modifier builders.
@@ -166,6 +170,8 @@ func (tx *Tx) Client() *Client {
 
 func (tx *Tx) init() {
 	tx.Category = NewCategoryClient(tx.config)
+	tx.MediaAsset = NewMediaAssetClient(tx.config)
+	tx.MediaUpload = NewMediaUploadClient(tx.config)
 	tx.MenuItem = NewMenuItemClient(tx.config)
 	tx.Modifier = NewModifierClient(tx.config)
 	tx.ModifierOption = NewModifierOptionClient(tx.config)

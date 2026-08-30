@@ -106,14 +106,14 @@ func Country(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEQ(FieldCountry, v))
 }
 
-// LogoURL applies equality check predicate on the "logo_url" field. It's identical to LogoURLEQ.
-func LogoURL(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEQ(FieldLogoURL, v))
+// LogoMediaAssetID applies equality check predicate on the "logo_media_asset_id" field. It's identical to LogoMediaAssetIDEQ.
+func LogoMediaAssetID(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldLogoMediaAssetID, v))
 }
 
-// CoverImageURL applies equality check predicate on the "cover_image_url" field. It's identical to CoverImageURLEQ.
-func CoverImageURL(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEQ(FieldCoverImageURL, v))
+// CoverImageMediaAssetID applies equality check predicate on the "cover_image_media_asset_id" field. It's identical to CoverImageMediaAssetIDEQ.
+func CoverImageMediaAssetID(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldCoverImageMediaAssetID, v))
 }
 
 // Currency applies equality check predicate on the "currency" field. It's identical to CurrencyEQ.
@@ -121,9 +121,9 @@ func Currency(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEQ(FieldCurrency, v))
 }
 
-// UserID applies equality check predicate on the "user_id" field. It's identical to UserIDEQ.
-func UserID(v uuid.UUID) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEQ(FieldUserID, v))
+// OwnerID applies equality check predicate on the "owner_id" field. It's identical to OwnerIDEQ.
+func OwnerID(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldOwnerID, v))
 }
 
 // UpdateTimeEQ applies the EQ predicate on the "update_time" field.
@@ -761,154 +761,64 @@ func CountryContainsFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldContainsFold(FieldCountry, v))
 }
 
-// LogoURLEQ applies the EQ predicate on the "logo_url" field.
-func LogoURLEQ(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEQ(FieldLogoURL, v))
+// LogoMediaAssetIDEQ applies the EQ predicate on the "logo_media_asset_id" field.
+func LogoMediaAssetIDEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldLogoMediaAssetID, v))
 }
 
-// LogoURLNEQ applies the NEQ predicate on the "logo_url" field.
-func LogoURLNEQ(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNEQ(FieldLogoURL, v))
+// LogoMediaAssetIDNEQ applies the NEQ predicate on the "logo_media_asset_id" field.
+func LogoMediaAssetIDNEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNEQ(FieldLogoMediaAssetID, v))
 }
 
-// LogoURLIn applies the In predicate on the "logo_url" field.
-func LogoURLIn(vs ...string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldIn(FieldLogoURL, vs...))
+// LogoMediaAssetIDIn applies the In predicate on the "logo_media_asset_id" field.
+func LogoMediaAssetIDIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIn(FieldLogoMediaAssetID, vs...))
 }
 
-// LogoURLNotIn applies the NotIn predicate on the "logo_url" field.
-func LogoURLNotIn(vs ...string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNotIn(FieldLogoURL, vs...))
+// LogoMediaAssetIDNotIn applies the NotIn predicate on the "logo_media_asset_id" field.
+func LogoMediaAssetIDNotIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotIn(FieldLogoMediaAssetID, vs...))
 }
 
-// LogoURLGT applies the GT predicate on the "logo_url" field.
-func LogoURLGT(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldGT(FieldLogoURL, v))
+// LogoMediaAssetIDIsNil applies the IsNil predicate on the "logo_media_asset_id" field.
+func LogoMediaAssetIDIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldLogoMediaAssetID))
 }
 
-// LogoURLGTE applies the GTE predicate on the "logo_url" field.
-func LogoURLGTE(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldGTE(FieldLogoURL, v))
+// LogoMediaAssetIDNotNil applies the NotNil predicate on the "logo_media_asset_id" field.
+func LogoMediaAssetIDNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldLogoMediaAssetID))
 }
 
-// LogoURLLT applies the LT predicate on the "logo_url" field.
-func LogoURLLT(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldLT(FieldLogoURL, v))
+// CoverImageMediaAssetIDEQ applies the EQ predicate on the "cover_image_media_asset_id" field.
+func CoverImageMediaAssetIDEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldCoverImageMediaAssetID, v))
 }
 
-// LogoURLLTE applies the LTE predicate on the "logo_url" field.
-func LogoURLLTE(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldLTE(FieldLogoURL, v))
+// CoverImageMediaAssetIDNEQ applies the NEQ predicate on the "cover_image_media_asset_id" field.
+func CoverImageMediaAssetIDNEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNEQ(FieldCoverImageMediaAssetID, v))
 }
 
-// LogoURLContains applies the Contains predicate on the "logo_url" field.
-func LogoURLContains(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldContains(FieldLogoURL, v))
+// CoverImageMediaAssetIDIn applies the In predicate on the "cover_image_media_asset_id" field.
+func CoverImageMediaAssetIDIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIn(FieldCoverImageMediaAssetID, vs...))
 }
 
-// LogoURLHasPrefix applies the HasPrefix predicate on the "logo_url" field.
-func LogoURLHasPrefix(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldHasPrefix(FieldLogoURL, v))
+// CoverImageMediaAssetIDNotIn applies the NotIn predicate on the "cover_image_media_asset_id" field.
+func CoverImageMediaAssetIDNotIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotIn(FieldCoverImageMediaAssetID, vs...))
 }
 
-// LogoURLHasSuffix applies the HasSuffix predicate on the "logo_url" field.
-func LogoURLHasSuffix(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldHasSuffix(FieldLogoURL, v))
+// CoverImageMediaAssetIDIsNil applies the IsNil predicate on the "cover_image_media_asset_id" field.
+func CoverImageMediaAssetIDIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldCoverImageMediaAssetID))
 }
 
-// LogoURLIsNil applies the IsNil predicate on the "logo_url" field.
-func LogoURLIsNil() predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldIsNull(FieldLogoURL))
-}
-
-// LogoURLNotNil applies the NotNil predicate on the "logo_url" field.
-func LogoURLNotNil() predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNotNull(FieldLogoURL))
-}
-
-// LogoURLEqualFold applies the EqualFold predicate on the "logo_url" field.
-func LogoURLEqualFold(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEqualFold(FieldLogoURL, v))
-}
-
-// LogoURLContainsFold applies the ContainsFold predicate on the "logo_url" field.
-func LogoURLContainsFold(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldContainsFold(FieldLogoURL, v))
-}
-
-// CoverImageURLEQ applies the EQ predicate on the "cover_image_url" field.
-func CoverImageURLEQ(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEQ(FieldCoverImageURL, v))
-}
-
-// CoverImageURLNEQ applies the NEQ predicate on the "cover_image_url" field.
-func CoverImageURLNEQ(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNEQ(FieldCoverImageURL, v))
-}
-
-// CoverImageURLIn applies the In predicate on the "cover_image_url" field.
-func CoverImageURLIn(vs ...string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldIn(FieldCoverImageURL, vs...))
-}
-
-// CoverImageURLNotIn applies the NotIn predicate on the "cover_image_url" field.
-func CoverImageURLNotIn(vs ...string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNotIn(FieldCoverImageURL, vs...))
-}
-
-// CoverImageURLGT applies the GT predicate on the "cover_image_url" field.
-func CoverImageURLGT(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldGT(FieldCoverImageURL, v))
-}
-
-// CoverImageURLGTE applies the GTE predicate on the "cover_image_url" field.
-func CoverImageURLGTE(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldGTE(FieldCoverImageURL, v))
-}
-
-// CoverImageURLLT applies the LT predicate on the "cover_image_url" field.
-func CoverImageURLLT(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldLT(FieldCoverImageURL, v))
-}
-
-// CoverImageURLLTE applies the LTE predicate on the "cover_image_url" field.
-func CoverImageURLLTE(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldLTE(FieldCoverImageURL, v))
-}
-
-// CoverImageURLContains applies the Contains predicate on the "cover_image_url" field.
-func CoverImageURLContains(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldContains(FieldCoverImageURL, v))
-}
-
-// CoverImageURLHasPrefix applies the HasPrefix predicate on the "cover_image_url" field.
-func CoverImageURLHasPrefix(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldHasPrefix(FieldCoverImageURL, v))
-}
-
-// CoverImageURLHasSuffix applies the HasSuffix predicate on the "cover_image_url" field.
-func CoverImageURLHasSuffix(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldHasSuffix(FieldCoverImageURL, v))
-}
-
-// CoverImageURLIsNil applies the IsNil predicate on the "cover_image_url" field.
-func CoverImageURLIsNil() predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldIsNull(FieldCoverImageURL))
-}
-
-// CoverImageURLNotNil applies the NotNil predicate on the "cover_image_url" field.
-func CoverImageURLNotNil() predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNotNull(FieldCoverImageURL))
-}
-
-// CoverImageURLEqualFold applies the EqualFold predicate on the "cover_image_url" field.
-func CoverImageURLEqualFold(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEqualFold(FieldCoverImageURL, v))
-}
-
-// CoverImageURLContainsFold applies the ContainsFold predicate on the "cover_image_url" field.
-func CoverImageURLContainsFold(v string) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldContainsFold(FieldCoverImageURL, v))
+// CoverImageMediaAssetIDNotNil applies the NotNil predicate on the "cover_image_media_asset_id" field.
+func CoverImageMediaAssetIDNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldCoverImageMediaAssetID))
 }
 
 // StatusEQ applies the EQ predicate on the "status" field.
@@ -1006,24 +916,24 @@ func CurrencyContainsFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldContainsFold(FieldCurrency, v))
 }
 
-// UserIDEQ applies the EQ predicate on the "user_id" field.
-func UserIDEQ(v uuid.UUID) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldEQ(FieldUserID, v))
+// OwnerIDEQ applies the EQ predicate on the "owner_id" field.
+func OwnerIDEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldEQ(FieldOwnerID, v))
 }
 
-// UserIDNEQ applies the NEQ predicate on the "user_id" field.
-func UserIDNEQ(v uuid.UUID) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNEQ(FieldUserID, v))
+// OwnerIDNEQ applies the NEQ predicate on the "owner_id" field.
+func OwnerIDNEQ(v uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNEQ(FieldOwnerID, v))
 }
 
-// UserIDIn applies the In predicate on the "user_id" field.
-func UserIDIn(vs ...uuid.UUID) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldIn(FieldUserID, vs...))
+// OwnerIDIn applies the In predicate on the "owner_id" field.
+func OwnerIDIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIn(FieldOwnerID, vs...))
 }
 
-// UserIDNotIn applies the NotIn predicate on the "user_id" field.
-func UserIDNotIn(vs ...uuid.UUID) predicate.Restaurant {
-	return predicate.Restaurant(sql.FieldNotIn(FieldUserID, vs...))
+// OwnerIDNotIn applies the NotIn predicate on the "owner_id" field.
+func OwnerIDNotIn(vs ...uuid.UUID) predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotIn(FieldOwnerID, vs...))
 }
 
 // HasUser applies the HasEdge predicate on the "user" edge.
@@ -1133,6 +1043,52 @@ func HasOrders() predicate.Restaurant {
 func HasOrdersWith(preds ...predicate.Order) predicate.Restaurant {
 	return predicate.Restaurant(func(s *sql.Selector) {
 		step := newOrdersStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasLogoAsset applies the HasEdge predicate on the "logo_asset" edge.
+func HasLogoAsset() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, LogoAssetTable, LogoAssetColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasLogoAssetWith applies the HasEdge predicate on the "logo_asset" edge with a given conditions (other predicates).
+func HasLogoAssetWith(preds ...predicate.MediaAsset) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := newLogoAssetStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCoverImageAsset applies the HasEdge predicate on the "cover_image_asset" edge.
+func HasCoverImageAsset() predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, CoverImageAssetTable, CoverImageAssetColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCoverImageAssetWith applies the HasEdge predicate on the "cover_image_asset" edge with a given conditions (other predicates).
+func HasCoverImageAssetWith(preds ...predicate.MediaAsset) predicate.Restaurant {
+	return predicate.Restaurant(func(s *sql.Selector) {
+		step := newCoverImageAssetStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

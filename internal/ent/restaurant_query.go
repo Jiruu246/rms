@@ -13,6 +13,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/order"
@@ -25,15 +26,17 @@ import (
 // RestaurantQuery is the builder for querying Restaurant entities.
 type RestaurantQuery struct {
 	config
-	ctx            *QueryContext
-	order          []restaurant.OrderOption
-	inters         []Interceptor
-	predicates     []predicate.Restaurant
-	withUser       *UserQuery
-	withMenuItems  *MenuItemQuery
-	withCategories *CategoryQuery
-	withModifiers  *ModifierQuery
-	withOrders     *OrderQuery
+	ctx                 *QueryContext
+	order               []restaurant.OrderOption
+	inters              []Interceptor
+	predicates          []predicate.Restaurant
+	withUser            *UserQuery
+	withMenuItems       *MenuItemQuery
+	withCategories      *CategoryQuery
+	withModifiers       *ModifierQuery
+	withOrders          *OrderQuery
+	withLogoAsset       *MediaAssetQuery
+	withCoverImageAsset *MediaAssetQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -173,6 +176,50 @@ func (_q *RestaurantQuery) QueryOrders() *OrderQuery {
 			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
 			sqlgraph.To(order.Table, order.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, restaurant.OrdersTable, restaurant.OrdersColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryLogoAsset chains the current query on the "logo_asset" edge.
+func (_q *RestaurantQuery) QueryLogoAsset() *MediaAssetQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, restaurant.LogoAssetTable, restaurant.LogoAssetColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCoverImageAsset chains the current query on the "cover_image_asset" edge.
+func (_q *RestaurantQuery) QueryCoverImageAsset() *MediaAssetQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, selector),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, restaurant.CoverImageAssetTable, restaurant.CoverImageAssetColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -367,16 +414,18 @@ func (_q *RestaurantQuery) Clone() *RestaurantQuery {
 		return nil
 	}
 	return &RestaurantQuery{
-		config:         _q.config,
-		ctx:            _q.ctx.Clone(),
-		order:          append([]restaurant.OrderOption{}, _q.order...),
-		inters:         append([]Interceptor{}, _q.inters...),
-		predicates:     append([]predicate.Restaurant{}, _q.predicates...),
-		withUser:       _q.withUser.Clone(),
-		withMenuItems:  _q.withMenuItems.Clone(),
-		withCategories: _q.withCategories.Clone(),
-		withModifiers:  _q.withModifiers.Clone(),
-		withOrders:     _q.withOrders.Clone(),
+		config:              _q.config,
+		ctx:                 _q.ctx.Clone(),
+		order:               append([]restaurant.OrderOption{}, _q.order...),
+		inters:              append([]Interceptor{}, _q.inters...),
+		predicates:          append([]predicate.Restaurant{}, _q.predicates...),
+		withUser:            _q.withUser.Clone(),
+		withMenuItems:       _q.withMenuItems.Clone(),
+		withCategories:      _q.withCategories.Clone(),
+		withModifiers:       _q.withModifiers.Clone(),
+		withOrders:          _q.withOrders.Clone(),
+		withLogoAsset:       _q.withLogoAsset.Clone(),
+		withCoverImageAsset: _q.withCoverImageAsset.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -435,6 +484,28 @@ func (_q *RestaurantQuery) WithOrders(opts ...func(*OrderQuery)) *RestaurantQuer
 		opt(query)
 	}
 	_q.withOrders = query
+	return _q
+}
+
+// WithLogoAsset tells the query-builder to eager-load the nodes that are connected to
+// the "logo_asset" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RestaurantQuery) WithLogoAsset(opts ...func(*MediaAssetQuery)) *RestaurantQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withLogoAsset = query
+	return _q
+}
+
+// WithCoverImageAsset tells the query-builder to eager-load the nodes that are connected to
+// the "cover_image_asset" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *RestaurantQuery) WithCoverImageAsset(opts ...func(*MediaAssetQuery)) *RestaurantQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withCoverImageAsset = query
 	return _q
 }
 
@@ -516,12 +587,14 @@ func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 	var (
 		nodes       = []*Restaurant{}
 		_spec       = _q.querySpec()
-		loadedTypes = [5]bool{
+		loadedTypes = [7]bool{
 			_q.withUser != nil,
 			_q.withMenuItems != nil,
 			_q.withCategories != nil,
 			_q.withModifiers != nil,
 			_q.withOrders != nil,
+			_q.withLogoAsset != nil,
+			_q.withCoverImageAsset != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -576,6 +649,18 @@ func (_q *RestaurantQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*R
 			return nil, err
 		}
 	}
+	if query := _q.withLogoAsset; query != nil {
+		if err := _q.loadLogoAsset(ctx, query, nodes, nil,
+			func(n *Restaurant, e *MediaAsset) { n.Edges.LogoAsset = e }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withCoverImageAsset; query != nil {
+		if err := _q.loadCoverImageAsset(ctx, query, nodes, nil,
+			func(n *Restaurant, e *MediaAsset) { n.Edges.CoverImageAsset = e }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -583,7 +668,7 @@ func (_q *RestaurantQuery) loadUser(ctx context.Context, query *UserQuery, nodes
 	ids := make([]uuid.UUID, 0, len(nodes))
 	nodeids := make(map[uuid.UUID][]*Restaurant)
 	for i := range nodes {
-		fk := nodes[i].UserID
+		fk := nodes[i].OwnerID
 		if _, ok := nodeids[fk]; !ok {
 			ids = append(ids, fk)
 		}
@@ -600,7 +685,7 @@ func (_q *RestaurantQuery) loadUser(ctx context.Context, query *UserQuery, nodes
 	for _, n := range neighbors {
 		nodes, ok := nodeids[n.ID]
 		if !ok {
-			return fmt.Errorf(`unexpected foreign-key "user_id" returned %v`, n.ID)
+			return fmt.Errorf(`unexpected foreign-key "owner_id" returned %v`, n.ID)
 		}
 		for i := range nodes {
 			assign(nodes[i], n)
@@ -730,6 +815,70 @@ func (_q *RestaurantQuery) loadOrders(ctx context.Context, query *OrderQuery, no
 	}
 	return nil
 }
+func (_q *RestaurantQuery) loadLogoAsset(ctx context.Context, query *MediaAssetQuery, nodes []*Restaurant, init func(*Restaurant), assign func(*Restaurant, *MediaAsset)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Restaurant)
+	for i := range nodes {
+		if nodes[i].LogoMediaAssetID == nil {
+			continue
+		}
+		fk := *nodes[i].LogoMediaAssetID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(mediaasset.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "logo_media_asset_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
+func (_q *RestaurantQuery) loadCoverImageAsset(ctx context.Context, query *MediaAssetQuery, nodes []*Restaurant, init func(*Restaurant), assign func(*Restaurant, *MediaAsset)) error {
+	ids := make([]uuid.UUID, 0, len(nodes))
+	nodeids := make(map[uuid.UUID][]*Restaurant)
+	for i := range nodes {
+		if nodes[i].CoverImageMediaAssetID == nil {
+			continue
+		}
+		fk := *nodes[i].CoverImageMediaAssetID
+		if _, ok := nodeids[fk]; !ok {
+			ids = append(ids, fk)
+		}
+		nodeids[fk] = append(nodeids[fk], nodes[i])
+	}
+	if len(ids) == 0 {
+		return nil
+	}
+	query.Where(mediaasset.IDIn(ids...))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		nodes, ok := nodeids[n.ID]
+		if !ok {
+			return fmt.Errorf(`unexpected foreign-key "cover_image_media_asset_id" returned %v`, n.ID)
+		}
+		for i := range nodes {
+			assign(nodes[i], n)
+		}
+	}
+	return nil
+}
 
 func (_q *RestaurantQuery) sqlCount(ctx context.Context) (int, error) {
 	_spec := _q.querySpec()
@@ -757,7 +906,13 @@ func (_q *RestaurantQuery) querySpec() *sqlgraph.QuerySpec {
 			}
 		}
 		if _q.withUser != nil {
-			_spec.Node.AddColumnOnce(restaurant.FieldUserID)
+			_spec.Node.AddColumnOnce(restaurant.FieldOwnerID)
+		}
+		if _q.withLogoAsset != nil {
+			_spec.Node.AddColumnOnce(restaurant.FieldLogoMediaAssetID)
+		}
+		if _q.withCoverImageAsset != nil {
+			_spec.Node.AddColumnOnce(restaurant.FieldCoverImageMediaAssetID)
 		}
 	}
 	if ps := _q.predicates; len(ps) > 0 {

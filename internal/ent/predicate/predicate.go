@@ -9,6 +9,12 @@ import (
 // Category is the predicate function for category builders.
 type Category func(*sql.Selector)
 
+// MediaAsset is the predicate function for mediaasset builders.
+type MediaAsset func(*sql.Selector)
+
+// MediaUpload is the predicate function for mediaupload builders.
+type MediaUpload func(*sql.Selector)
+
 // MenuItem is the predicate function for menuitem builders.
 type MenuItem func(*sql.Selector)
 

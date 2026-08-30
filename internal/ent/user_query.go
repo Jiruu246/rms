@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
@@ -23,13 +25,15 @@ import (
 // UserQuery is the builder for querying User entities.
 type UserQuery struct {
 	config
-	ctx               *QueryContext
-	order             []user.OrderOption
-	inters            []Interceptor
-	predicates        []predicate.User
-	withRestaurants   *RestaurantQuery
-	withAuthProviders *UserAuthProviderQuery
-	withRefreshTokens *RefreshTokenQuery
+	ctx                     *QueryContext
+	order                   []user.OrderOption
+	inters                  []Interceptor
+	predicates              []predicate.User
+	withRestaurants         *RestaurantQuery
+	withAuthProviders       *UserAuthProviderQuery
+	withRefreshTokens       *RefreshTokenQuery
+	withMediaUploads        *MediaUploadQuery
+	withUploadedMediaAssets *MediaAssetQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -125,6 +129,50 @@ func (_q *UserQuery) QueryRefreshTokens() *RefreshTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(refreshtoken.Table, refreshtoken.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.RefreshTokensTable, user.RefreshTokensColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryMediaUploads chains the current query on the "media_uploads" edge.
+func (_q *UserQuery) QueryMediaUploads() *MediaUploadQuery {
+	query := (&MediaUploadClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(mediaupload.Table, mediaupload.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MediaUploadsTable, user.MediaUploadsColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryUploadedMediaAssets chains the current query on the "uploaded_media_assets" edge.
+func (_q *UserQuery) QueryUploadedMediaAssets() *MediaAssetQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := _q.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := _q.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UploadedMediaAssetsTable, user.UploadedMediaAssetsColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(_q.driver.Dialect(), step)
 		return fromU, nil
@@ -319,14 +367,16 @@ func (_q *UserQuery) Clone() *UserQuery {
 		return nil
 	}
 	return &UserQuery{
-		config:            _q.config,
-		ctx:               _q.ctx.Clone(),
-		order:             append([]user.OrderOption{}, _q.order...),
-		inters:            append([]Interceptor{}, _q.inters...),
-		predicates:        append([]predicate.User{}, _q.predicates...),
-		withRestaurants:   _q.withRestaurants.Clone(),
-		withAuthProviders: _q.withAuthProviders.Clone(),
-		withRefreshTokens: _q.withRefreshTokens.Clone(),
+		config:                  _q.config,
+		ctx:                     _q.ctx.Clone(),
+		order:                   append([]user.OrderOption{}, _q.order...),
+		inters:                  append([]Interceptor{}, _q.inters...),
+		predicates:              append([]predicate.User{}, _q.predicates...),
+		withRestaurants:         _q.withRestaurants.Clone(),
+		withAuthProviders:       _q.withAuthProviders.Clone(),
+		withRefreshTokens:       _q.withRefreshTokens.Clone(),
+		withMediaUploads:        _q.withMediaUploads.Clone(),
+		withUploadedMediaAssets: _q.withUploadedMediaAssets.Clone(),
 		// clone intermediate query.
 		sql:  _q.sql.Clone(),
 		path: _q.path,
@@ -363,6 +413,28 @@ func (_q *UserQuery) WithRefreshTokens(opts ...func(*RefreshTokenQuery)) *UserQu
 		opt(query)
 	}
 	_q.withRefreshTokens = query
+	return _q
+}
+
+// WithMediaUploads tells the query-builder to eager-load the nodes that are connected to
+// the "media_uploads" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithMediaUploads(opts ...func(*MediaUploadQuery)) *UserQuery {
+	query := (&MediaUploadClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withMediaUploads = query
+	return _q
+}
+
+// WithUploadedMediaAssets tells the query-builder to eager-load the nodes that are connected to
+// the "uploaded_media_assets" edge. The optional arguments are used to configure the query builder of the edge.
+func (_q *UserQuery) WithUploadedMediaAssets(opts ...func(*MediaAssetQuery)) *UserQuery {
+	query := (&MediaAssetClient{config: _q.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	_q.withUploadedMediaAssets = query
 	return _q
 }
 
@@ -444,10 +516,12 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = _q.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [5]bool{
 			_q.withRestaurants != nil,
 			_q.withAuthProviders != nil,
 			_q.withRefreshTokens != nil,
+			_q.withMediaUploads != nil,
+			_q.withUploadedMediaAssets != nil,
 		}
 	)
 	_spec.ScanValues = func(columns []string) ([]any, error) {
@@ -489,6 +563,20 @@ func (_q *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 			return nil, err
 		}
 	}
+	if query := _q.withMediaUploads; query != nil {
+		if err := _q.loadMediaUploads(ctx, query, nodes,
+			func(n *User) { n.Edges.MediaUploads = []*MediaUpload{} },
+			func(n *User, e *MediaUpload) { n.Edges.MediaUploads = append(n.Edges.MediaUploads, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := _q.withUploadedMediaAssets; query != nil {
+		if err := _q.loadUploadedMediaAssets(ctx, query, nodes,
+			func(n *User) { n.Edges.UploadedMediaAssets = []*MediaAsset{} },
+			func(n *User, e *MediaAsset) { n.Edges.UploadedMediaAssets = append(n.Edges.UploadedMediaAssets, e) }); err != nil {
+			return nil, err
+		}
+	}
 	return nodes, nil
 }
 
@@ -503,7 +591,7 @@ func (_q *UserQuery) loadRestaurants(ctx context.Context, query *RestaurantQuery
 		}
 	}
 	if len(query.ctx.Fields) > 0 {
-		query.ctx.AppendFieldOnce(restaurant.FieldUserID)
+		query.ctx.AppendFieldOnce(restaurant.FieldOwnerID)
 	}
 	query.Where(predicate.Restaurant(func(s *sql.Selector) {
 		s.Where(sql.InValues(s.C(user.RestaurantsColumn), fks...))
@@ -513,10 +601,10 @@ func (_q *UserQuery) loadRestaurants(ctx context.Context, query *RestaurantQuery
 		return err
 	}
 	for _, n := range neighbors {
-		fk := n.UserID
+		fk := n.OwnerID
 		node, ok := nodeids[fk]
 		if !ok {
-			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}
@@ -577,6 +665,66 @@ func (_q *UserQuery) loadRefreshTokens(ctx context.Context, query *RefreshTokenQ
 		node, ok := nodeids[fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadMediaUploads(ctx context.Context, query *MediaUploadQuery, nodes []*User, init func(*User), assign func(*User, *MediaUpload)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(mediaupload.FieldOwnerID)
+	}
+	query.Where(predicate.MediaUpload(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.MediaUploadsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.OwnerID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "owner_id" returned %v for node %v`, fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (_q *UserQuery) loadUploadedMediaAssets(ctx context.Context, query *MediaAssetQuery, nodes []*User, init func(*User), assign func(*User, *MediaAsset)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	if len(query.ctx.Fields) > 0 {
+		query.ctx.AppendFieldOnce(mediaasset.FieldUploadedByUserID)
+	}
+	query.Where(predicate.MediaAsset(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.UploadedMediaAssetsColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.UploadedByUserID
+		node, ok := nodeids[fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "uploaded_by_user_id" returned %v for node %v`, fk, n.ID)
 		}
 		assign(node, n)
 	}

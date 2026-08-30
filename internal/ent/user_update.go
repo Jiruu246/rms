@@ -11,6 +11,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/predicate"
 	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
@@ -179,6 +181,36 @@ func (_u *UserUpdate) AddRefreshTokens(v ...*RefreshToken) *UserUpdate {
 	return _u.AddRefreshTokenIDs(ids...)
 }
 
+// AddMediaUploadIDs adds the "media_uploads" edge to the MediaUpload entity by IDs.
+func (_u *UserUpdate) AddMediaUploadIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddMediaUploadIDs(ids...)
+	return _u
+}
+
+// AddMediaUploads adds the "media_uploads" edges to the MediaUpload entity.
+func (_u *UserUpdate) AddMediaUploads(v ...*MediaUpload) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMediaUploadIDs(ids...)
+}
+
+// AddUploadedMediaAssetIDs adds the "uploaded_media_assets" edge to the MediaAsset entity by IDs.
+func (_u *UserUpdate) AddUploadedMediaAssetIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.AddUploadedMediaAssetIDs(ids...)
+	return _u
+}
+
+// AddUploadedMediaAssets adds the "uploaded_media_assets" edges to the MediaAsset entity.
+func (_u *UserUpdate) AddUploadedMediaAssets(v ...*MediaAsset) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUploadedMediaAssetIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdate) Mutation() *UserMutation {
 	return _u.mutation
@@ -245,6 +277,48 @@ func (_u *UserUpdate) RemoveRefreshTokens(v ...*RefreshToken) *UserUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRefreshTokenIDs(ids...)
+}
+
+// ClearMediaUploads clears all "media_uploads" edges to the MediaUpload entity.
+func (_u *UserUpdate) ClearMediaUploads() *UserUpdate {
+	_u.mutation.ClearMediaUploads()
+	return _u
+}
+
+// RemoveMediaUploadIDs removes the "media_uploads" edge to MediaUpload entities by IDs.
+func (_u *UserUpdate) RemoveMediaUploadIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemoveMediaUploadIDs(ids...)
+	return _u
+}
+
+// RemoveMediaUploads removes "media_uploads" edges to MediaUpload entities.
+func (_u *UserUpdate) RemoveMediaUploads(v ...*MediaUpload) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMediaUploadIDs(ids...)
+}
+
+// ClearUploadedMediaAssets clears all "uploaded_media_assets" edges to the MediaAsset entity.
+func (_u *UserUpdate) ClearUploadedMediaAssets() *UserUpdate {
+	_u.mutation.ClearUploadedMediaAssets()
+	return _u
+}
+
+// RemoveUploadedMediaAssetIDs removes the "uploaded_media_assets" edge to MediaAsset entities by IDs.
+func (_u *UserUpdate) RemoveUploadedMediaAssetIDs(ids ...uuid.UUID) *UserUpdate {
+	_u.mutation.RemoveUploadedMediaAssetIDs(ids...)
+	return _u
+}
+
+// RemoveUploadedMediaAssets removes "uploaded_media_assets" edges to MediaAsset entities.
+func (_u *UserUpdate) RemoveUploadedMediaAssets(v ...*MediaAsset) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUploadedMediaAssetIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -467,6 +541,96 @@ func (_u *UserUpdate) sqlSave(ctx context.Context) (_node int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.MediaUploadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMediaUploadsIDs(); len(nodes) > 0 && !_u.mutation.MediaUploadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MediaUploadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UploadedMediaAssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUploadedMediaAssetsIDs(); len(nodes) > 0 && !_u.mutation.UploadedMediaAssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UploadedMediaAssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{user.Label}
@@ -634,6 +798,36 @@ func (_u *UserUpdateOne) AddRefreshTokens(v ...*RefreshToken) *UserUpdateOne {
 	return _u.AddRefreshTokenIDs(ids...)
 }
 
+// AddMediaUploadIDs adds the "media_uploads" edge to the MediaUpload entity by IDs.
+func (_u *UserUpdateOne) AddMediaUploadIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddMediaUploadIDs(ids...)
+	return _u
+}
+
+// AddMediaUploads adds the "media_uploads" edges to the MediaUpload entity.
+func (_u *UserUpdateOne) AddMediaUploads(v ...*MediaUpload) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddMediaUploadIDs(ids...)
+}
+
+// AddUploadedMediaAssetIDs adds the "uploaded_media_assets" edge to the MediaAsset entity by IDs.
+func (_u *UserUpdateOne) AddUploadedMediaAssetIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.AddUploadedMediaAssetIDs(ids...)
+	return _u
+}
+
+// AddUploadedMediaAssets adds the "uploaded_media_assets" edges to the MediaAsset entity.
+func (_u *UserUpdateOne) AddUploadedMediaAssets(v ...*MediaAsset) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.AddUploadedMediaAssetIDs(ids...)
+}
+
 // Mutation returns the UserMutation object of the builder.
 func (_u *UserUpdateOne) Mutation() *UserMutation {
 	return _u.mutation
@@ -700,6 +894,48 @@ func (_u *UserUpdateOne) RemoveRefreshTokens(v ...*RefreshToken) *UserUpdateOne 
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveRefreshTokenIDs(ids...)
+}
+
+// ClearMediaUploads clears all "media_uploads" edges to the MediaUpload entity.
+func (_u *UserUpdateOne) ClearMediaUploads() *UserUpdateOne {
+	_u.mutation.ClearMediaUploads()
+	return _u
+}
+
+// RemoveMediaUploadIDs removes the "media_uploads" edge to MediaUpload entities by IDs.
+func (_u *UserUpdateOne) RemoveMediaUploadIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemoveMediaUploadIDs(ids...)
+	return _u
+}
+
+// RemoveMediaUploads removes "media_uploads" edges to MediaUpload entities.
+func (_u *UserUpdateOne) RemoveMediaUploads(v ...*MediaUpload) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveMediaUploadIDs(ids...)
+}
+
+// ClearUploadedMediaAssets clears all "uploaded_media_assets" edges to the MediaAsset entity.
+func (_u *UserUpdateOne) ClearUploadedMediaAssets() *UserUpdateOne {
+	_u.mutation.ClearUploadedMediaAssets()
+	return _u
+}
+
+// RemoveUploadedMediaAssetIDs removes the "uploaded_media_assets" edge to MediaAsset entities by IDs.
+func (_u *UserUpdateOne) RemoveUploadedMediaAssetIDs(ids ...uuid.UUID) *UserUpdateOne {
+	_u.mutation.RemoveUploadedMediaAssetIDs(ids...)
+	return _u
+}
+
+// RemoveUploadedMediaAssets removes "uploaded_media_assets" edges to MediaAsset entities.
+func (_u *UserUpdateOne) RemoveUploadedMediaAssets(v ...*MediaAsset) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _u.RemoveUploadedMediaAssetIDs(ids...)
 }
 
 // Where appends a list predicates to the UserUpdate builder.
@@ -945,6 +1181,96 @@ func (_u *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.MediaUploadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedMediaUploadsIDs(); len(nodes) > 0 && !_u.mutation.MediaUploadsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.MediaUploadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.UploadedMediaAssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.RemovedUploadedMediaAssetsIDs(); len(nodes) > 0 && !_u.mutation.UploadedMediaAssetsCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.UploadedMediaAssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

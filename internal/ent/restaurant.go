@@ -10,6 +10,7 @@ import (
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
 	"github.com/google/uuid"
@@ -40,18 +41,18 @@ type Restaurant struct {
 	ZipCode string `json:"zip_code,omitempty"`
 	// Country holds the value of the "country" field.
 	Country string `json:"country,omitempty"`
-	// LogoURL holds the value of the "logo_url" field.
-	LogoURL string `json:"logo_url,omitempty"`
-	// CoverImageURL holds the value of the "cover_image_url" field.
-	CoverImageURL string `json:"cover_image_url,omitempty"`
+	// MediaAsset backing this restaurant's logo image
+	LogoMediaAssetID *uuid.UUID `json:"logo_media_asset_id,omitempty"`
+	// MediaAsset backing this restaurant's cover image
+	CoverImageMediaAssetID *uuid.UUID `json:"cover_image_media_asset_id,omitempty"`
 	// Status holds the value of the "status" field.
 	Status restaurant.Status `json:"status,omitempty"`
 	// OperatingHours holds the value of the "operating_hours" field.
 	OperatingHours map[string]interface{} `json:"operating_hours,omitempty"`
 	// Currency holds the value of the "currency" field.
 	Currency string `json:"currency,omitempty"`
-	// UserID holds the value of the "user_id" field.
-	UserID uuid.UUID `json:"user_id,omitempty"`
+	// OwnerID holds the value of the "owner_id" field.
+	OwnerID uuid.UUID `json:"owner_id,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the RestaurantQuery when eager-loading is set.
 	Edges        RestaurantEdges `json:"edges"`
@@ -70,9 +71,13 @@ type RestaurantEdges struct {
 	Modifiers []*Modifier `json:"modifiers,omitempty"`
 	// Orders holds the value of the orders edge.
 	Orders []*Order `json:"orders,omitempty"`
+	// LogoAsset holds the value of the logo_asset edge.
+	LogoAsset *MediaAsset `json:"logo_asset,omitempty"`
+	// CoverImageAsset holds the value of the cover_image_asset edge.
+	CoverImageAsset *MediaAsset `json:"cover_image_asset,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [5]bool
+	loadedTypes [7]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -122,18 +127,42 @@ func (e RestaurantEdges) OrdersOrErr() ([]*Order, error) {
 	return nil, &NotLoadedError{edge: "orders"}
 }
 
+// LogoAssetOrErr returns the LogoAsset value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RestaurantEdges) LogoAssetOrErr() (*MediaAsset, error) {
+	if e.LogoAsset != nil {
+		return e.LogoAsset, nil
+	} else if e.loadedTypes[5] {
+		return nil, &NotFoundError{label: mediaasset.Label}
+	}
+	return nil, &NotLoadedError{edge: "logo_asset"}
+}
+
+// CoverImageAssetOrErr returns the CoverImageAsset value or an error if the edge
+// was not loaded in eager-loading, or loaded but was not found.
+func (e RestaurantEdges) CoverImageAssetOrErr() (*MediaAsset, error) {
+	if e.CoverImageAsset != nil {
+		return e.CoverImageAsset, nil
+	} else if e.loadedTypes[6] {
+		return nil, &NotFoundError{label: mediaasset.Label}
+	}
+	return nil, &NotLoadedError{edge: "cover_image_asset"}
+}
+
 // scanValues returns the types for scanning values from sql.Rows.
 func (*Restaurant) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
+		case restaurant.FieldLogoMediaAssetID, restaurant.FieldCoverImageMediaAssetID:
+			values[i] = &sql.NullScanner{S: new(uuid.UUID)}
 		case restaurant.FieldOperatingHours:
 			values[i] = new([]byte)
-		case restaurant.FieldName, restaurant.FieldDescription, restaurant.FieldPhone, restaurant.FieldEmail, restaurant.FieldAddress, restaurant.FieldCity, restaurant.FieldState, restaurant.FieldZipCode, restaurant.FieldCountry, restaurant.FieldLogoURL, restaurant.FieldCoverImageURL, restaurant.FieldStatus, restaurant.FieldCurrency:
+		case restaurant.FieldName, restaurant.FieldDescription, restaurant.FieldPhone, restaurant.FieldEmail, restaurant.FieldAddress, restaurant.FieldCity, restaurant.FieldState, restaurant.FieldZipCode, restaurant.FieldCountry, restaurant.FieldStatus, restaurant.FieldCurrency:
 			values[i] = new(sql.NullString)
 		case restaurant.FieldUpdateTime:
 			values[i] = new(sql.NullTime)
-		case restaurant.FieldID, restaurant.FieldUserID:
+		case restaurant.FieldID, restaurant.FieldOwnerID:
 			values[i] = new(uuid.UUID)
 		default:
 			values[i] = new(sql.UnknownType)
@@ -216,17 +245,19 @@ func (_m *Restaurant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Country = value.String
 			}
-		case restaurant.FieldLogoURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field logo_url", values[i])
+		case restaurant.FieldLogoMediaAssetID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field logo_media_asset_id", values[i])
 			} else if value.Valid {
-				_m.LogoURL = value.String
+				_m.LogoMediaAssetID = new(uuid.UUID)
+				*_m.LogoMediaAssetID = *value.S.(*uuid.UUID)
 			}
-		case restaurant.FieldCoverImageURL:
-			if value, ok := values[i].(*sql.NullString); !ok {
-				return fmt.Errorf("unexpected type %T for field cover_image_url", values[i])
+		case restaurant.FieldCoverImageMediaAssetID:
+			if value, ok := values[i].(*sql.NullScanner); !ok {
+				return fmt.Errorf("unexpected type %T for field cover_image_media_asset_id", values[i])
 			} else if value.Valid {
-				_m.CoverImageURL = value.String
+				_m.CoverImageMediaAssetID = new(uuid.UUID)
+				*_m.CoverImageMediaAssetID = *value.S.(*uuid.UUID)
 			}
 		case restaurant.FieldStatus:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -248,11 +279,11 @@ func (_m *Restaurant) assignValues(columns []string, values []any) error {
 			} else if value.Valid {
 				_m.Currency = value.String
 			}
-		case restaurant.FieldUserID:
+		case restaurant.FieldOwnerID:
 			if value, ok := values[i].(*uuid.UUID); !ok {
-				return fmt.Errorf("unexpected type %T for field user_id", values[i])
+				return fmt.Errorf("unexpected type %T for field owner_id", values[i])
 			} else if value != nil {
-				_m.UserID = *value
+				_m.OwnerID = *value
 			}
 		default:
 			_m.selectValues.Set(columns[i], values[i])
@@ -290,6 +321,16 @@ func (_m *Restaurant) QueryModifiers() *ModifierQuery {
 // QueryOrders queries the "orders" edge of the Restaurant entity.
 func (_m *Restaurant) QueryOrders() *OrderQuery {
 	return NewRestaurantClient(_m.config).QueryOrders(_m)
+}
+
+// QueryLogoAsset queries the "logo_asset" edge of the Restaurant entity.
+func (_m *Restaurant) QueryLogoAsset() *MediaAssetQuery {
+	return NewRestaurantClient(_m.config).QueryLogoAsset(_m)
+}
+
+// QueryCoverImageAsset queries the "cover_image_asset" edge of the Restaurant entity.
+func (_m *Restaurant) QueryCoverImageAsset() *MediaAssetQuery {
+	return NewRestaurantClient(_m.config).QueryCoverImageAsset(_m)
 }
 
 // Update returns a builder for updating this Restaurant.
@@ -345,11 +386,15 @@ func (_m *Restaurant) String() string {
 	builder.WriteString("country=")
 	builder.WriteString(_m.Country)
 	builder.WriteString(", ")
-	builder.WriteString("logo_url=")
-	builder.WriteString(_m.LogoURL)
+	if v := _m.LogoMediaAssetID; v != nil {
+		builder.WriteString("logo_media_asset_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
-	builder.WriteString("cover_image_url=")
-	builder.WriteString(_m.CoverImageURL)
+	if v := _m.CoverImageMediaAssetID; v != nil {
+		builder.WriteString("cover_image_media_asset_id=")
+		builder.WriteString(fmt.Sprintf("%v", *v))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("status=")
 	builder.WriteString(fmt.Sprintf("%v", _m.Status))
@@ -360,8 +405,8 @@ func (_m *Restaurant) String() string {
 	builder.WriteString("currency=")
 	builder.WriteString(_m.Currency)
 	builder.WriteString(", ")
-	builder.WriteString("user_id=")
-	builder.WriteString(fmt.Sprintf("%v", _m.UserID))
+	builder.WriteString("owner_id=")
+	builder.WriteString(fmt.Sprintf("%v", _m.OwnerID))
 	builder.WriteByte(')')
 	return builder.String()
 }

@@ -35,6 +35,10 @@ const (
 	EdgeAuthProviders = "auth_providers"
 	// EdgeRefreshTokens holds the string denoting the refresh_tokens edge name in mutations.
 	EdgeRefreshTokens = "refresh_tokens"
+	// EdgeMediaUploads holds the string denoting the media_uploads edge name in mutations.
+	EdgeMediaUploads = "media_uploads"
+	// EdgeUploadedMediaAssets holds the string denoting the uploaded_media_assets edge name in mutations.
+	EdgeUploadedMediaAssets = "uploaded_media_assets"
 	// Table holds the table name of the user in the database.
 	Table = "users"
 	// RestaurantsTable is the table that holds the restaurants relation/edge.
@@ -43,7 +47,7 @@ const (
 	// It exists in this package in order to avoid circular dependency with the "restaurant" package.
 	RestaurantsInverseTable = "restaurants"
 	// RestaurantsColumn is the table column denoting the restaurants relation/edge.
-	RestaurantsColumn = "user_id"
+	RestaurantsColumn = "owner_id"
 	// AuthProvidersTable is the table that holds the auth_providers relation/edge.
 	AuthProvidersTable = "user_auth_providers"
 	// AuthProvidersInverseTable is the table name for the UserAuthProvider entity.
@@ -58,6 +62,20 @@ const (
 	RefreshTokensInverseTable = "refresh_tokens"
 	// RefreshTokensColumn is the table column denoting the refresh_tokens relation/edge.
 	RefreshTokensColumn = "user_id"
+	// MediaUploadsTable is the table that holds the media_uploads relation/edge.
+	MediaUploadsTable = "media_uploads"
+	// MediaUploadsInverseTable is the table name for the MediaUpload entity.
+	// It exists in this package in order to avoid circular dependency with the "mediaupload" package.
+	MediaUploadsInverseTable = "media_uploads"
+	// MediaUploadsColumn is the table column denoting the media_uploads relation/edge.
+	MediaUploadsColumn = "owner_id"
+	// UploadedMediaAssetsTable is the table that holds the uploaded_media_assets relation/edge.
+	UploadedMediaAssetsTable = "media_assets"
+	// UploadedMediaAssetsInverseTable is the table name for the MediaAsset entity.
+	// It exists in this package in order to avoid circular dependency with the "mediaasset" package.
+	UploadedMediaAssetsInverseTable = "media_assets"
+	// UploadedMediaAssetsColumn is the table column denoting the uploaded_media_assets relation/edge.
+	UploadedMediaAssetsColumn = "uploaded_by_user_id"
 )
 
 // Columns holds all SQL columns for user fields.
@@ -183,6 +201,34 @@ func ByRefreshTokens(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 		sqlgraph.OrderByNeighborTerms(s, newRefreshTokensStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
+
+// ByMediaUploadsCount orders the results by media_uploads count.
+func ByMediaUploadsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newMediaUploadsStep(), opts...)
+	}
+}
+
+// ByMediaUploads orders the results by media_uploads terms.
+func ByMediaUploads(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newMediaUploadsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByUploadedMediaAssetsCount orders the results by uploaded_media_assets count.
+func ByUploadedMediaAssetsCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newUploadedMediaAssetsStep(), opts...)
+	}
+}
+
+// ByUploadedMediaAssets orders the results by uploaded_media_assets terms.
+func ByUploadedMediaAssets(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newUploadedMediaAssetsStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
 func newRestaurantsStep() *sqlgraph.Step {
 	return sqlgraph.NewStep(
 		sqlgraph.From(Table, FieldID),
@@ -202,5 +248,19 @@ func newRefreshTokensStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(RefreshTokensInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, RefreshTokensTable, RefreshTokensColumn),
+	)
+}
+func newMediaUploadsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(MediaUploadsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, MediaUploadsTable, MediaUploadsColumn),
+	)
+}
+func newUploadedMediaAssetsStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(UploadedMediaAssetsInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, UploadedMediaAssetsTable, UploadedMediaAssetsColumn),
 	)
 }

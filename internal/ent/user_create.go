@@ -10,6 +10,8 @@ import (
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/refreshtoken"
 	"github.com/Jiruu246/rms/internal/ent/restaurant"
 	"github.com/Jiruu246/rms/internal/ent/user"
@@ -171,6 +173,36 @@ func (_c *UserCreate) AddRefreshTokens(v ...*RefreshToken) *UserCreate {
 		ids[i] = v[i].ID
 	}
 	return _c.AddRefreshTokenIDs(ids...)
+}
+
+// AddMediaUploadIDs adds the "media_uploads" edge to the MediaUpload entity by IDs.
+func (_c *UserCreate) AddMediaUploadIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddMediaUploadIDs(ids...)
+	return _c
+}
+
+// AddMediaUploads adds the "media_uploads" edges to the MediaUpload entity.
+func (_c *UserCreate) AddMediaUploads(v ...*MediaUpload) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddMediaUploadIDs(ids...)
+}
+
+// AddUploadedMediaAssetIDs adds the "uploaded_media_assets" edge to the MediaAsset entity by IDs.
+func (_c *UserCreate) AddUploadedMediaAssetIDs(ids ...uuid.UUID) *UserCreate {
+	_c.mutation.AddUploadedMediaAssetIDs(ids...)
+	return _c
+}
+
+// AddUploadedMediaAssets adds the "uploaded_media_assets" edges to the MediaAsset entity.
+func (_c *UserCreate) AddUploadedMediaAssets(v ...*MediaAsset) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return _c.AddUploadedMediaAssetIDs(ids...)
 }
 
 // Mutation returns the UserMutation object of the builder.
@@ -356,6 +388,38 @@ func (_c *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(refreshtoken.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.MediaUploadsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.MediaUploadsTable,
+			Columns: []string{user.MediaUploadsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaupload.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := _c.mutation.UploadedMediaAssetsIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.UploadedMediaAssetsTable,
+			Columns: []string{user.UploadedMediaAssetsColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

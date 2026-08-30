@@ -12,6 +12,8 @@ import (
 	"entgo.io/ent"
 	"entgo.io/ent/dialect/sql"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
@@ -36,6 +38,8 @@ const (
 
 	// Node types.
 	TypeCategory                = "Category"
+	TypeMediaAsset              = "MediaAsset"
+	TypeMediaUpload             = "MediaUpload"
 	TypeMenuItem                = "MenuItem"
 	TypeModifier                = "Modifier"
 	TypeModifierOption          = "ModifierOption"
@@ -877,6 +881,1634 @@ func (m *CategoryMutation) ResetEdge(name string) error {
 		return nil
 	}
 	return fmt.Errorf("unknown Category edge %s", name)
+}
+
+// MediaAssetMutation represents an operation that mutates the MediaAsset nodes in the graph.
+type MediaAssetMutation struct {
+	config
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	update_time        *time.Time
+	create_time        *time.Time
+	storage_key        *string
+	content_type       *string
+	size_bytes         *int64
+	addsize_bytes      *int64
+	status             *mediaasset.Status
+	clearedFields      map[string]struct{}
+	uploaded_by        *uuid.UUID
+	cleareduploaded_by bool
+	upload             *uuid.UUID
+	clearedupload      bool
+	done               bool
+	oldValue           func(context.Context) (*MediaAsset, error)
+	predicates         []predicate.MediaAsset
+}
+
+var _ ent.Mutation = (*MediaAssetMutation)(nil)
+
+// mediaassetOption allows management of the mutation configuration using functional options.
+type mediaassetOption func(*MediaAssetMutation)
+
+// newMediaAssetMutation creates new mutation for the MediaAsset entity.
+func newMediaAssetMutation(c config, op Op, opts ...mediaassetOption) *MediaAssetMutation {
+	m := &MediaAssetMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMediaAsset,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMediaAssetID sets the ID field of the mutation.
+func withMediaAssetID(id uuid.UUID) mediaassetOption {
+	return func(m *MediaAssetMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MediaAsset
+		)
+		m.oldValue = func(ctx context.Context) (*MediaAsset, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MediaAsset.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMediaAsset sets the old MediaAsset of the mutation.
+func withMediaAsset(node *MediaAsset) mediaassetOption {
+	return func(m *MediaAssetMutation) {
+		m.oldValue = func(context.Context) (*MediaAsset, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MediaAssetMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MediaAssetMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MediaAsset entities.
+func (m *MediaAssetMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MediaAssetMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MediaAssetMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MediaAsset.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *MediaAssetMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *MediaAssetMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *MediaAssetMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *MediaAssetMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *MediaAssetMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *MediaAssetMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetUploadedByUserID sets the "uploaded_by_user_id" field.
+func (m *MediaAssetMutation) SetUploadedByUserID(u uuid.UUID) {
+	m.uploaded_by = &u
+}
+
+// UploadedByUserID returns the value of the "uploaded_by_user_id" field in the mutation.
+func (m *MediaAssetMutation) UploadedByUserID() (r uuid.UUID, exists bool) {
+	v := m.uploaded_by
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploadedByUserID returns the old "uploaded_by_user_id" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUploadedByUserID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploadedByUserID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploadedByUserID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploadedByUserID: %w", err)
+	}
+	return oldValue.UploadedByUserID, nil
+}
+
+// ResetUploadedByUserID resets all changes to the "uploaded_by_user_id" field.
+func (m *MediaAssetMutation) ResetUploadedByUserID() {
+	m.uploaded_by = nil
+}
+
+// SetUploadID sets the "upload_id" field.
+func (m *MediaAssetMutation) SetUploadID(u uuid.UUID) {
+	m.upload = &u
+}
+
+// UploadID returns the value of the "upload_id" field in the mutation.
+func (m *MediaAssetMutation) UploadID() (r uuid.UUID, exists bool) {
+	v := m.upload
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUploadID returns the old "upload_id" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldUploadID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUploadID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUploadID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUploadID: %w", err)
+	}
+	return oldValue.UploadID, nil
+}
+
+// ResetUploadID resets all changes to the "upload_id" field.
+func (m *MediaAssetMutation) ResetUploadID() {
+	m.upload = nil
+}
+
+// SetStorageKey sets the "storage_key" field.
+func (m *MediaAssetMutation) SetStorageKey(s string) {
+	m.storage_key = &s
+}
+
+// StorageKey returns the value of the "storage_key" field in the mutation.
+func (m *MediaAssetMutation) StorageKey() (r string, exists bool) {
+	v := m.storage_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStorageKey returns the old "storage_key" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldStorageKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStorageKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStorageKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStorageKey: %w", err)
+	}
+	return oldValue.StorageKey, nil
+}
+
+// ResetStorageKey resets all changes to the "storage_key" field.
+func (m *MediaAssetMutation) ResetStorageKey() {
+	m.storage_key = nil
+}
+
+// SetContentType sets the "content_type" field.
+func (m *MediaAssetMutation) SetContentType(s string) {
+	m.content_type = &s
+}
+
+// ContentType returns the value of the "content_type" field in the mutation.
+func (m *MediaAssetMutation) ContentType() (r string, exists bool) {
+	v := m.content_type
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldContentType returns the old "content_type" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldContentType(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldContentType is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldContentType requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldContentType: %w", err)
+	}
+	return oldValue.ContentType, nil
+}
+
+// ResetContentType resets all changes to the "content_type" field.
+func (m *MediaAssetMutation) ResetContentType() {
+	m.content_type = nil
+}
+
+// SetSizeBytes sets the "size_bytes" field.
+func (m *MediaAssetMutation) SetSizeBytes(i int64) {
+	m.size_bytes = &i
+	m.addsize_bytes = nil
+}
+
+// SizeBytes returns the value of the "size_bytes" field in the mutation.
+func (m *MediaAssetMutation) SizeBytes() (r int64, exists bool) {
+	v := m.size_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldSizeBytes returns the old "size_bytes" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldSizeBytes(ctx context.Context) (v int64, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldSizeBytes is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldSizeBytes requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldSizeBytes: %w", err)
+	}
+	return oldValue.SizeBytes, nil
+}
+
+// AddSizeBytes adds i to the "size_bytes" field.
+func (m *MediaAssetMutation) AddSizeBytes(i int64) {
+	if m.addsize_bytes != nil {
+		*m.addsize_bytes += i
+	} else {
+		m.addsize_bytes = &i
+	}
+}
+
+// AddedSizeBytes returns the value that was added to the "size_bytes" field in this mutation.
+func (m *MediaAssetMutation) AddedSizeBytes() (r int64, exists bool) {
+	v := m.addsize_bytes
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetSizeBytes resets all changes to the "size_bytes" field.
+func (m *MediaAssetMutation) ResetSizeBytes() {
+	m.size_bytes = nil
+	m.addsize_bytes = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *MediaAssetMutation) SetStatus(value mediaasset.Status) {
+	m.status = &value
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *MediaAssetMutation) Status() (r mediaasset.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the MediaAsset entity.
+// If the MediaAsset object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaAssetMutation) OldStatus(ctx context.Context) (v mediaasset.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *MediaAssetMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetUploadedByID sets the "uploaded_by" edge to the User entity by id.
+func (m *MediaAssetMutation) SetUploadedByID(id uuid.UUID) {
+	m.uploaded_by = &id
+}
+
+// ClearUploadedBy clears the "uploaded_by" edge to the User entity.
+func (m *MediaAssetMutation) ClearUploadedBy() {
+	m.cleareduploaded_by = true
+	m.clearedFields[mediaasset.FieldUploadedByUserID] = struct{}{}
+}
+
+// UploadedByCleared reports if the "uploaded_by" edge to the User entity was cleared.
+func (m *MediaAssetMutation) UploadedByCleared() bool {
+	return m.cleareduploaded_by
+}
+
+// UploadedByID returns the "uploaded_by" edge ID in the mutation.
+func (m *MediaAssetMutation) UploadedByID() (id uuid.UUID, exists bool) {
+	if m.uploaded_by != nil {
+		return *m.uploaded_by, true
+	}
+	return
+}
+
+// UploadedByIDs returns the "uploaded_by" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UploadedByID instead. It exists only for internal usage by the builders.
+func (m *MediaAssetMutation) UploadedByIDs() (ids []uuid.UUID) {
+	if id := m.uploaded_by; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUploadedBy resets all changes to the "uploaded_by" edge.
+func (m *MediaAssetMutation) ResetUploadedBy() {
+	m.uploaded_by = nil
+	m.cleareduploaded_by = false
+}
+
+// ClearUpload clears the "upload" edge to the MediaUpload entity.
+func (m *MediaAssetMutation) ClearUpload() {
+	m.clearedupload = true
+	m.clearedFields[mediaasset.FieldUploadID] = struct{}{}
+}
+
+// UploadCleared reports if the "upload" edge to the MediaUpload entity was cleared.
+func (m *MediaAssetMutation) UploadCleared() bool {
+	return m.clearedupload
+}
+
+// UploadIDs returns the "upload" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UploadID instead. It exists only for internal usage by the builders.
+func (m *MediaAssetMutation) UploadIDs() (ids []uuid.UUID) {
+	if id := m.upload; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUpload resets all changes to the "upload" edge.
+func (m *MediaAssetMutation) ResetUpload() {
+	m.upload = nil
+	m.clearedupload = false
+}
+
+// Where appends a list predicates to the MediaAssetMutation builder.
+func (m *MediaAssetMutation) Where(ps ...predicate.MediaAsset) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MediaAssetMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MediaAssetMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MediaAsset, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MediaAssetMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MediaAssetMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MediaAsset).
+func (m *MediaAssetMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MediaAssetMutation) Fields() []string {
+	fields := make([]string, 0, 8)
+	if m.update_time != nil {
+		fields = append(fields, mediaasset.FieldUpdateTime)
+	}
+	if m.create_time != nil {
+		fields = append(fields, mediaasset.FieldCreateTime)
+	}
+	if m.uploaded_by != nil {
+		fields = append(fields, mediaasset.FieldUploadedByUserID)
+	}
+	if m.upload != nil {
+		fields = append(fields, mediaasset.FieldUploadID)
+	}
+	if m.storage_key != nil {
+		fields = append(fields, mediaasset.FieldStorageKey)
+	}
+	if m.content_type != nil {
+		fields = append(fields, mediaasset.FieldContentType)
+	}
+	if m.size_bytes != nil {
+		fields = append(fields, mediaasset.FieldSizeBytes)
+	}
+	if m.status != nil {
+		fields = append(fields, mediaasset.FieldStatus)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MediaAssetMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mediaasset.FieldUpdateTime:
+		return m.UpdateTime()
+	case mediaasset.FieldCreateTime:
+		return m.CreateTime()
+	case mediaasset.FieldUploadedByUserID:
+		return m.UploadedByUserID()
+	case mediaasset.FieldUploadID:
+		return m.UploadID()
+	case mediaasset.FieldStorageKey:
+		return m.StorageKey()
+	case mediaasset.FieldContentType:
+		return m.ContentType()
+	case mediaasset.FieldSizeBytes:
+		return m.SizeBytes()
+	case mediaasset.FieldStatus:
+		return m.Status()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MediaAssetMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mediaasset.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case mediaasset.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case mediaasset.FieldUploadedByUserID:
+		return m.OldUploadedByUserID(ctx)
+	case mediaasset.FieldUploadID:
+		return m.OldUploadID(ctx)
+	case mediaasset.FieldStorageKey:
+		return m.OldStorageKey(ctx)
+	case mediaasset.FieldContentType:
+		return m.OldContentType(ctx)
+	case mediaasset.FieldSizeBytes:
+		return m.OldSizeBytes(ctx)
+	case mediaasset.FieldStatus:
+		return m.OldStatus(ctx)
+	}
+	return nil, fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaAssetMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mediaasset.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case mediaasset.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case mediaasset.FieldUploadedByUserID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploadedByUserID(v)
+		return nil
+	case mediaasset.FieldUploadID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUploadID(v)
+		return nil
+	case mediaasset.FieldStorageKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStorageKey(v)
+		return nil
+	case mediaasset.FieldContentType:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetContentType(v)
+		return nil
+	case mediaasset.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetSizeBytes(v)
+		return nil
+	case mediaasset.FieldStatus:
+		v, ok := value.(mediaasset.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MediaAssetMutation) AddedFields() []string {
+	var fields []string
+	if m.addsize_bytes != nil {
+		fields = append(fields, mediaasset.FieldSizeBytes)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MediaAssetMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case mediaasset.FieldSizeBytes:
+		return m.AddedSizeBytes()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaAssetMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case mediaasset.FieldSizeBytes:
+		v, ok := value.(int64)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddSizeBytes(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MediaAssetMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MediaAssetMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MediaAssetMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown MediaAsset nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MediaAssetMutation) ResetField(name string) error {
+	switch name {
+	case mediaasset.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case mediaasset.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case mediaasset.FieldUploadedByUserID:
+		m.ResetUploadedByUserID()
+		return nil
+	case mediaasset.FieldUploadID:
+		m.ResetUploadID()
+		return nil
+	case mediaasset.FieldStorageKey:
+		m.ResetStorageKey()
+		return nil
+	case mediaasset.FieldContentType:
+		m.ResetContentType()
+		return nil
+	case mediaasset.FieldSizeBytes:
+		m.ResetSizeBytes()
+		return nil
+	case mediaasset.FieldStatus:
+		m.ResetStatus()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MediaAssetMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.uploaded_by != nil {
+		edges = append(edges, mediaasset.EdgeUploadedBy)
+	}
+	if m.upload != nil {
+		edges = append(edges, mediaasset.EdgeUpload)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MediaAssetMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case mediaasset.EdgeUploadedBy:
+		if id := m.uploaded_by; id != nil {
+			return []ent.Value{*id}
+		}
+	case mediaasset.EdgeUpload:
+		if id := m.upload; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MediaAssetMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MediaAssetMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MediaAssetMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduploaded_by {
+		edges = append(edges, mediaasset.EdgeUploadedBy)
+	}
+	if m.clearedupload {
+		edges = append(edges, mediaasset.EdgeUpload)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MediaAssetMutation) EdgeCleared(name string) bool {
+	switch name {
+	case mediaasset.EdgeUploadedBy:
+		return m.cleareduploaded_by
+	case mediaasset.EdgeUpload:
+		return m.clearedupload
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MediaAssetMutation) ClearEdge(name string) error {
+	switch name {
+	case mediaasset.EdgeUploadedBy:
+		m.ClearUploadedBy()
+		return nil
+	case mediaasset.EdgeUpload:
+		m.ClearUpload()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MediaAssetMutation) ResetEdge(name string) error {
+	switch name {
+	case mediaasset.EdgeUploadedBy:
+		m.ResetUploadedBy()
+		return nil
+	case mediaasset.EdgeUpload:
+		m.ResetUpload()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaAsset edge %s", name)
+}
+
+// MediaUploadMutation represents an operation that mutates the MediaUpload nodes in the graph.
+type MediaUploadMutation struct {
+	config
+	op            Op
+	typ           string
+	id            *uuid.UUID
+	update_time   *time.Time
+	create_time   *time.Time
+	purpose       *mediaupload.Purpose
+	object_key    *string
+	status        *mediaupload.Status
+	expires_at    *time.Time
+	clearedFields map[string]struct{}
+	owner         *uuid.UUID
+	clearedowner  bool
+	asset         *uuid.UUID
+	clearedasset  bool
+	done          bool
+	oldValue      func(context.Context) (*MediaUpload, error)
+	predicates    []predicate.MediaUpload
+}
+
+var _ ent.Mutation = (*MediaUploadMutation)(nil)
+
+// mediauploadOption allows management of the mutation configuration using functional options.
+type mediauploadOption func(*MediaUploadMutation)
+
+// newMediaUploadMutation creates new mutation for the MediaUpload entity.
+func newMediaUploadMutation(c config, op Op, opts ...mediauploadOption) *MediaUploadMutation {
+	m := &MediaUploadMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeMediaUpload,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withMediaUploadID sets the ID field of the mutation.
+func withMediaUploadID(id uuid.UUID) mediauploadOption {
+	return func(m *MediaUploadMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *MediaUpload
+		)
+		m.oldValue = func(ctx context.Context) (*MediaUpload, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().MediaUpload.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withMediaUpload sets the old MediaUpload of the mutation.
+func withMediaUpload(node *MediaUpload) mediauploadOption {
+	return func(m *MediaUploadMutation) {
+		m.oldValue = func(context.Context) (*MediaUpload, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m MediaUploadMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m MediaUploadMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of MediaUpload entities.
+func (m *MediaUploadMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *MediaUploadMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *MediaUploadMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().MediaUpload.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetUpdateTime sets the "update_time" field.
+func (m *MediaUploadMutation) SetUpdateTime(t time.Time) {
+	m.update_time = &t
+}
+
+// UpdateTime returns the value of the "update_time" field in the mutation.
+func (m *MediaUploadMutation) UpdateTime() (r time.Time, exists bool) {
+	v := m.update_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldUpdateTime returns the old "update_time" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldUpdateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldUpdateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldUpdateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldUpdateTime: %w", err)
+	}
+	return oldValue.UpdateTime, nil
+}
+
+// ResetUpdateTime resets all changes to the "update_time" field.
+func (m *MediaUploadMutation) ResetUpdateTime() {
+	m.update_time = nil
+}
+
+// SetCreateTime sets the "create_time" field.
+func (m *MediaUploadMutation) SetCreateTime(t time.Time) {
+	m.create_time = &t
+}
+
+// CreateTime returns the value of the "create_time" field in the mutation.
+func (m *MediaUploadMutation) CreateTime() (r time.Time, exists bool) {
+	v := m.create_time
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreateTime returns the old "create_time" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldCreateTime(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreateTime is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreateTime requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreateTime: %w", err)
+	}
+	return oldValue.CreateTime, nil
+}
+
+// ResetCreateTime resets all changes to the "create_time" field.
+func (m *MediaUploadMutation) ResetCreateTime() {
+	m.create_time = nil
+}
+
+// SetOwnerID sets the "owner_id" field.
+func (m *MediaUploadMutation) SetOwnerID(u uuid.UUID) {
+	m.owner = &u
+}
+
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *MediaUploadMutation) OwnerID() (r uuid.UUID, exists bool) {
+	v := m.owner
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldOwnerID returns the old "owner_id" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
+	}
+	return oldValue.OwnerID, nil
+}
+
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *MediaUploadMutation) ResetOwnerID() {
+	m.owner = nil
+}
+
+// SetPurpose sets the "purpose" field.
+func (m *MediaUploadMutation) SetPurpose(value mediaupload.Purpose) {
+	m.purpose = &value
+}
+
+// Purpose returns the value of the "purpose" field in the mutation.
+func (m *MediaUploadMutation) Purpose() (r mediaupload.Purpose, exists bool) {
+	v := m.purpose
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldPurpose returns the old "purpose" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldPurpose(ctx context.Context) (v mediaupload.Purpose, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldPurpose is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldPurpose requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldPurpose: %w", err)
+	}
+	return oldValue.Purpose, nil
+}
+
+// ResetPurpose resets all changes to the "purpose" field.
+func (m *MediaUploadMutation) ResetPurpose() {
+	m.purpose = nil
+}
+
+// SetObjectKey sets the "object_key" field.
+func (m *MediaUploadMutation) SetObjectKey(s string) {
+	m.object_key = &s
+}
+
+// ObjectKey returns the value of the "object_key" field in the mutation.
+func (m *MediaUploadMutation) ObjectKey() (r string, exists bool) {
+	v := m.object_key
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldObjectKey returns the old "object_key" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldObjectKey(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldObjectKey is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldObjectKey requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldObjectKey: %w", err)
+	}
+	return oldValue.ObjectKey, nil
+}
+
+// ResetObjectKey resets all changes to the "object_key" field.
+func (m *MediaUploadMutation) ResetObjectKey() {
+	m.object_key = nil
+}
+
+// SetStatus sets the "status" field.
+func (m *MediaUploadMutation) SetStatus(value mediaupload.Status) {
+	m.status = &value
+}
+
+// Status returns the value of the "status" field in the mutation.
+func (m *MediaUploadMutation) Status() (r mediaupload.Status, exists bool) {
+	v := m.status
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldStatus returns the old "status" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldStatus(ctx context.Context) (v mediaupload.Status, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldStatus is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldStatus requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldStatus: %w", err)
+	}
+	return oldValue.Status, nil
+}
+
+// ResetStatus resets all changes to the "status" field.
+func (m *MediaUploadMutation) ResetStatus() {
+	m.status = nil
+}
+
+// SetExpiresAt sets the "expires_at" field.
+func (m *MediaUploadMutation) SetExpiresAt(t time.Time) {
+	m.expires_at = &t
+}
+
+// ExpiresAt returns the value of the "expires_at" field in the mutation.
+func (m *MediaUploadMutation) ExpiresAt() (r time.Time, exists bool) {
+	v := m.expires_at
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldExpiresAt returns the old "expires_at" field's value of the MediaUpload entity.
+// If the MediaUpload object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *MediaUploadMutation) OldExpiresAt(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldExpiresAt is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldExpiresAt requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldExpiresAt: %w", err)
+	}
+	return oldValue.ExpiresAt, nil
+}
+
+// ResetExpiresAt resets all changes to the "expires_at" field.
+func (m *MediaUploadMutation) ResetExpiresAt() {
+	m.expires_at = nil
+}
+
+// ClearOwner clears the "owner" edge to the User entity.
+func (m *MediaUploadMutation) ClearOwner() {
+	m.clearedowner = true
+	m.clearedFields[mediaupload.FieldOwnerID] = struct{}{}
+}
+
+// OwnerCleared reports if the "owner" edge to the User entity was cleared.
+func (m *MediaUploadMutation) OwnerCleared() bool {
+	return m.clearedowner
+}
+
+// OwnerIDs returns the "owner" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// OwnerID instead. It exists only for internal usage by the builders.
+func (m *MediaUploadMutation) OwnerIDs() (ids []uuid.UUID) {
+	if id := m.owner; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetOwner resets all changes to the "owner" edge.
+func (m *MediaUploadMutation) ResetOwner() {
+	m.owner = nil
+	m.clearedowner = false
+}
+
+// SetAssetID sets the "asset" edge to the MediaAsset entity by id.
+func (m *MediaUploadMutation) SetAssetID(id uuid.UUID) {
+	m.asset = &id
+}
+
+// ClearAsset clears the "asset" edge to the MediaAsset entity.
+func (m *MediaUploadMutation) ClearAsset() {
+	m.clearedasset = true
+}
+
+// AssetCleared reports if the "asset" edge to the MediaAsset entity was cleared.
+func (m *MediaUploadMutation) AssetCleared() bool {
+	return m.clearedasset
+}
+
+// AssetID returns the "asset" edge ID in the mutation.
+func (m *MediaUploadMutation) AssetID() (id uuid.UUID, exists bool) {
+	if m.asset != nil {
+		return *m.asset, true
+	}
+	return
+}
+
+// AssetIDs returns the "asset" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// AssetID instead. It exists only for internal usage by the builders.
+func (m *MediaUploadMutation) AssetIDs() (ids []uuid.UUID) {
+	if id := m.asset; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetAsset resets all changes to the "asset" edge.
+func (m *MediaUploadMutation) ResetAsset() {
+	m.asset = nil
+	m.clearedasset = false
+}
+
+// Where appends a list predicates to the MediaUploadMutation builder.
+func (m *MediaUploadMutation) Where(ps ...predicate.MediaUpload) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the MediaUploadMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *MediaUploadMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.MediaUpload, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *MediaUploadMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *MediaUploadMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (MediaUpload).
+func (m *MediaUploadMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *MediaUploadMutation) Fields() []string {
+	fields := make([]string, 0, 7)
+	if m.update_time != nil {
+		fields = append(fields, mediaupload.FieldUpdateTime)
+	}
+	if m.create_time != nil {
+		fields = append(fields, mediaupload.FieldCreateTime)
+	}
+	if m.owner != nil {
+		fields = append(fields, mediaupload.FieldOwnerID)
+	}
+	if m.purpose != nil {
+		fields = append(fields, mediaupload.FieldPurpose)
+	}
+	if m.object_key != nil {
+		fields = append(fields, mediaupload.FieldObjectKey)
+	}
+	if m.status != nil {
+		fields = append(fields, mediaupload.FieldStatus)
+	}
+	if m.expires_at != nil {
+		fields = append(fields, mediaupload.FieldExpiresAt)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *MediaUploadMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case mediaupload.FieldUpdateTime:
+		return m.UpdateTime()
+	case mediaupload.FieldCreateTime:
+		return m.CreateTime()
+	case mediaupload.FieldOwnerID:
+		return m.OwnerID()
+	case mediaupload.FieldPurpose:
+		return m.Purpose()
+	case mediaupload.FieldObjectKey:
+		return m.ObjectKey()
+	case mediaupload.FieldStatus:
+		return m.Status()
+	case mediaupload.FieldExpiresAt:
+		return m.ExpiresAt()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *MediaUploadMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case mediaupload.FieldUpdateTime:
+		return m.OldUpdateTime(ctx)
+	case mediaupload.FieldCreateTime:
+		return m.OldCreateTime(ctx)
+	case mediaupload.FieldOwnerID:
+		return m.OldOwnerID(ctx)
+	case mediaupload.FieldPurpose:
+		return m.OldPurpose(ctx)
+	case mediaupload.FieldObjectKey:
+		return m.OldObjectKey(ctx)
+	case mediaupload.FieldStatus:
+		return m.OldStatus(ctx)
+	case mediaupload.FieldExpiresAt:
+		return m.OldExpiresAt(ctx)
+	}
+	return nil, fmt.Errorf("unknown MediaUpload field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaUploadMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case mediaupload.FieldUpdateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetUpdateTime(v)
+		return nil
+	case mediaupload.FieldCreateTime:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreateTime(v)
+		return nil
+	case mediaupload.FieldOwnerID:
+		v, ok := value.(uuid.UUID)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetOwnerID(v)
+		return nil
+	case mediaupload.FieldPurpose:
+		v, ok := value.(mediaupload.Purpose)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetPurpose(v)
+		return nil
+	case mediaupload.FieldObjectKey:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetObjectKey(v)
+		return nil
+	case mediaupload.FieldStatus:
+		v, ok := value.(mediaupload.Status)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetStatus(v)
+		return nil
+	case mediaupload.FieldExpiresAt:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetExpiresAt(v)
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUpload field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *MediaUploadMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *MediaUploadMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *MediaUploadMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown MediaUpload numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *MediaUploadMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *MediaUploadMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *MediaUploadMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown MediaUpload nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *MediaUploadMutation) ResetField(name string) error {
+	switch name {
+	case mediaupload.FieldUpdateTime:
+		m.ResetUpdateTime()
+		return nil
+	case mediaupload.FieldCreateTime:
+		m.ResetCreateTime()
+		return nil
+	case mediaupload.FieldOwnerID:
+		m.ResetOwnerID()
+		return nil
+	case mediaupload.FieldPurpose:
+		m.ResetPurpose()
+		return nil
+	case mediaupload.FieldObjectKey:
+		m.ResetObjectKey()
+		return nil
+	case mediaupload.FieldStatus:
+		m.ResetStatus()
+		return nil
+	case mediaupload.FieldExpiresAt:
+		m.ResetExpiresAt()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUpload field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *MediaUploadMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.owner != nil {
+		edges = append(edges, mediaupload.EdgeOwner)
+	}
+	if m.asset != nil {
+		edges = append(edges, mediaupload.EdgeAsset)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *MediaUploadMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case mediaupload.EdgeOwner:
+		if id := m.owner; id != nil {
+			return []ent.Value{*id}
+		}
+	case mediaupload.EdgeAsset:
+		if id := m.asset; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *MediaUploadMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *MediaUploadMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *MediaUploadMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedowner {
+		edges = append(edges, mediaupload.EdgeOwner)
+	}
+	if m.clearedasset {
+		edges = append(edges, mediaupload.EdgeAsset)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *MediaUploadMutation) EdgeCleared(name string) bool {
+	switch name {
+	case mediaupload.EdgeOwner:
+		return m.clearedowner
+	case mediaupload.EdgeAsset:
+		return m.clearedasset
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *MediaUploadMutation) ClearEdge(name string) error {
+	switch name {
+	case mediaupload.EdgeOwner:
+		m.ClearOwner()
+		return nil
+	case mediaupload.EdgeAsset:
+		m.ClearAsset()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUpload unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *MediaUploadMutation) ResetEdge(name string) error {
+	switch name {
+	case mediaupload.EdgeOwner:
+		m.ResetOwner()
+		return nil
+	case mediaupload.EdgeAsset:
+		m.ResetAsset()
+		return nil
+	}
+	return fmt.Errorf("unknown MediaUpload edge %s", name)
 }
 
 // MenuItemMutation represents an operation that mutates the MenuItem nodes in the graph.
@@ -6809,42 +8441,44 @@ func (m *RefreshTokenMutation) ResetEdge(name string) error {
 // RestaurantMutation represents an operation that mutates the Restaurant nodes in the graph.
 type RestaurantMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *uuid.UUID
-	update_time       *time.Time
-	name              *string
-	description       *string
-	phone             *string
-	email             *string
-	address           *string
-	city              *string
-	state             *string
-	zip_code          *string
-	country           *string
-	logo_url          *string
-	cover_image_url   *string
-	status            *restaurant.Status
-	operating_hours   *map[string]interface{}
-	currency          *string
-	clearedFields     map[string]struct{}
-	user              *uuid.UUID
-	cleareduser       bool
-	menu_items        map[int64]struct{}
-	removedmenu_items map[int64]struct{}
-	clearedmenu_items bool
-	categories        map[uuid.UUID]struct{}
-	removedcategories map[uuid.UUID]struct{}
-	clearedcategories bool
-	modifiers         map[uuid.UUID]struct{}
-	removedmodifiers  map[uuid.UUID]struct{}
-	clearedmodifiers  bool
-	orders            map[uuid.UUID]struct{}
-	removedorders     map[uuid.UUID]struct{}
-	clearedorders     bool
-	done              bool
-	oldValue          func(context.Context) (*Restaurant, error)
-	predicates        []predicate.Restaurant
+	op                       Op
+	typ                      string
+	id                       *uuid.UUID
+	update_time              *time.Time
+	name                     *string
+	description              *string
+	phone                    *string
+	email                    *string
+	address                  *string
+	city                     *string
+	state                    *string
+	zip_code                 *string
+	country                  *string
+	status                   *restaurant.Status
+	operating_hours          *map[string]interface{}
+	currency                 *string
+	clearedFields            map[string]struct{}
+	user                     *uuid.UUID
+	cleareduser              bool
+	menu_items               map[int64]struct{}
+	removedmenu_items        map[int64]struct{}
+	clearedmenu_items        bool
+	categories               map[uuid.UUID]struct{}
+	removedcategories        map[uuid.UUID]struct{}
+	clearedcategories        bool
+	modifiers                map[uuid.UUID]struct{}
+	removedmodifiers         map[uuid.UUID]struct{}
+	clearedmodifiers         bool
+	orders                   map[uuid.UUID]struct{}
+	removedorders            map[uuid.UUID]struct{}
+	clearedorders            bool
+	logo_asset               *uuid.UUID
+	clearedlogo_asset        bool
+	cover_image_asset        *uuid.UUID
+	clearedcover_image_asset bool
+	done                     bool
+	oldValue                 func(context.Context) (*Restaurant, error)
+	predicates               []predicate.Restaurant
 }
 
 var _ ent.Mutation = (*RestaurantMutation)(nil)
@@ -7324,102 +8958,102 @@ func (m *RestaurantMutation) ResetCountry() {
 	m.country = nil
 }
 
-// SetLogoURL sets the "logo_url" field.
-func (m *RestaurantMutation) SetLogoURL(s string) {
-	m.logo_url = &s
+// SetLogoMediaAssetID sets the "logo_media_asset_id" field.
+func (m *RestaurantMutation) SetLogoMediaAssetID(u uuid.UUID) {
+	m.logo_asset = &u
 }
 
-// LogoURL returns the value of the "logo_url" field in the mutation.
-func (m *RestaurantMutation) LogoURL() (r string, exists bool) {
-	v := m.logo_url
+// LogoMediaAssetID returns the value of the "logo_media_asset_id" field in the mutation.
+func (m *RestaurantMutation) LogoMediaAssetID() (r uuid.UUID, exists bool) {
+	v := m.logo_asset
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldLogoURL returns the old "logo_url" field's value of the Restaurant entity.
+// OldLogoMediaAssetID returns the old "logo_media_asset_id" field's value of the Restaurant entity.
 // If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RestaurantMutation) OldLogoURL(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldLogoMediaAssetID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldLogoURL is only allowed on UpdateOne operations")
+		return v, errors.New("OldLogoMediaAssetID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldLogoURL requires an ID field in the mutation")
+		return v, errors.New("OldLogoMediaAssetID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldLogoURL: %w", err)
+		return v, fmt.Errorf("querying old value for OldLogoMediaAssetID: %w", err)
 	}
-	return oldValue.LogoURL, nil
+	return oldValue.LogoMediaAssetID, nil
 }
 
-// ClearLogoURL clears the value of the "logo_url" field.
-func (m *RestaurantMutation) ClearLogoURL() {
-	m.logo_url = nil
-	m.clearedFields[restaurant.FieldLogoURL] = struct{}{}
+// ClearLogoMediaAssetID clears the value of the "logo_media_asset_id" field.
+func (m *RestaurantMutation) ClearLogoMediaAssetID() {
+	m.logo_asset = nil
+	m.clearedFields[restaurant.FieldLogoMediaAssetID] = struct{}{}
 }
 
-// LogoURLCleared returns if the "logo_url" field was cleared in this mutation.
-func (m *RestaurantMutation) LogoURLCleared() bool {
-	_, ok := m.clearedFields[restaurant.FieldLogoURL]
+// LogoMediaAssetIDCleared returns if the "logo_media_asset_id" field was cleared in this mutation.
+func (m *RestaurantMutation) LogoMediaAssetIDCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldLogoMediaAssetID]
 	return ok
 }
 
-// ResetLogoURL resets all changes to the "logo_url" field.
-func (m *RestaurantMutation) ResetLogoURL() {
-	m.logo_url = nil
-	delete(m.clearedFields, restaurant.FieldLogoURL)
+// ResetLogoMediaAssetID resets all changes to the "logo_media_asset_id" field.
+func (m *RestaurantMutation) ResetLogoMediaAssetID() {
+	m.logo_asset = nil
+	delete(m.clearedFields, restaurant.FieldLogoMediaAssetID)
 }
 
-// SetCoverImageURL sets the "cover_image_url" field.
-func (m *RestaurantMutation) SetCoverImageURL(s string) {
-	m.cover_image_url = &s
+// SetCoverImageMediaAssetID sets the "cover_image_media_asset_id" field.
+func (m *RestaurantMutation) SetCoverImageMediaAssetID(u uuid.UUID) {
+	m.cover_image_asset = &u
 }
 
-// CoverImageURL returns the value of the "cover_image_url" field in the mutation.
-func (m *RestaurantMutation) CoverImageURL() (r string, exists bool) {
-	v := m.cover_image_url
+// CoverImageMediaAssetID returns the value of the "cover_image_media_asset_id" field in the mutation.
+func (m *RestaurantMutation) CoverImageMediaAssetID() (r uuid.UUID, exists bool) {
+	v := m.cover_image_asset
 	if v == nil {
 		return
 	}
 	return *v, true
 }
 
-// OldCoverImageURL returns the old "cover_image_url" field's value of the Restaurant entity.
+// OldCoverImageMediaAssetID returns the old "cover_image_media_asset_id" field's value of the Restaurant entity.
 // If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RestaurantMutation) OldCoverImageURL(ctx context.Context) (v string, err error) {
+func (m *RestaurantMutation) OldCoverImageMediaAssetID(ctx context.Context) (v *uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldCoverImageURL is only allowed on UpdateOne operations")
+		return v, errors.New("OldCoverImageMediaAssetID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldCoverImageURL requires an ID field in the mutation")
+		return v, errors.New("OldCoverImageMediaAssetID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldCoverImageURL: %w", err)
+		return v, fmt.Errorf("querying old value for OldCoverImageMediaAssetID: %w", err)
 	}
-	return oldValue.CoverImageURL, nil
+	return oldValue.CoverImageMediaAssetID, nil
 }
 
-// ClearCoverImageURL clears the value of the "cover_image_url" field.
-func (m *RestaurantMutation) ClearCoverImageURL() {
-	m.cover_image_url = nil
-	m.clearedFields[restaurant.FieldCoverImageURL] = struct{}{}
+// ClearCoverImageMediaAssetID clears the value of the "cover_image_media_asset_id" field.
+func (m *RestaurantMutation) ClearCoverImageMediaAssetID() {
+	m.cover_image_asset = nil
+	m.clearedFields[restaurant.FieldCoverImageMediaAssetID] = struct{}{}
 }
 
-// CoverImageURLCleared returns if the "cover_image_url" field was cleared in this mutation.
-func (m *RestaurantMutation) CoverImageURLCleared() bool {
-	_, ok := m.clearedFields[restaurant.FieldCoverImageURL]
+// CoverImageMediaAssetIDCleared returns if the "cover_image_media_asset_id" field was cleared in this mutation.
+func (m *RestaurantMutation) CoverImageMediaAssetIDCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldCoverImageMediaAssetID]
 	return ok
 }
 
-// ResetCoverImageURL resets all changes to the "cover_image_url" field.
-func (m *RestaurantMutation) ResetCoverImageURL() {
-	m.cover_image_url = nil
-	delete(m.clearedFields, restaurant.FieldCoverImageURL)
+// ResetCoverImageMediaAssetID resets all changes to the "cover_image_media_asset_id" field.
+func (m *RestaurantMutation) ResetCoverImageMediaAssetID() {
+	m.cover_image_asset = nil
+	delete(m.clearedFields, restaurant.FieldCoverImageMediaAssetID)
 }
 
 // SetStatus sets the "status" field.
@@ -7543,13 +9177,13 @@ func (m *RestaurantMutation) ResetCurrency() {
 	m.currency = nil
 }
 
-// SetUserID sets the "user_id" field.
-func (m *RestaurantMutation) SetUserID(u uuid.UUID) {
+// SetOwnerID sets the "owner_id" field.
+func (m *RestaurantMutation) SetOwnerID(u uuid.UUID) {
 	m.user = &u
 }
 
-// UserID returns the value of the "user_id" field in the mutation.
-func (m *RestaurantMutation) UserID() (r uuid.UUID, exists bool) {
+// OwnerID returns the value of the "owner_id" field in the mutation.
+func (m *RestaurantMutation) OwnerID() (r uuid.UUID, exists bool) {
 	v := m.user
 	if v == nil {
 		return
@@ -7557,37 +9191,50 @@ func (m *RestaurantMutation) UserID() (r uuid.UUID, exists bool) {
 	return *v, true
 }
 
-// OldUserID returns the old "user_id" field's value of the Restaurant entity.
+// OldOwnerID returns the old "owner_id" field's value of the Restaurant entity.
 // If the Restaurant object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *RestaurantMutation) OldUserID(ctx context.Context) (v uuid.UUID, err error) {
+func (m *RestaurantMutation) OldOwnerID(ctx context.Context) (v uuid.UUID, err error) {
 	if !m.op.Is(OpUpdateOne) {
-		return v, errors.New("OldUserID is only allowed on UpdateOne operations")
+		return v, errors.New("OldOwnerID is only allowed on UpdateOne operations")
 	}
 	if m.id == nil || m.oldValue == nil {
-		return v, errors.New("OldUserID requires an ID field in the mutation")
+		return v, errors.New("OldOwnerID requires an ID field in the mutation")
 	}
 	oldValue, err := m.oldValue(ctx)
 	if err != nil {
-		return v, fmt.Errorf("querying old value for OldUserID: %w", err)
+		return v, fmt.Errorf("querying old value for OldOwnerID: %w", err)
 	}
-	return oldValue.UserID, nil
+	return oldValue.OwnerID, nil
 }
 
-// ResetUserID resets all changes to the "user_id" field.
-func (m *RestaurantMutation) ResetUserID() {
+// ResetOwnerID resets all changes to the "owner_id" field.
+func (m *RestaurantMutation) ResetOwnerID() {
 	m.user = nil
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *RestaurantMutation) SetUserID(id uuid.UUID) {
+	m.user = &id
 }
 
 // ClearUser clears the "user" edge to the User entity.
 func (m *RestaurantMutation) ClearUser() {
 	m.cleareduser = true
-	m.clearedFields[restaurant.FieldUserID] = struct{}{}
+	m.clearedFields[restaurant.FieldOwnerID] = struct{}{}
 }
 
 // UserCleared reports if the "user" edge to the User entity was cleared.
 func (m *RestaurantMutation) UserCleared() bool {
 	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *RestaurantMutation) UserID() (id uuid.UUID, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
 }
 
 // UserIDs returns the "user" edge IDs in the mutation.
@@ -7822,6 +9469,86 @@ func (m *RestaurantMutation) ResetOrders() {
 	m.removedorders = nil
 }
 
+// SetLogoAssetID sets the "logo_asset" edge to the MediaAsset entity by id.
+func (m *RestaurantMutation) SetLogoAssetID(id uuid.UUID) {
+	m.logo_asset = &id
+}
+
+// ClearLogoAsset clears the "logo_asset" edge to the MediaAsset entity.
+func (m *RestaurantMutation) ClearLogoAsset() {
+	m.clearedlogo_asset = true
+	m.clearedFields[restaurant.FieldLogoMediaAssetID] = struct{}{}
+}
+
+// LogoAssetCleared reports if the "logo_asset" edge to the MediaAsset entity was cleared.
+func (m *RestaurantMutation) LogoAssetCleared() bool {
+	return m.LogoMediaAssetIDCleared() || m.clearedlogo_asset
+}
+
+// LogoAssetID returns the "logo_asset" edge ID in the mutation.
+func (m *RestaurantMutation) LogoAssetID() (id uuid.UUID, exists bool) {
+	if m.logo_asset != nil {
+		return *m.logo_asset, true
+	}
+	return
+}
+
+// LogoAssetIDs returns the "logo_asset" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// LogoAssetID instead. It exists only for internal usage by the builders.
+func (m *RestaurantMutation) LogoAssetIDs() (ids []uuid.UUID) {
+	if id := m.logo_asset; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetLogoAsset resets all changes to the "logo_asset" edge.
+func (m *RestaurantMutation) ResetLogoAsset() {
+	m.logo_asset = nil
+	m.clearedlogo_asset = false
+}
+
+// SetCoverImageAssetID sets the "cover_image_asset" edge to the MediaAsset entity by id.
+func (m *RestaurantMutation) SetCoverImageAssetID(id uuid.UUID) {
+	m.cover_image_asset = &id
+}
+
+// ClearCoverImageAsset clears the "cover_image_asset" edge to the MediaAsset entity.
+func (m *RestaurantMutation) ClearCoverImageAsset() {
+	m.clearedcover_image_asset = true
+	m.clearedFields[restaurant.FieldCoverImageMediaAssetID] = struct{}{}
+}
+
+// CoverImageAssetCleared reports if the "cover_image_asset" edge to the MediaAsset entity was cleared.
+func (m *RestaurantMutation) CoverImageAssetCleared() bool {
+	return m.CoverImageMediaAssetIDCleared() || m.clearedcover_image_asset
+}
+
+// CoverImageAssetID returns the "cover_image_asset" edge ID in the mutation.
+func (m *RestaurantMutation) CoverImageAssetID() (id uuid.UUID, exists bool) {
+	if m.cover_image_asset != nil {
+		return *m.cover_image_asset, true
+	}
+	return
+}
+
+// CoverImageAssetIDs returns the "cover_image_asset" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// CoverImageAssetID instead. It exists only for internal usage by the builders.
+func (m *RestaurantMutation) CoverImageAssetIDs() (ids []uuid.UUID) {
+	if id := m.cover_image_asset; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetCoverImageAsset resets all changes to the "cover_image_asset" edge.
+func (m *RestaurantMutation) ResetCoverImageAsset() {
+	m.cover_image_asset = nil
+	m.clearedcover_image_asset = false
+}
+
 // Where appends a list predicates to the RestaurantMutation builder.
 func (m *RestaurantMutation) Where(ps ...predicate.Restaurant) {
 	m.predicates = append(m.predicates, ps...)
@@ -7887,11 +9614,11 @@ func (m *RestaurantMutation) Fields() []string {
 	if m.country != nil {
 		fields = append(fields, restaurant.FieldCountry)
 	}
-	if m.logo_url != nil {
-		fields = append(fields, restaurant.FieldLogoURL)
+	if m.logo_asset != nil {
+		fields = append(fields, restaurant.FieldLogoMediaAssetID)
 	}
-	if m.cover_image_url != nil {
-		fields = append(fields, restaurant.FieldCoverImageURL)
+	if m.cover_image_asset != nil {
+		fields = append(fields, restaurant.FieldCoverImageMediaAssetID)
 	}
 	if m.status != nil {
 		fields = append(fields, restaurant.FieldStatus)
@@ -7903,7 +9630,7 @@ func (m *RestaurantMutation) Fields() []string {
 		fields = append(fields, restaurant.FieldCurrency)
 	}
 	if m.user != nil {
-		fields = append(fields, restaurant.FieldUserID)
+		fields = append(fields, restaurant.FieldOwnerID)
 	}
 	return fields
 }
@@ -7933,18 +9660,18 @@ func (m *RestaurantMutation) Field(name string) (ent.Value, bool) {
 		return m.ZipCode()
 	case restaurant.FieldCountry:
 		return m.Country()
-	case restaurant.FieldLogoURL:
-		return m.LogoURL()
-	case restaurant.FieldCoverImageURL:
-		return m.CoverImageURL()
+	case restaurant.FieldLogoMediaAssetID:
+		return m.LogoMediaAssetID()
+	case restaurant.FieldCoverImageMediaAssetID:
+		return m.CoverImageMediaAssetID()
 	case restaurant.FieldStatus:
 		return m.Status()
 	case restaurant.FieldOperatingHours:
 		return m.OperatingHours()
 	case restaurant.FieldCurrency:
 		return m.Currency()
-	case restaurant.FieldUserID:
-		return m.UserID()
+	case restaurant.FieldOwnerID:
+		return m.OwnerID()
 	}
 	return nil, false
 }
@@ -7974,18 +9701,18 @@ func (m *RestaurantMutation) OldField(ctx context.Context, name string) (ent.Val
 		return m.OldZipCode(ctx)
 	case restaurant.FieldCountry:
 		return m.OldCountry(ctx)
-	case restaurant.FieldLogoURL:
-		return m.OldLogoURL(ctx)
-	case restaurant.FieldCoverImageURL:
-		return m.OldCoverImageURL(ctx)
+	case restaurant.FieldLogoMediaAssetID:
+		return m.OldLogoMediaAssetID(ctx)
+	case restaurant.FieldCoverImageMediaAssetID:
+		return m.OldCoverImageMediaAssetID(ctx)
 	case restaurant.FieldStatus:
 		return m.OldStatus(ctx)
 	case restaurant.FieldOperatingHours:
 		return m.OldOperatingHours(ctx)
 	case restaurant.FieldCurrency:
 		return m.OldCurrency(ctx)
-	case restaurant.FieldUserID:
-		return m.OldUserID(ctx)
+	case restaurant.FieldOwnerID:
+		return m.OldOwnerID(ctx)
 	}
 	return nil, fmt.Errorf("unknown Restaurant field %s", name)
 }
@@ -8065,19 +9792,19 @@ func (m *RestaurantMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCountry(v)
 		return nil
-	case restaurant.FieldLogoURL:
-		v, ok := value.(string)
+	case restaurant.FieldLogoMediaAssetID:
+		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetLogoURL(v)
+		m.SetLogoMediaAssetID(v)
 		return nil
-	case restaurant.FieldCoverImageURL:
-		v, ok := value.(string)
+	case restaurant.FieldCoverImageMediaAssetID:
+		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetCoverImageURL(v)
+		m.SetCoverImageMediaAssetID(v)
 		return nil
 	case restaurant.FieldStatus:
 		v, ok := value.(restaurant.Status)
@@ -8100,12 +9827,12 @@ func (m *RestaurantMutation) SetField(name string, value ent.Value) error {
 		}
 		m.SetCurrency(v)
 		return nil
-	case restaurant.FieldUserID:
+	case restaurant.FieldOwnerID:
 		v, ok := value.(uuid.UUID)
 		if !ok {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
-		m.SetUserID(v)
+		m.SetOwnerID(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Restaurant field %s", name)
@@ -8140,11 +9867,11 @@ func (m *RestaurantMutation) ClearedFields() []string {
 	if m.FieldCleared(restaurant.FieldDescription) {
 		fields = append(fields, restaurant.FieldDescription)
 	}
-	if m.FieldCleared(restaurant.FieldLogoURL) {
-		fields = append(fields, restaurant.FieldLogoURL)
+	if m.FieldCleared(restaurant.FieldLogoMediaAssetID) {
+		fields = append(fields, restaurant.FieldLogoMediaAssetID)
 	}
-	if m.FieldCleared(restaurant.FieldCoverImageURL) {
-		fields = append(fields, restaurant.FieldCoverImageURL)
+	if m.FieldCleared(restaurant.FieldCoverImageMediaAssetID) {
+		fields = append(fields, restaurant.FieldCoverImageMediaAssetID)
 	}
 	if m.FieldCleared(restaurant.FieldOperatingHours) {
 		fields = append(fields, restaurant.FieldOperatingHours)
@@ -8166,11 +9893,11 @@ func (m *RestaurantMutation) ClearField(name string) error {
 	case restaurant.FieldDescription:
 		m.ClearDescription()
 		return nil
-	case restaurant.FieldLogoURL:
-		m.ClearLogoURL()
+	case restaurant.FieldLogoMediaAssetID:
+		m.ClearLogoMediaAssetID()
 		return nil
-	case restaurant.FieldCoverImageURL:
-		m.ClearCoverImageURL()
+	case restaurant.FieldCoverImageMediaAssetID:
+		m.ClearCoverImageMediaAssetID()
 		return nil
 	case restaurant.FieldOperatingHours:
 		m.ClearOperatingHours()
@@ -8213,11 +9940,11 @@ func (m *RestaurantMutation) ResetField(name string) error {
 	case restaurant.FieldCountry:
 		m.ResetCountry()
 		return nil
-	case restaurant.FieldLogoURL:
-		m.ResetLogoURL()
+	case restaurant.FieldLogoMediaAssetID:
+		m.ResetLogoMediaAssetID()
 		return nil
-	case restaurant.FieldCoverImageURL:
-		m.ResetCoverImageURL()
+	case restaurant.FieldCoverImageMediaAssetID:
+		m.ResetCoverImageMediaAssetID()
 		return nil
 	case restaurant.FieldStatus:
 		m.ResetStatus()
@@ -8228,8 +9955,8 @@ func (m *RestaurantMutation) ResetField(name string) error {
 	case restaurant.FieldCurrency:
 		m.ResetCurrency()
 		return nil
-	case restaurant.FieldUserID:
-		m.ResetUserID()
+	case restaurant.FieldOwnerID:
+		m.ResetOwnerID()
 		return nil
 	}
 	return fmt.Errorf("unknown Restaurant field %s", name)
@@ -8237,7 +9964,7 @@ func (m *RestaurantMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *RestaurantMutation) AddedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 7)
 	if m.user != nil {
 		edges = append(edges, restaurant.EdgeUser)
 	}
@@ -8252,6 +9979,12 @@ func (m *RestaurantMutation) AddedEdges() []string {
 	}
 	if m.orders != nil {
 		edges = append(edges, restaurant.EdgeOrders)
+	}
+	if m.logo_asset != nil {
+		edges = append(edges, restaurant.EdgeLogoAsset)
+	}
+	if m.cover_image_asset != nil {
+		edges = append(edges, restaurant.EdgeCoverImageAsset)
 	}
 	return edges
 }
@@ -8288,13 +10021,21 @@ func (m *RestaurantMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case restaurant.EdgeLogoAsset:
+		if id := m.logo_asset; id != nil {
+			return []ent.Value{*id}
+		}
+	case restaurant.EdgeCoverImageAsset:
+		if id := m.cover_image_asset; id != nil {
+			return []ent.Value{*id}
+		}
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *RestaurantMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 7)
 	if m.removedmenu_items != nil {
 		edges = append(edges, restaurant.EdgeMenuItems)
 	}
@@ -8344,7 +10085,7 @@ func (m *RestaurantMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *RestaurantMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 5)
+	edges := make([]string, 0, 7)
 	if m.cleareduser {
 		edges = append(edges, restaurant.EdgeUser)
 	}
@@ -8359,6 +10100,12 @@ func (m *RestaurantMutation) ClearedEdges() []string {
 	}
 	if m.clearedorders {
 		edges = append(edges, restaurant.EdgeOrders)
+	}
+	if m.clearedlogo_asset {
+		edges = append(edges, restaurant.EdgeLogoAsset)
+	}
+	if m.clearedcover_image_asset {
+		edges = append(edges, restaurant.EdgeCoverImageAsset)
 	}
 	return edges
 }
@@ -8377,6 +10124,10 @@ func (m *RestaurantMutation) EdgeCleared(name string) bool {
 		return m.clearedmodifiers
 	case restaurant.EdgeOrders:
 		return m.clearedorders
+	case restaurant.EdgeLogoAsset:
+		return m.clearedlogo_asset
+	case restaurant.EdgeCoverImageAsset:
+		return m.clearedcover_image_asset
 	}
 	return false
 }
@@ -8387,6 +10138,12 @@ func (m *RestaurantMutation) ClearEdge(name string) error {
 	switch name {
 	case restaurant.EdgeUser:
 		m.ClearUser()
+		return nil
+	case restaurant.EdgeLogoAsset:
+		m.ClearLogoAsset()
+		return nil
+	case restaurant.EdgeCoverImageAsset:
+		m.ClearCoverImageAsset()
 		return nil
 	}
 	return fmt.Errorf("unknown Restaurant unique edge %s", name)
@@ -8411,6 +10168,12 @@ func (m *RestaurantMutation) ResetEdge(name string) error {
 	case restaurant.EdgeOrders:
 		m.ResetOrders()
 		return nil
+	case restaurant.EdgeLogoAsset:
+		m.ResetLogoAsset()
+		return nil
+	case restaurant.EdgeCoverImageAsset:
+		m.ResetCoverImageAsset()
+		return nil
 	}
 	return fmt.Errorf("unknown Restaurant edge %s", name)
 }
@@ -8418,29 +10181,35 @@ func (m *RestaurantMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                    Op
-	typ                   string
-	id                    *uuid.UUID
-	update_time           *time.Time
-	name                  *string
-	email                 *string
-	email_verified        *bool
-	phone_number          *string
-	is_active             *bool
-	password_hash         *string
-	clearedFields         map[string]struct{}
-	restaurants           map[uuid.UUID]struct{}
-	removedrestaurants    map[uuid.UUID]struct{}
-	clearedrestaurants    bool
-	auth_providers        map[int]struct{}
-	removedauth_providers map[int]struct{}
-	clearedauth_providers bool
-	refresh_tokens        map[uuid.UUID]struct{}
-	removedrefresh_tokens map[uuid.UUID]struct{}
-	clearedrefresh_tokens bool
-	done                  bool
-	oldValue              func(context.Context) (*User, error)
-	predicates            []predicate.User
+	op                           Op
+	typ                          string
+	id                           *uuid.UUID
+	update_time                  *time.Time
+	name                         *string
+	email                        *string
+	email_verified               *bool
+	phone_number                 *string
+	is_active                    *bool
+	password_hash                *string
+	clearedFields                map[string]struct{}
+	restaurants                  map[uuid.UUID]struct{}
+	removedrestaurants           map[uuid.UUID]struct{}
+	clearedrestaurants           bool
+	auth_providers               map[int]struct{}
+	removedauth_providers        map[int]struct{}
+	clearedauth_providers        bool
+	refresh_tokens               map[uuid.UUID]struct{}
+	removedrefresh_tokens        map[uuid.UUID]struct{}
+	clearedrefresh_tokens        bool
+	media_uploads                map[uuid.UUID]struct{}
+	removedmedia_uploads         map[uuid.UUID]struct{}
+	clearedmedia_uploads         bool
+	uploaded_media_assets        map[uuid.UUID]struct{}
+	removeduploaded_media_assets map[uuid.UUID]struct{}
+	cleareduploaded_media_assets bool
+	done                         bool
+	oldValue                     func(context.Context) (*User, error)
+	predicates                   []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -8987,6 +10756,114 @@ func (m *UserMutation) ResetRefreshTokens() {
 	m.removedrefresh_tokens = nil
 }
 
+// AddMediaUploadIDs adds the "media_uploads" edge to the MediaUpload entity by ids.
+func (m *UserMutation) AddMediaUploadIDs(ids ...uuid.UUID) {
+	if m.media_uploads == nil {
+		m.media_uploads = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.media_uploads[ids[i]] = struct{}{}
+	}
+}
+
+// ClearMediaUploads clears the "media_uploads" edge to the MediaUpload entity.
+func (m *UserMutation) ClearMediaUploads() {
+	m.clearedmedia_uploads = true
+}
+
+// MediaUploadsCleared reports if the "media_uploads" edge to the MediaUpload entity was cleared.
+func (m *UserMutation) MediaUploadsCleared() bool {
+	return m.clearedmedia_uploads
+}
+
+// RemoveMediaUploadIDs removes the "media_uploads" edge to the MediaUpload entity by IDs.
+func (m *UserMutation) RemoveMediaUploadIDs(ids ...uuid.UUID) {
+	if m.removedmedia_uploads == nil {
+		m.removedmedia_uploads = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.media_uploads, ids[i])
+		m.removedmedia_uploads[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedMediaUploads returns the removed IDs of the "media_uploads" edge to the MediaUpload entity.
+func (m *UserMutation) RemovedMediaUploadsIDs() (ids []uuid.UUID) {
+	for id := range m.removedmedia_uploads {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// MediaUploadsIDs returns the "media_uploads" edge IDs in the mutation.
+func (m *UserMutation) MediaUploadsIDs() (ids []uuid.UUID) {
+	for id := range m.media_uploads {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetMediaUploads resets all changes to the "media_uploads" edge.
+func (m *UserMutation) ResetMediaUploads() {
+	m.media_uploads = nil
+	m.clearedmedia_uploads = false
+	m.removedmedia_uploads = nil
+}
+
+// AddUploadedMediaAssetIDs adds the "uploaded_media_assets" edge to the MediaAsset entity by ids.
+func (m *UserMutation) AddUploadedMediaAssetIDs(ids ...uuid.UUID) {
+	if m.uploaded_media_assets == nil {
+		m.uploaded_media_assets = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.uploaded_media_assets[ids[i]] = struct{}{}
+	}
+}
+
+// ClearUploadedMediaAssets clears the "uploaded_media_assets" edge to the MediaAsset entity.
+func (m *UserMutation) ClearUploadedMediaAssets() {
+	m.cleareduploaded_media_assets = true
+}
+
+// UploadedMediaAssetsCleared reports if the "uploaded_media_assets" edge to the MediaAsset entity was cleared.
+func (m *UserMutation) UploadedMediaAssetsCleared() bool {
+	return m.cleareduploaded_media_assets
+}
+
+// RemoveUploadedMediaAssetIDs removes the "uploaded_media_assets" edge to the MediaAsset entity by IDs.
+func (m *UserMutation) RemoveUploadedMediaAssetIDs(ids ...uuid.UUID) {
+	if m.removeduploaded_media_assets == nil {
+		m.removeduploaded_media_assets = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.uploaded_media_assets, ids[i])
+		m.removeduploaded_media_assets[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedUploadedMediaAssets returns the removed IDs of the "uploaded_media_assets" edge to the MediaAsset entity.
+func (m *UserMutation) RemovedUploadedMediaAssetsIDs() (ids []uuid.UUID) {
+	for id := range m.removeduploaded_media_assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// UploadedMediaAssetsIDs returns the "uploaded_media_assets" edge IDs in the mutation.
+func (m *UserMutation) UploadedMediaAssetsIDs() (ids []uuid.UUID) {
+	for id := range m.uploaded_media_assets {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetUploadedMediaAssets resets all changes to the "uploaded_media_assets" edge.
+func (m *UserMutation) ResetUploadedMediaAssets() {
+	m.uploaded_media_assets = nil
+	m.cleareduploaded_media_assets = false
+	m.removeduploaded_media_assets = nil
+}
+
 // Where appends a list predicates to the UserMutation builder.
 func (m *UserMutation) Where(ps ...predicate.User) {
 	m.predicates = append(m.predicates, ps...)
@@ -9237,7 +11114,7 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.restaurants != nil {
 		edges = append(edges, user.EdgeRestaurants)
 	}
@@ -9246,6 +11123,12 @@ func (m *UserMutation) AddedEdges() []string {
 	}
 	if m.refresh_tokens != nil {
 		edges = append(edges, user.EdgeRefreshTokens)
+	}
+	if m.media_uploads != nil {
+		edges = append(edges, user.EdgeMediaUploads)
+	}
+	if m.uploaded_media_assets != nil {
+		edges = append(edges, user.EdgeUploadedMediaAssets)
 	}
 	return edges
 }
@@ -9272,13 +11155,25 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeMediaUploads:
+		ids := make([]ent.Value, 0, len(m.media_uploads))
+		for id := range m.media_uploads {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeUploadedMediaAssets:
+		ids := make([]ent.Value, 0, len(m.uploaded_media_assets))
+		for id := range m.uploaded_media_assets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.removedrestaurants != nil {
 		edges = append(edges, user.EdgeRestaurants)
 	}
@@ -9287,6 +11182,12 @@ func (m *UserMutation) RemovedEdges() []string {
 	}
 	if m.removedrefresh_tokens != nil {
 		edges = append(edges, user.EdgeRefreshTokens)
+	}
+	if m.removedmedia_uploads != nil {
+		edges = append(edges, user.EdgeMediaUploads)
+	}
+	if m.removeduploaded_media_assets != nil {
+		edges = append(edges, user.EdgeUploadedMediaAssets)
 	}
 	return edges
 }
@@ -9313,13 +11214,25 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case user.EdgeMediaUploads:
+		ids := make([]ent.Value, 0, len(m.removedmedia_uploads))
+		for id := range m.removedmedia_uploads {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeUploadedMediaAssets:
+		ids := make([]ent.Value, 0, len(m.removeduploaded_media_assets))
+		for id := range m.removeduploaded_media_assets {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 5)
 	if m.clearedrestaurants {
 		edges = append(edges, user.EdgeRestaurants)
 	}
@@ -9328,6 +11241,12 @@ func (m *UserMutation) ClearedEdges() []string {
 	}
 	if m.clearedrefresh_tokens {
 		edges = append(edges, user.EdgeRefreshTokens)
+	}
+	if m.clearedmedia_uploads {
+		edges = append(edges, user.EdgeMediaUploads)
+	}
+	if m.cleareduploaded_media_assets {
+		edges = append(edges, user.EdgeUploadedMediaAssets)
 	}
 	return edges
 }
@@ -9342,6 +11261,10 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 		return m.clearedauth_providers
 	case user.EdgeRefreshTokens:
 		return m.clearedrefresh_tokens
+	case user.EdgeMediaUploads:
+		return m.clearedmedia_uploads
+	case user.EdgeUploadedMediaAssets:
+		return m.cleareduploaded_media_assets
 	}
 	return false
 }
@@ -9366,6 +11289,12 @@ func (m *UserMutation) ResetEdge(name string) error {
 		return nil
 	case user.EdgeRefreshTokens:
 		m.ResetRefreshTokens()
+		return nil
+	case user.EdgeMediaUploads:
+		m.ResetMediaUploads()
+		return nil
+	case user.EdgeUploadedMediaAssets:
+		m.ResetUploadedMediaAssets()
 		return nil
 	}
 	return fmt.Errorf("unknown User edge %s", name)

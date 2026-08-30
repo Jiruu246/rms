@@ -40,6 +40,82 @@ var (
 			},
 		},
 	}
+	// MediaAssetsColumns holds the columns for the "media_assets" table.
+	MediaAssetsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "storage_key", Type: field.TypeString, Unique: true, Size: 1024},
+		{Name: "content_type", Type: field.TypeString, Size: 255},
+		{Name: "size_bytes", Type: field.TypeInt64},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "deleted"}, Default: "active"},
+		{Name: "upload_id", Type: field.TypeUUID, Unique: true},
+		{Name: "uploaded_by_user_id", Type: field.TypeUUID},
+	}
+	// MediaAssetsTable holds the schema information for the "media_assets" table.
+	MediaAssetsTable = &schema.Table{
+		Name:       "media_assets",
+		Columns:    MediaAssetsColumns,
+		PrimaryKey: []*schema.Column{MediaAssetsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "media_assets_media_uploads_asset",
+				Columns:    []*schema.Column{MediaAssetsColumns[7]},
+				RefColumns: []*schema.Column{MediaUploadsColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+			{
+				Symbol:     "media_assets_users_uploaded_media_assets",
+				Columns:    []*schema.Column{MediaAssetsColumns[8]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "mediaasset_uploaded_by_user_id",
+				Unique:  false,
+				Columns: []*schema.Column{MediaAssetsColumns[8]},
+			},
+		},
+	}
+	// MediaUploadsColumns holds the columns for the "media_uploads" table.
+	MediaUploadsColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID},
+		{Name: "update_time", Type: field.TypeTime},
+		{Name: "create_time", Type: field.TypeTime},
+		{Name: "purpose", Type: field.TypeEnum, Enums: []string{"menu_item_image", "restaurant_logo", "restaurant_cover_image"}},
+		{Name: "object_key", Type: field.TypeString, Unique: true, Size: 1024},
+		{Name: "status", Type: field.TypeEnum, Enums: []string{"issued", "consumed", "failed"}, Default: "issued"},
+		{Name: "expires_at", Type: field.TypeTime},
+		{Name: "owner_id", Type: field.TypeUUID},
+	}
+	// MediaUploadsTable holds the schema information for the "media_uploads" table.
+	MediaUploadsTable = &schema.Table{
+		Name:       "media_uploads",
+		Columns:    MediaUploadsColumns,
+		PrimaryKey: []*schema.Column{MediaUploadsColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "media_uploads_users_media_uploads",
+				Columns:    []*schema.Column{MediaUploadsColumns[7]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+		Indexes: []*schema.Index{
+			{
+				Name:    "mediaupload_owner_id_status",
+				Unique:  false,
+				Columns: []*schema.Column{MediaUploadsColumns[7], MediaUploadsColumns[5]},
+			},
+			{
+				Name:    "mediaupload_status_expires_at",
+				Unique:  false,
+				Columns: []*schema.Column{MediaUploadsColumns[5], MediaUploadsColumns[6]},
+			},
+		},
+	}
 	// MenuItemsColumns holds the columns for the "menu_items" table.
 	MenuItemsColumns = []*schema.Column{
 		{Name: "id", Type: field.TypeInt64, Increment: true},
@@ -286,12 +362,12 @@ var (
 		{Name: "state", Type: field.TypeString},
 		{Name: "zip_code", Type: field.TypeString},
 		{Name: "country", Type: field.TypeString},
-		{Name: "logo_url", Type: field.TypeString, Nullable: true},
-		{Name: "cover_image_url", Type: field.TypeString, Nullable: true},
 		{Name: "status", Type: field.TypeEnum, Enums: []string{"active", "inactive", "closed"}, Default: "active"},
 		{Name: "operating_hours", Type: field.TypeJSON, Nullable: true},
 		{Name: "currency", Type: field.TypeString},
-		{Name: "user_id", Type: field.TypeUUID},
+		{Name: "logo_media_asset_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "cover_image_media_asset_id", Type: field.TypeUUID, Nullable: true},
+		{Name: "owner_id", Type: field.TypeUUID},
 	}
 	// RestaurantsTable holds the schema information for the "restaurants" table.
 	RestaurantsTable = &schema.Table{
@@ -299,6 +375,18 @@ var (
 		Columns:    RestaurantsColumns,
 		PrimaryKey: []*schema.Column{RestaurantsColumns[0]},
 		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "restaurants_media_assets_logo_asset",
+				Columns:    []*schema.Column{RestaurantsColumns[14]},
+				RefColumns: []*schema.Column{MediaAssetsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
+			{
+				Symbol:     "restaurants_media_assets_cover_image_asset",
+				Columns:    []*schema.Column{RestaurantsColumns[15]},
+				RefColumns: []*schema.Column{MediaAssetsColumns[0]},
+				OnDelete:   schema.SetNull,
+			},
 			{
 				Symbol:     "restaurants_users_restaurants",
 				Columns:    []*schema.Column{RestaurantsColumns[16]},
@@ -349,6 +437,8 @@ var (
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		CategoriesTable,
+		MediaAssetsTable,
+		MediaUploadsTable,
 		MenuItemsTable,
 		ModifiersTable,
 		ModifierOptionsTable,
@@ -364,6 +454,9 @@ var (
 
 func init() {
 	CategoriesTable.ForeignKeys[0].RefTable = RestaurantsTable
+	MediaAssetsTable.ForeignKeys[0].RefTable = MediaUploadsTable
+	MediaAssetsTable.ForeignKeys[1].RefTable = UsersTable
+	MediaUploadsTable.ForeignKeys[0].RefTable = UsersTable
 	MenuItemsTable.ForeignKeys[0].RefTable = CategoriesTable
 	MenuItemsTable.ForeignKeys[1].RefTable = ModifiersTable
 	MenuItemsTable.ForeignKeys[2].RefTable = RestaurantsTable
@@ -377,6 +470,8 @@ func init() {
 	OrderItemModifierOptionsTable.ForeignKeys[1].RefTable = OrderItemsTable
 	RefreshTokensTable.ForeignKeys[0].RefTable = RefreshTokensTable
 	RefreshTokensTable.ForeignKeys[1].RefTable = UsersTable
-	RestaurantsTable.ForeignKeys[0].RefTable = UsersTable
+	RestaurantsTable.ForeignKeys[0].RefTable = MediaAssetsTable
+	RestaurantsTable.ForeignKeys[1].RefTable = MediaAssetsTable
+	RestaurantsTable.ForeignKeys[2].RefTable = UsersTable
 	UserAuthProvidersTable.ForeignKeys[0].RefTable = UsersTable
 }

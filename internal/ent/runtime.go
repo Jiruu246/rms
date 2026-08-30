@@ -6,6 +6,8 @@ import (
 	"time"
 
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
@@ -79,6 +81,106 @@ func init() {
 	categoryDescID := categoryFields[0].Descriptor()
 	// category.DefaultID holds the default value on creation for the id field.
 	category.DefaultID = categoryDescID.Default.(func() uuid.UUID)
+	mediaassetMixin := schema.MediaAsset{}.Mixin()
+	mediaassetMixinFields0 := mediaassetMixin[0].Fields()
+	_ = mediaassetMixinFields0
+	mediaassetMixinFields1 := mediaassetMixin[1].Fields()
+	_ = mediaassetMixinFields1
+	mediaassetFields := schema.MediaAsset{}.Fields()
+	_ = mediaassetFields
+	// mediaassetDescUpdateTime is the schema descriptor for update_time field.
+	mediaassetDescUpdateTime := mediaassetMixinFields0[0].Descriptor()
+	// mediaasset.DefaultUpdateTime holds the default value on creation for the update_time field.
+	mediaasset.DefaultUpdateTime = mediaassetDescUpdateTime.Default.(func() time.Time)
+	// mediaasset.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	mediaasset.UpdateDefaultUpdateTime = mediaassetDescUpdateTime.UpdateDefault.(func() time.Time)
+	// mediaassetDescCreateTime is the schema descriptor for create_time field.
+	mediaassetDescCreateTime := mediaassetMixinFields1[0].Descriptor()
+	// mediaasset.DefaultCreateTime holds the default value on creation for the create_time field.
+	mediaasset.DefaultCreateTime = mediaassetDescCreateTime.Default.(func() time.Time)
+	// mediaassetDescStorageKey is the schema descriptor for storage_key field.
+	mediaassetDescStorageKey := mediaassetFields[3].Descriptor()
+	// mediaasset.StorageKeyValidator is a validator for the "storage_key" field. It is called by the builders before save.
+	mediaasset.StorageKeyValidator = func() func(string) error {
+		validators := mediaassetDescStorageKey.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(storage_key string) error {
+			for _, fn := range fns {
+				if err := fn(storage_key); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// mediaassetDescContentType is the schema descriptor for content_type field.
+	mediaassetDescContentType := mediaassetFields[4].Descriptor()
+	// mediaasset.ContentTypeValidator is a validator for the "content_type" field. It is called by the builders before save.
+	mediaasset.ContentTypeValidator = func() func(string) error {
+		validators := mediaassetDescContentType.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(content_type string) error {
+			for _, fn := range fns {
+				if err := fn(content_type); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// mediaassetDescSizeBytes is the schema descriptor for size_bytes field.
+	mediaassetDescSizeBytes := mediaassetFields[5].Descriptor()
+	// mediaasset.SizeBytesValidator is a validator for the "size_bytes" field. It is called by the builders before save.
+	mediaasset.SizeBytesValidator = mediaassetDescSizeBytes.Validators[0].(func(int64) error)
+	// mediaassetDescID is the schema descriptor for id field.
+	mediaassetDescID := mediaassetFields[0].Descriptor()
+	// mediaasset.DefaultID holds the default value on creation for the id field.
+	mediaasset.DefaultID = mediaassetDescID.Default.(func() uuid.UUID)
+	mediauploadMixin := schema.MediaUpload{}.Mixin()
+	mediauploadMixinFields0 := mediauploadMixin[0].Fields()
+	_ = mediauploadMixinFields0
+	mediauploadMixinFields1 := mediauploadMixin[1].Fields()
+	_ = mediauploadMixinFields1
+	mediauploadFields := schema.MediaUpload{}.Fields()
+	_ = mediauploadFields
+	// mediauploadDescUpdateTime is the schema descriptor for update_time field.
+	mediauploadDescUpdateTime := mediauploadMixinFields0[0].Descriptor()
+	// mediaupload.DefaultUpdateTime holds the default value on creation for the update_time field.
+	mediaupload.DefaultUpdateTime = mediauploadDescUpdateTime.Default.(func() time.Time)
+	// mediaupload.UpdateDefaultUpdateTime holds the default value on update for the update_time field.
+	mediaupload.UpdateDefaultUpdateTime = mediauploadDescUpdateTime.UpdateDefault.(func() time.Time)
+	// mediauploadDescCreateTime is the schema descriptor for create_time field.
+	mediauploadDescCreateTime := mediauploadMixinFields1[0].Descriptor()
+	// mediaupload.DefaultCreateTime holds the default value on creation for the create_time field.
+	mediaupload.DefaultCreateTime = mediauploadDescCreateTime.Default.(func() time.Time)
+	// mediauploadDescObjectKey is the schema descriptor for object_key field.
+	mediauploadDescObjectKey := mediauploadFields[3].Descriptor()
+	// mediaupload.ObjectKeyValidator is a validator for the "object_key" field. It is called by the builders before save.
+	mediaupload.ObjectKeyValidator = func() func(string) error {
+		validators := mediauploadDescObjectKey.Validators
+		fns := [...]func(string) error{
+			validators[0].(func(string) error),
+			validators[1].(func(string) error),
+		}
+		return func(object_key string) error {
+			for _, fn := range fns {
+				if err := fn(object_key); err != nil {
+					return err
+				}
+			}
+			return nil
+		}
+	}()
+	// mediauploadDescID is the schema descriptor for id field.
+	mediauploadDescID := mediauploadFields[0].Descriptor()
+	// mediaupload.DefaultID holds the default value on creation for the id field.
+	mediaupload.DefaultID = mediauploadDescID.Default.(func() uuid.UUID)
 	menuitemMixin := schema.MenuItem{}.Mixin()
 	menuitemMixinFields0 := menuitemMixin[0].Fields()
 	_ = menuitemMixinFields0

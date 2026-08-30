@@ -17,6 +17,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
@@ -36,6 +38,10 @@ type Client struct {
 	Schema *migrate.Schema
 	// Category is the client for interacting with the Category builders.
 	Category *CategoryClient
+	// MediaAsset is the client for interacting with the MediaAsset builders.
+	MediaAsset *MediaAssetClient
+	// MediaUpload is the client for interacting with the MediaUpload builders.
+	MediaUpload *MediaUploadClient
 	// MenuItem is the client for interacting with the MenuItem builders.
 	MenuItem *MenuItemClient
 	// Modifier is the client for interacting with the Modifier builders.
@@ -68,6 +74,8 @@ func NewClient(opts ...Option) *Client {
 func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Category = NewCategoryClient(c.config)
+	c.MediaAsset = NewMediaAssetClient(c.config)
+	c.MediaUpload = NewMediaUploadClient(c.config)
 	c.MenuItem = NewMenuItemClient(c.config)
 	c.Modifier = NewModifierClient(c.config)
 	c.ModifierOption = NewModifierOptionClient(c.config)
@@ -171,6 +179,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		ctx:                     ctx,
 		config:                  cfg,
 		Category:                NewCategoryClient(cfg),
+		MediaAsset:              NewMediaAssetClient(cfg),
+		MediaUpload:             NewMediaUploadClient(cfg),
 		MenuItem:                NewMenuItemClient(cfg),
 		Modifier:                NewModifierClient(cfg),
 		ModifierOption:          NewModifierOptionClient(cfg),
@@ -201,6 +211,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		ctx:                     ctx,
 		config:                  cfg,
 		Category:                NewCategoryClient(cfg),
+		MediaAsset:              NewMediaAssetClient(cfg),
+		MediaUpload:             NewMediaUploadClient(cfg),
 		MenuItem:                NewMenuItemClient(cfg),
 		Modifier:                NewModifierClient(cfg),
 		ModifierOption:          NewModifierOptionClient(cfg),
@@ -240,9 +252,9 @@ func (c *Client) Close() error {
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
 	for _, n := range []interface{ Use(...Hook) }{
-		c.Category, c.MenuItem, c.Modifier, c.ModifierOption, c.Order, c.OrderItem,
-		c.OrderItemModifierOption, c.RefreshToken, c.Restaurant, c.User,
-		c.UserAuthProvider,
+		c.Category, c.MediaAsset, c.MediaUpload, c.MenuItem, c.Modifier,
+		c.ModifierOption, c.Order, c.OrderItem, c.OrderItemModifierOption,
+		c.RefreshToken, c.Restaurant, c.User, c.UserAuthProvider,
 	} {
 		n.Use(hooks...)
 	}
@@ -252,9 +264,9 @@ func (c *Client) Use(hooks ...Hook) {
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
 	for _, n := range []interface{ Intercept(...Interceptor) }{
-		c.Category, c.MenuItem, c.Modifier, c.ModifierOption, c.Order, c.OrderItem,
-		c.OrderItemModifierOption, c.RefreshToken, c.Restaurant, c.User,
-		c.UserAuthProvider,
+		c.Category, c.MediaAsset, c.MediaUpload, c.MenuItem, c.Modifier,
+		c.ModifierOption, c.Order, c.OrderItem, c.OrderItemModifierOption,
+		c.RefreshToken, c.Restaurant, c.User, c.UserAuthProvider,
 	} {
 		n.Intercept(interceptors...)
 	}
@@ -265,6 +277,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 	switch m := m.(type) {
 	case *CategoryMutation:
 		return c.Category.mutate(ctx, m)
+	case *MediaAssetMutation:
+		return c.MediaAsset.mutate(ctx, m)
+	case *MediaUploadMutation:
+		return c.MediaUpload.mutate(ctx, m)
 	case *MenuItemMutation:
 		return c.MenuItem.mutate(ctx, m)
 	case *ModifierMutation:
@@ -452,6 +468,336 @@ func (c *CategoryClient) mutate(ctx context.Context, m *CategoryMutation) (Value
 		return (&CategoryDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
 	default:
 		return nil, fmt.Errorf("ent: unknown Category mutation op: %q", m.Op())
+	}
+}
+
+// MediaAssetClient is a client for the MediaAsset schema.
+type MediaAssetClient struct {
+	config
+}
+
+// NewMediaAssetClient returns a client for the MediaAsset from the given config.
+func NewMediaAssetClient(c config) *MediaAssetClient {
+	return &MediaAssetClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediaasset.Hooks(f(g(h())))`.
+func (c *MediaAssetClient) Use(hooks ...Hook) {
+	c.hooks.MediaAsset = append(c.hooks.MediaAsset, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediaasset.Intercept(f(g(h())))`.
+func (c *MediaAssetClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaAsset = append(c.inters.MediaAsset, interceptors...)
+}
+
+// Create returns a builder for creating a MediaAsset entity.
+func (c *MediaAssetClient) Create() *MediaAssetCreate {
+	mutation := newMediaAssetMutation(c.config, OpCreate)
+	return &MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaAsset entities.
+func (c *MediaAssetClient) CreateBulk(builders ...*MediaAssetCreate) *MediaAssetCreateBulk {
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaAssetClient) MapCreateBulk(slice any, setFunc func(*MediaAssetCreate, int)) *MediaAssetCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaAssetCreateBulk{err: fmt.Errorf("calling to MediaAssetClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaAssetCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaAssetCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaAsset.
+func (c *MediaAssetClient) Update() *MediaAssetUpdate {
+	mutation := newMediaAssetMutation(c.config, OpUpdate)
+	return &MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaAssetClient) UpdateOne(_m *MediaAsset) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAsset(_m))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaAssetClient) UpdateOneID(id uuid.UUID) *MediaAssetUpdateOne {
+	mutation := newMediaAssetMutation(c.config, OpUpdateOne, withMediaAssetID(id))
+	return &MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaAsset.
+func (c *MediaAssetClient) Delete() *MediaAssetDelete {
+	mutation := newMediaAssetMutation(c.config, OpDelete)
+	return &MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaAssetClient) DeleteOne(_m *MediaAsset) *MediaAssetDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaAssetClient) DeleteOneID(id uuid.UUID) *MediaAssetDeleteOne {
+	builder := c.Delete().Where(mediaasset.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaAssetDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaAsset.
+func (c *MediaAssetClient) Query() *MediaAssetQuery {
+	return &MediaAssetQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaAsset},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaAsset entity by its id.
+func (c *MediaAssetClient) Get(ctx context.Context, id uuid.UUID) (*MediaAsset, error) {
+	return c.Query().Where(mediaasset.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaAssetClient) GetX(ctx context.Context, id uuid.UUID) *MediaAsset {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUploadedBy queries the uploaded_by edge of a MediaAsset.
+func (c *MediaAssetClient) QueryUploadedBy(_m *MediaAsset) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mediaasset.Table, mediaasset.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, mediaasset.UploadedByTable, mediaasset.UploadedByColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUpload queries the upload edge of a MediaAsset.
+func (c *MediaAssetClient) QueryUpload(_m *MediaAsset) *MediaUploadQuery {
+	query := (&MediaUploadClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mediaasset.Table, mediaasset.FieldID, id),
+			sqlgraph.To(mediaupload.Table, mediaupload.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, true, mediaasset.UploadTable, mediaasset.UploadColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MediaAssetClient) Hooks() []Hook {
+	return c.hooks.MediaAsset
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaAssetClient) Interceptors() []Interceptor {
+	return c.inters.MediaAsset
+}
+
+func (c *MediaAssetClient) mutate(ctx context.Context, m *MediaAssetMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaAssetCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaAssetUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaAssetUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaAssetDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaAsset mutation op: %q", m.Op())
+	}
+}
+
+// MediaUploadClient is a client for the MediaUpload schema.
+type MediaUploadClient struct {
+	config
+}
+
+// NewMediaUploadClient returns a client for the MediaUpload from the given config.
+func NewMediaUploadClient(c config) *MediaUploadClient {
+	return &MediaUploadClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `mediaupload.Hooks(f(g(h())))`.
+func (c *MediaUploadClient) Use(hooks ...Hook) {
+	c.hooks.MediaUpload = append(c.hooks.MediaUpload, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `mediaupload.Intercept(f(g(h())))`.
+func (c *MediaUploadClient) Intercept(interceptors ...Interceptor) {
+	c.inters.MediaUpload = append(c.inters.MediaUpload, interceptors...)
+}
+
+// Create returns a builder for creating a MediaUpload entity.
+func (c *MediaUploadClient) Create() *MediaUploadCreate {
+	mutation := newMediaUploadMutation(c.config, OpCreate)
+	return &MediaUploadCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of MediaUpload entities.
+func (c *MediaUploadClient) CreateBulk(builders ...*MediaUploadCreate) *MediaUploadCreateBulk {
+	return &MediaUploadCreateBulk{config: c.config, builders: builders}
+}
+
+// MapCreateBulk creates a bulk creation builder from the given slice. For each item in the slice, the function creates
+// a builder and applies setFunc on it.
+func (c *MediaUploadClient) MapCreateBulk(slice any, setFunc func(*MediaUploadCreate, int)) *MediaUploadCreateBulk {
+	rv := reflect.ValueOf(slice)
+	if rv.Kind() != reflect.Slice {
+		return &MediaUploadCreateBulk{err: fmt.Errorf("calling to MediaUploadClient.MapCreateBulk with wrong type %T, need slice", slice)}
+	}
+	builders := make([]*MediaUploadCreate, rv.Len())
+	for i := 0; i < rv.Len(); i++ {
+		builders[i] = c.Create()
+		setFunc(builders[i], i)
+	}
+	return &MediaUploadCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for MediaUpload.
+func (c *MediaUploadClient) Update() *MediaUploadUpdate {
+	mutation := newMediaUploadMutation(c.config, OpUpdate)
+	return &MediaUploadUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *MediaUploadClient) UpdateOne(_m *MediaUpload) *MediaUploadUpdateOne {
+	mutation := newMediaUploadMutation(c.config, OpUpdateOne, withMediaUpload(_m))
+	return &MediaUploadUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *MediaUploadClient) UpdateOneID(id uuid.UUID) *MediaUploadUpdateOne {
+	mutation := newMediaUploadMutation(c.config, OpUpdateOne, withMediaUploadID(id))
+	return &MediaUploadUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for MediaUpload.
+func (c *MediaUploadClient) Delete() *MediaUploadDelete {
+	mutation := newMediaUploadMutation(c.config, OpDelete)
+	return &MediaUploadDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *MediaUploadClient) DeleteOne(_m *MediaUpload) *MediaUploadDeleteOne {
+	return c.DeleteOneID(_m.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *MediaUploadClient) DeleteOneID(id uuid.UUID) *MediaUploadDeleteOne {
+	builder := c.Delete().Where(mediaupload.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &MediaUploadDeleteOne{builder}
+}
+
+// Query returns a query builder for MediaUpload.
+func (c *MediaUploadClient) Query() *MediaUploadQuery {
+	return &MediaUploadQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeMediaUpload},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a MediaUpload entity by its id.
+func (c *MediaUploadClient) Get(ctx context.Context, id uuid.UUID) (*MediaUpload, error) {
+	return c.Query().Where(mediaupload.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *MediaUploadClient) GetX(ctx context.Context, id uuid.UUID) *MediaUpload {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryOwner queries the owner edge of a MediaUpload.
+func (c *MediaUploadClient) QueryOwner(_m *MediaUpload) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mediaupload.Table, mediaupload.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, mediaupload.OwnerTable, mediaupload.OwnerColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryAsset queries the asset edge of a MediaUpload.
+func (c *MediaUploadClient) QueryAsset(_m *MediaUpload) *MediaAssetQuery {
+	query := (&MediaAssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(mediaupload.Table, mediaupload.FieldID, id),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2O, false, mediaupload.AssetTable, mediaupload.AssetColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *MediaUploadClient) Hooks() []Hook {
+	return c.hooks.MediaUpload
+}
+
+// Interceptors returns the client interceptors.
+func (c *MediaUploadClient) Interceptors() []Interceptor {
+	return c.inters.MediaUpload
+}
+
+func (c *MediaUploadClient) mutate(ctx context.Context, m *MediaUploadMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&MediaUploadCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&MediaUploadUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&MediaUploadUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&MediaUploadDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown MediaUpload mutation op: %q", m.Op())
 	}
 }
 
@@ -1862,6 +2208,38 @@ func (c *RestaurantClient) QueryOrders(_m *Restaurant) *OrderQuery {
 	return query
 }
 
+// QueryLogoAsset queries the logo_asset edge of a Restaurant.
+func (c *RestaurantClient) QueryLogoAsset(_m *Restaurant) *MediaAssetQuery {
+	query := (&MediaAssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, restaurant.LogoAssetTable, restaurant.LogoAssetColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryCoverImageAsset queries the cover_image_asset edge of a Restaurant.
+func (c *RestaurantClient) QueryCoverImageAsset(_m *Restaurant) *MediaAssetQuery {
+	query := (&MediaAssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(restaurant.Table, restaurant.FieldID, id),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, false, restaurant.CoverImageAssetTable, restaurant.CoverImageAssetColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // Hooks returns the client hooks.
 func (c *RestaurantClient) Hooks() []Hook {
 	return c.hooks.Restaurant
@@ -2036,6 +2414,38 @@ func (c *UserClient) QueryRefreshTokens(_m *User) *RefreshTokenQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(refreshtoken.Table, refreshtoken.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.RefreshTokensTable, user.RefreshTokensColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryMediaUploads queries the media_uploads edge of a User.
+func (c *UserClient) QueryMediaUploads(_m *User) *MediaUploadQuery {
+	query := (&MediaUploadClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(mediaupload.Table, mediaupload.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.MediaUploadsTable, user.MediaUploadsColumn),
+		)
+		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryUploadedMediaAssets queries the uploaded_media_assets edge of a User.
+func (c *UserClient) QueryUploadedMediaAssets(_m *User) *MediaAssetQuery {
+	query := (&MediaAssetClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := _m.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(mediaasset.Table, mediaasset.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.UploadedMediaAssetsTable, user.UploadedMediaAssetsColumn),
 		)
 		fromV = sqlgraph.Neighbors(_m.driver.Dialect(), step)
 		return fromV, nil
@@ -2220,13 +2630,13 @@ func (c *UserAuthProviderClient) mutate(ctx context.Context, m *UserAuthProvider
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Category, MenuItem, Modifier, ModifierOption, Order, OrderItem,
-		OrderItemModifierOption, RefreshToken, Restaurant, User,
+		Category, MediaAsset, MediaUpload, MenuItem, Modifier, ModifierOption, Order,
+		OrderItem, OrderItemModifierOption, RefreshToken, Restaurant, User,
 		UserAuthProvider []ent.Hook
 	}
 	inters struct {
-		Category, MenuItem, Modifier, ModifierOption, Order, OrderItem,
-		OrderItemModifierOption, RefreshToken, Restaurant, User,
+		Category, MediaAsset, MediaUpload, MenuItem, Modifier, ModifierOption, Order,
+		OrderItem, OrderItemModifierOption, RefreshToken, Restaurant, User,
 		UserAuthProvider []ent.Interceptor
 	}
 )

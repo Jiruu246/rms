@@ -13,6 +13,8 @@ import (
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
+	"github.com/Jiruu246/rms/internal/ent/mediaupload"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/modifieroption"
@@ -84,6 +86,8 @@ func checkColumn(t, c string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			category.Table:                category.ValidColumn,
+			mediaasset.Table:              mediaasset.ValidColumn,
+			mediaupload.Table:             mediaupload.ValidColumn,
 			menuitem.Table:                menuitem.ValidColumn,
 			modifier.Table:                modifier.ValidColumn,
 			modifieroption.Table:          modifieroption.ValidColumn,

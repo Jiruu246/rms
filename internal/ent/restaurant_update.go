@@ -12,6 +12,7 @@ import (
 	"entgo.io/ent/dialect/sql/sqlgraph"
 	"entgo.io/ent/schema/field"
 	"github.com/Jiruu246/rms/internal/ent/category"
+	"github.com/Jiruu246/rms/internal/ent/mediaasset"
 	"github.com/Jiruu246/rms/internal/ent/menuitem"
 	"github.com/Jiruu246/rms/internal/ent/modifier"
 	"github.com/Jiruu246/rms/internal/ent/order"
@@ -172,43 +173,43 @@ func (_u *RestaurantUpdate) SetNillableCountry(v *string) *RestaurantUpdate {
 	return _u
 }
 
-// SetLogoURL sets the "logo_url" field.
-func (_u *RestaurantUpdate) SetLogoURL(v string) *RestaurantUpdate {
-	_u.mutation.SetLogoURL(v)
+// SetLogoMediaAssetID sets the "logo_media_asset_id" field.
+func (_u *RestaurantUpdate) SetLogoMediaAssetID(v uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetLogoMediaAssetID(v)
 	return _u
 }
 
-// SetNillableLogoURL sets the "logo_url" field if the given value is not nil.
-func (_u *RestaurantUpdate) SetNillableLogoURL(v *string) *RestaurantUpdate {
+// SetNillableLogoMediaAssetID sets the "logo_media_asset_id" field if the given value is not nil.
+func (_u *RestaurantUpdate) SetNillableLogoMediaAssetID(v *uuid.UUID) *RestaurantUpdate {
 	if v != nil {
-		_u.SetLogoURL(*v)
+		_u.SetLogoMediaAssetID(*v)
 	}
 	return _u
 }
 
-// ClearLogoURL clears the value of the "logo_url" field.
-func (_u *RestaurantUpdate) ClearLogoURL() *RestaurantUpdate {
-	_u.mutation.ClearLogoURL()
+// ClearLogoMediaAssetID clears the value of the "logo_media_asset_id" field.
+func (_u *RestaurantUpdate) ClearLogoMediaAssetID() *RestaurantUpdate {
+	_u.mutation.ClearLogoMediaAssetID()
 	return _u
 }
 
-// SetCoverImageURL sets the "cover_image_url" field.
-func (_u *RestaurantUpdate) SetCoverImageURL(v string) *RestaurantUpdate {
-	_u.mutation.SetCoverImageURL(v)
+// SetCoverImageMediaAssetID sets the "cover_image_media_asset_id" field.
+func (_u *RestaurantUpdate) SetCoverImageMediaAssetID(v uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetCoverImageMediaAssetID(v)
 	return _u
 }
 
-// SetNillableCoverImageURL sets the "cover_image_url" field if the given value is not nil.
-func (_u *RestaurantUpdate) SetNillableCoverImageURL(v *string) *RestaurantUpdate {
+// SetNillableCoverImageMediaAssetID sets the "cover_image_media_asset_id" field if the given value is not nil.
+func (_u *RestaurantUpdate) SetNillableCoverImageMediaAssetID(v *uuid.UUID) *RestaurantUpdate {
 	if v != nil {
-		_u.SetCoverImageURL(*v)
+		_u.SetCoverImageMediaAssetID(*v)
 	}
 	return _u
 }
 
-// ClearCoverImageURL clears the value of the "cover_image_url" field.
-func (_u *RestaurantUpdate) ClearCoverImageURL() *RestaurantUpdate {
-	_u.mutation.ClearCoverImageURL()
+// ClearCoverImageMediaAssetID clears the value of the "cover_image_media_asset_id" field.
+func (_u *RestaurantUpdate) ClearCoverImageMediaAssetID() *RestaurantUpdate {
+	_u.mutation.ClearCoverImageMediaAssetID()
 	return _u
 }
 
@@ -252,17 +253,23 @@ func (_u *RestaurantUpdate) SetNillableCurrency(v *string) *RestaurantUpdate {
 	return _u
 }
 
-// SetUserID sets the "user_id" field.
-func (_u *RestaurantUpdate) SetUserID(v uuid.UUID) *RestaurantUpdate {
-	_u.mutation.SetUserID(v)
+// SetOwnerID sets the "owner_id" field.
+func (_u *RestaurantUpdate) SetOwnerID(v uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetOwnerID(v)
 	return _u
 }
 
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (_u *RestaurantUpdate) SetNillableUserID(v *uuid.UUID) *RestaurantUpdate {
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_u *RestaurantUpdate) SetNillableOwnerID(v *uuid.UUID) *RestaurantUpdate {
 	if v != nil {
-		_u.SetUserID(*v)
+		_u.SetOwnerID(*v)
 	}
+	return _u
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (_u *RestaurantUpdate) SetUserID(id uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetUserID(id)
 	return _u
 }
 
@@ -329,6 +336,44 @@ func (_u *RestaurantUpdate) AddOrders(v ...*Order) *RestaurantUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.AddOrderIDs(ids...)
+}
+
+// SetLogoAssetID sets the "logo_asset" edge to the MediaAsset entity by ID.
+func (_u *RestaurantUpdate) SetLogoAssetID(id uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetLogoAssetID(id)
+	return _u
+}
+
+// SetNillableLogoAssetID sets the "logo_asset" edge to the MediaAsset entity by ID if the given value is not nil.
+func (_u *RestaurantUpdate) SetNillableLogoAssetID(id *uuid.UUID) *RestaurantUpdate {
+	if id != nil {
+		_u = _u.SetLogoAssetID(*id)
+	}
+	return _u
+}
+
+// SetLogoAsset sets the "logo_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdate) SetLogoAsset(v *MediaAsset) *RestaurantUpdate {
+	return _u.SetLogoAssetID(v.ID)
+}
+
+// SetCoverImageAssetID sets the "cover_image_asset" edge to the MediaAsset entity by ID.
+func (_u *RestaurantUpdate) SetCoverImageAssetID(id uuid.UUID) *RestaurantUpdate {
+	_u.mutation.SetCoverImageAssetID(id)
+	return _u
+}
+
+// SetNillableCoverImageAssetID sets the "cover_image_asset" edge to the MediaAsset entity by ID if the given value is not nil.
+func (_u *RestaurantUpdate) SetNillableCoverImageAssetID(id *uuid.UUID) *RestaurantUpdate {
+	if id != nil {
+		_u = _u.SetCoverImageAssetID(*id)
+	}
+	return _u
+}
+
+// SetCoverImageAsset sets the "cover_image_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdate) SetCoverImageAsset(v *MediaAsset) *RestaurantUpdate {
+	return _u.SetCoverImageAssetID(v.ID)
 }
 
 // Mutation returns the RestaurantMutation object of the builder.
@@ -424,6 +469,18 @@ func (_u *RestaurantUpdate) RemoveOrders(v ...*Order) *RestaurantUpdate {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveOrderIDs(ids...)
+}
+
+// ClearLogoAsset clears the "logo_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdate) ClearLogoAsset() *RestaurantUpdate {
+	_u.mutation.ClearLogoAsset()
+	return _u
+}
+
+// ClearCoverImageAsset clears the "cover_image_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdate) ClearCoverImageAsset() *RestaurantUpdate {
+	_u.mutation.ClearCoverImageAsset()
+	return _u
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -559,18 +616,6 @@ func (_u *RestaurantUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.Country(); ok {
 		_spec.SetField(restaurant.FieldCountry, field.TypeString, value)
-	}
-	if value, ok := _u.mutation.LogoURL(); ok {
-		_spec.SetField(restaurant.FieldLogoURL, field.TypeString, value)
-	}
-	if _u.mutation.LogoURLCleared() {
-		_spec.ClearField(restaurant.FieldLogoURL, field.TypeString)
-	}
-	if value, ok := _u.mutation.CoverImageURL(); ok {
-		_spec.SetField(restaurant.FieldCoverImageURL, field.TypeString, value)
-	}
-	if _u.mutation.CoverImageURLCleared() {
-		_spec.ClearField(restaurant.FieldCoverImageURL, field.TypeString)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(restaurant.FieldStatus, field.TypeEnum, value)
@@ -793,6 +838,64 @@ func (_u *RestaurantUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if _u.mutation.LogoAssetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.LogoAssetTable,
+			Columns: []string{restaurant.LogoAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LogoAssetIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.LogoAssetTable,
+			Columns: []string{restaurant.LogoAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CoverImageAssetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.CoverImageAssetTable,
+			Columns: []string{restaurant.CoverImageAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CoverImageAssetIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.CoverImageAssetTable,
+			Columns: []string{restaurant.CoverImageAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if _node, err = sqlgraph.UpdateNodes(ctx, _u.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{restaurant.Label}
@@ -951,43 +1054,43 @@ func (_u *RestaurantUpdateOne) SetNillableCountry(v *string) *RestaurantUpdateOn
 	return _u
 }
 
-// SetLogoURL sets the "logo_url" field.
-func (_u *RestaurantUpdateOne) SetLogoURL(v string) *RestaurantUpdateOne {
-	_u.mutation.SetLogoURL(v)
+// SetLogoMediaAssetID sets the "logo_media_asset_id" field.
+func (_u *RestaurantUpdateOne) SetLogoMediaAssetID(v uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetLogoMediaAssetID(v)
 	return _u
 }
 
-// SetNillableLogoURL sets the "logo_url" field if the given value is not nil.
-func (_u *RestaurantUpdateOne) SetNillableLogoURL(v *string) *RestaurantUpdateOne {
+// SetNillableLogoMediaAssetID sets the "logo_media_asset_id" field if the given value is not nil.
+func (_u *RestaurantUpdateOne) SetNillableLogoMediaAssetID(v *uuid.UUID) *RestaurantUpdateOne {
 	if v != nil {
-		_u.SetLogoURL(*v)
+		_u.SetLogoMediaAssetID(*v)
 	}
 	return _u
 }
 
-// ClearLogoURL clears the value of the "logo_url" field.
-func (_u *RestaurantUpdateOne) ClearLogoURL() *RestaurantUpdateOne {
-	_u.mutation.ClearLogoURL()
+// ClearLogoMediaAssetID clears the value of the "logo_media_asset_id" field.
+func (_u *RestaurantUpdateOne) ClearLogoMediaAssetID() *RestaurantUpdateOne {
+	_u.mutation.ClearLogoMediaAssetID()
 	return _u
 }
 
-// SetCoverImageURL sets the "cover_image_url" field.
-func (_u *RestaurantUpdateOne) SetCoverImageURL(v string) *RestaurantUpdateOne {
-	_u.mutation.SetCoverImageURL(v)
+// SetCoverImageMediaAssetID sets the "cover_image_media_asset_id" field.
+func (_u *RestaurantUpdateOne) SetCoverImageMediaAssetID(v uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetCoverImageMediaAssetID(v)
 	return _u
 }
 
-// SetNillableCoverImageURL sets the "cover_image_url" field if the given value is not nil.
-func (_u *RestaurantUpdateOne) SetNillableCoverImageURL(v *string) *RestaurantUpdateOne {
+// SetNillableCoverImageMediaAssetID sets the "cover_image_media_asset_id" field if the given value is not nil.
+func (_u *RestaurantUpdateOne) SetNillableCoverImageMediaAssetID(v *uuid.UUID) *RestaurantUpdateOne {
 	if v != nil {
-		_u.SetCoverImageURL(*v)
+		_u.SetCoverImageMediaAssetID(*v)
 	}
 	return _u
 }
 
-// ClearCoverImageURL clears the value of the "cover_image_url" field.
-func (_u *RestaurantUpdateOne) ClearCoverImageURL() *RestaurantUpdateOne {
-	_u.mutation.ClearCoverImageURL()
+// ClearCoverImageMediaAssetID clears the value of the "cover_image_media_asset_id" field.
+func (_u *RestaurantUpdateOne) ClearCoverImageMediaAssetID() *RestaurantUpdateOne {
+	_u.mutation.ClearCoverImageMediaAssetID()
 	return _u
 }
 
@@ -1031,17 +1134,23 @@ func (_u *RestaurantUpdateOne) SetNillableCurrency(v *string) *RestaurantUpdateO
 	return _u
 }
 
-// SetUserID sets the "user_id" field.
-func (_u *RestaurantUpdateOne) SetUserID(v uuid.UUID) *RestaurantUpdateOne {
-	_u.mutation.SetUserID(v)
+// SetOwnerID sets the "owner_id" field.
+func (_u *RestaurantUpdateOne) SetOwnerID(v uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetOwnerID(v)
 	return _u
 }
 
-// SetNillableUserID sets the "user_id" field if the given value is not nil.
-func (_u *RestaurantUpdateOne) SetNillableUserID(v *uuid.UUID) *RestaurantUpdateOne {
+// SetNillableOwnerID sets the "owner_id" field if the given value is not nil.
+func (_u *RestaurantUpdateOne) SetNillableOwnerID(v *uuid.UUID) *RestaurantUpdateOne {
 	if v != nil {
-		_u.SetUserID(*v)
+		_u.SetOwnerID(*v)
 	}
+	return _u
+}
+
+// SetUserID sets the "user" edge to the User entity by ID.
+func (_u *RestaurantUpdateOne) SetUserID(id uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetUserID(id)
 	return _u
 }
 
@@ -1108,6 +1217,44 @@ func (_u *RestaurantUpdateOne) AddOrders(v ...*Order) *RestaurantUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.AddOrderIDs(ids...)
+}
+
+// SetLogoAssetID sets the "logo_asset" edge to the MediaAsset entity by ID.
+func (_u *RestaurantUpdateOne) SetLogoAssetID(id uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetLogoAssetID(id)
+	return _u
+}
+
+// SetNillableLogoAssetID sets the "logo_asset" edge to the MediaAsset entity by ID if the given value is not nil.
+func (_u *RestaurantUpdateOne) SetNillableLogoAssetID(id *uuid.UUID) *RestaurantUpdateOne {
+	if id != nil {
+		_u = _u.SetLogoAssetID(*id)
+	}
+	return _u
+}
+
+// SetLogoAsset sets the "logo_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdateOne) SetLogoAsset(v *MediaAsset) *RestaurantUpdateOne {
+	return _u.SetLogoAssetID(v.ID)
+}
+
+// SetCoverImageAssetID sets the "cover_image_asset" edge to the MediaAsset entity by ID.
+func (_u *RestaurantUpdateOne) SetCoverImageAssetID(id uuid.UUID) *RestaurantUpdateOne {
+	_u.mutation.SetCoverImageAssetID(id)
+	return _u
+}
+
+// SetNillableCoverImageAssetID sets the "cover_image_asset" edge to the MediaAsset entity by ID if the given value is not nil.
+func (_u *RestaurantUpdateOne) SetNillableCoverImageAssetID(id *uuid.UUID) *RestaurantUpdateOne {
+	if id != nil {
+		_u = _u.SetCoverImageAssetID(*id)
+	}
+	return _u
+}
+
+// SetCoverImageAsset sets the "cover_image_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdateOne) SetCoverImageAsset(v *MediaAsset) *RestaurantUpdateOne {
+	return _u.SetCoverImageAssetID(v.ID)
 }
 
 // Mutation returns the RestaurantMutation object of the builder.
@@ -1203,6 +1350,18 @@ func (_u *RestaurantUpdateOne) RemoveOrders(v ...*Order) *RestaurantUpdateOne {
 		ids[i] = v[i].ID
 	}
 	return _u.RemoveOrderIDs(ids...)
+}
+
+// ClearLogoAsset clears the "logo_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdateOne) ClearLogoAsset() *RestaurantUpdateOne {
+	_u.mutation.ClearLogoAsset()
+	return _u
+}
+
+// ClearCoverImageAsset clears the "cover_image_asset" edge to the MediaAsset entity.
+func (_u *RestaurantUpdateOne) ClearCoverImageAsset() *RestaurantUpdateOne {
+	_u.mutation.ClearCoverImageAsset()
+	return _u
 }
 
 // Where appends a list predicates to the RestaurantUpdate builder.
@@ -1369,18 +1528,6 @@ func (_u *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant, 
 	if value, ok := _u.mutation.Country(); ok {
 		_spec.SetField(restaurant.FieldCountry, field.TypeString, value)
 	}
-	if value, ok := _u.mutation.LogoURL(); ok {
-		_spec.SetField(restaurant.FieldLogoURL, field.TypeString, value)
-	}
-	if _u.mutation.LogoURLCleared() {
-		_spec.ClearField(restaurant.FieldLogoURL, field.TypeString)
-	}
-	if value, ok := _u.mutation.CoverImageURL(); ok {
-		_spec.SetField(restaurant.FieldCoverImageURL, field.TypeString, value)
-	}
-	if _u.mutation.CoverImageURLCleared() {
-		_spec.ClearField(restaurant.FieldCoverImageURL, field.TypeString)
-	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(restaurant.FieldStatus, field.TypeEnum, value)
 	}
@@ -1595,6 +1742,64 @@ func (_u *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant, 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(order.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.LogoAssetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.LogoAssetTable,
+			Columns: []string{restaurant.LogoAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.LogoAssetIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.LogoAssetTable,
+			Columns: []string{restaurant.LogoAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if _u.mutation.CoverImageAssetCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.CoverImageAssetTable,
+			Columns: []string{restaurant.CoverImageAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := _u.mutation.CoverImageAssetIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.M2O,
+			Inverse: false,
+			Table:   restaurant.CoverImageAssetTable,
+			Columns: []string{restaurant.CoverImageAssetColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(mediaasset.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -10,6 +10,7 @@ import (
 	"github.com/Jiruu246/rms/internal/config"
 	_ "github.com/Jiruu246/rms/internal/docs"
 	"github.com/Jiruu246/rms/internal/middlewares"
+	"github.com/Jiruu246/rms/internal/r2storage"
 	"github.com/Jiruu246/rms/internal/server"
 	"github.com/Jiruu246/rms/pkg/database"
 	"github.com/joho/godotenv"
@@ -32,14 +33,12 @@ func main() {
 		fmt.Println("No .env file found, relying on environment variables")
 	}
 
-	// load config
 	cfg, err := config.Load()
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to load config: %v\n", err)
 		os.Exit(1)
 	}
 
-	// init database
 	db, err := database.NewEntClient(cfg.DatabaseURL)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "failed to init database: %v\n", err)
@@ -50,10 +49,14 @@ func main() {
 		}
 	}()
 
-	// initialize custom middlewares
+	storageProvider, err := r2storage.NewProvider(cfg.R2Config)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "failed to init storage provider: %v\n", err)
+		os.Exit(1)
+	}
 
 	// create server
-	srv := server.New(cfg, db, server.Middlewares{
+	srv := server.New(cfg, db, storageProvider, server.Middlewares{
 		RestrictiveCORS: middlewares.RestrictiveCORS,
 		JWTMiddleware:   middlewares.JWTMiddleware,
 	})

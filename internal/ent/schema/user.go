@@ -46,5 +46,7 @@ func (User) Edges() []ent.Edge {
 		edge.To("restaurants", Restaurant.Type),
 		edge.To("auth_providers", UserAuthProvider.Type),
 		edge.To("refresh_tokens", RefreshToken.Type),
+		edge.To("media_uploads", MediaUpload.Type),
+		edge.To("uploaded_media_assets", MediaAsset.Type),
 	}
 }

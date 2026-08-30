@@ -70,41 +70,65 @@ type MockRestaurantService struct {
 	mock.Mock
 }
 
-func (m *MockRestaurantService) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.RestaurantResponse, error) {
+func (m *MockRestaurantService) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.Restaurant, error) {
 	args := m.Called(ctx, data)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
-func (m *MockRestaurantService) GetByID(ctx context.Context, actor authz.Actor, id uuid.UUID) (*dto.RestaurantResponse, error) {
+func (m *MockRestaurantService) GetByID(ctx context.Context, actor authz.Actor, id uuid.UUID) (*dto.Restaurant, error) {
 	args := m.Called(ctx, actor, id)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
-func (m *MockRestaurantService) GetAll(ctx context.Context, actor authz.Actor) ([]*dto.RestaurantResponse, error) {
+func (m *MockRestaurantService) GetAll(ctx context.Context, actor authz.Actor) ([]*dto.Restaurant, error) {
 	args := m.Called(ctx, actor)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).([]*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).([]*dto.Restaurant), args.Error(1)
 }
 
-func (m *MockRestaurantService) Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.RestaurantResponse, error) {
+func (m *MockRestaurantService) Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.Restaurant, error) {
 	args := m.Called(ctx, actor, id, req)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
-	return args.Get(0).(*dto.RestaurantResponse), args.Error(1)
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
 func (m *MockRestaurantService) Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error {
 	args := m.Called(ctx, actor, id)
 	return args.Error(0)
+}
+
+func (m *MockRestaurantService) CreateImageUpload(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot) (*dto.CreateUploadResult, error) {
+	args := m.Called(ctx, actor, id, slot)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.CreateUploadResult), args.Error(1)
+}
+
+func (m *MockRestaurantService) UpdateImage(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot, uploadID uuid.UUID) (*dto.Restaurant, error) {
+	args := m.Called(ctx, actor, id, slot, uploadID)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
+}
+
+func (m *MockRestaurantService) ClearImage(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot) (*dto.Restaurant, error) {
+	args := m.Called(ctx, actor, id, slot)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.Restaurant), args.Error(1)
 }
 
 func (m *MockRestaurantService) AuthorizeOwnership(ctx context.Context, actor authz.Actor, action authz.Action, restaurantID uuid.UUID) error {

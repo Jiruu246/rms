@@ -1444,7 +1444,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_RestaurantResponse"
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Restaurant"
                         }
                     },
                     "500": {
@@ -1486,7 +1486,7 @@ const docTemplate = `{
                     "201": {
                         "description": "Created",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse"
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant"
                         }
                     },
                     "400": {
@@ -1532,7 +1532,7 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse"
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant"
                         }
                     },
                     "400": {
@@ -1593,6 +1593,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
+                "description": "Updates plain restaurant attributes only. Images are a\nseparate subresource\n/restaurants/{id}/images/{slot} — so an image update never\nshares a failure boundary with this request.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1602,7 +1603,7 @@ const docTemplate = `{
                 "tags": [
                     "restaurants"
                 ],
-                "summary": "Update a restaurant",
+                "summary": "Update a restaurant's attributes",
                 "parameters": [
                     {
                         "type": "string",
@@ -1626,7 +1627,215 @@ const docTemplate = `{
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse"
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/restaurants/{id}/images/{slot}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Consumes the given upload (see\nPOST /restaurants/{id}/images/{slot}/uploads) and assigns\nthe resulting media asset to the named image slot.\nWhatever was previously assigned to this slot, if\nanything, is left in storage untouched by this call.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurants"
+                ],
+                "summary": "Assign a restaurant image slot",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Restaurant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "logo",
+                            "cover"
+                        ],
+                        "type": "string",
+                        "description": "Image slot",
+                        "name": "slot",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Upload to assign",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.UpdateRestaurantImageRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "409": {
+                        "description": "Conflict",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Detaches whatever media asset is assigned to the named\nslot. Idempotent: clearing an already-empty slot succeeds.\nThe detached asset, if any, is left in storage untouched\nby this call.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurants"
+                ],
+                "summary": "Clear a restaurant image slot",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Restaurant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "logo",
+                            "cover"
+                        ],
+                        "type": "string",
+                        "description": "Image slot",
+                        "name": "slot",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-any"
+                        }
+                    }
+                }
+            }
+        },
+        "/restaurants/{id}/images/{slot}/uploads": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Issues a presigned upload grant for the named image slot.\nThe purpose (and its content-type/size constraints) is\nderived from the slot itself — the client never declares\nit. Upload the file directly to the returned URL, then\ncall PUT /restaurants/{id}/images/{slot} with the\nreturned upload_id to attach it.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "restaurants"
+                ],
+                "summary": "Request an upload for a restaurant image slot",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "format": "uuid",
+                        "description": "Restaurant ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "enum": [
+                            "logo",
+                            "cover"
+                        ],
+                        "type": "string",
+                        "description": "Image slot",
+                        "name": "slot",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_CreateUploadResult"
                         }
                     },
                     "400": {
@@ -1929,9 +2138,6 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
-                "cover_image_url": {
-                    "type": "string"
-                },
                 "currency": {
                     "type": "string"
                 },
@@ -1940,9 +2146,6 @@ const docTemplate = `{
                     "maxLength": 1000
                 },
                 "email": {
-                    "type": "string"
-                },
-                "logo_url": {
                     "type": "string"
                 },
                 "name": {
@@ -1969,6 +2172,23 @@ const docTemplate = `{
                     ]
                 },
                 "zip_code": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Jiruu246_rms_internal_dto.CreateUploadResult": {
+            "type": "object",
+            "properties": {
+                "constraints": {
+                    "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.UploadConstraints"
+                },
+                "expires_at": {
+                    "type": "string"
+                },
+                "upload": {
+                    "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.UploadGrant"
+                },
+                "upload_id": {
                     "type": "string"
                 }
             }
@@ -2178,7 +2398,7 @@ const docTemplate = `{
                 "OrderTypeDELIVERY"
             ]
         },
-        "github_com_Jiruu246_rms_internal_dto.RestaurantResponse": {
+        "github_com_Jiruu246_rms_internal_dto.Restaurant": {
             "type": "object",
             "properties": {
                 "address": {
@@ -2335,6 +2555,17 @@ const docTemplate = `{
                 }
             }
         },
+        "github_com_Jiruu246_rms_internal_dto.UpdateRestaurantImageRequest": {
+            "type": "object",
+            "required": [
+                "upload_id"
+            ],
+            "properties": {
+                "upload_id": {
+                    "type": "string"
+                }
+            }
+        },
         "github_com_Jiruu246_rms_internal_dto.UpdateRestaurantRequest": {
             "type": "object",
             "properties": {
@@ -2347,9 +2578,6 @@ const docTemplate = `{
                 "country": {
                     "type": "string"
                 },
-                "cover_image_url": {
-                    "type": "string"
-                },
                 "currency": {
                     "type": "string"
                 },
@@ -2358,9 +2586,6 @@ const docTemplate = `{
                     "maxLength": 1000
                 },
                 "email": {
-                    "type": "string"
-                },
-                "logo_url": {
                     "type": "string"
                 },
                 "name": {
@@ -2398,6 +2623,37 @@ const docTemplate = `{
                     "type": "string"
                 },
                 "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Jiruu246_rms_internal_dto.UploadConstraints": {
+            "type": "object",
+            "properties": {
+                "allowed_content_types": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "max_size_bytes": {
+                    "type": "integer"
+                }
+            }
+        },
+        "github_com_Jiruu246_rms_internal_dto.UploadGrant": {
+            "type": "object",
+            "properties": {
+                "headers": {
+                    "type": "object",
+                    "additionalProperties": {
+                        "type": "string"
+                    }
+                },
+                "method": {
+                    "type": "string"
+                },
+                "url": {
                     "type": "string"
                 }
             }
@@ -2546,13 +2802,13 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_RestaurantResponse": {
+        "github_com_Jiruu246_rms_pkg_utils.APIResponse-array_github_com_Jiruu246_rms_internal_dto_Restaurant": {
             "type": "object",
             "properties": {
                 "data": {
                     "type": "array",
                     "items": {
-                        "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.RestaurantResponse"
+                        "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.Restaurant"
                     }
                 },
                 "error": {
@@ -2588,6 +2844,23 @@ const docTemplate = `{
             "properties": {
                 "data": {
                     "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.Category"
+                },
+                "error": {
+                    "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError"
+                },
+                "success": {
+                    "type": "boolean"
+                },
+                "timestamp": {
+                    "type": "string"
+                }
+            }
+        },
+        "github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_CreateUploadResult": {
+            "type": "object",
+            "properties": {
+                "data": {
+                    "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.CreateUploadResult"
                 },
                 "error": {
                     "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError"
@@ -2668,11 +2941,11 @@ const docTemplate = `{
                 }
             }
         },
-        "github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_RestaurantResponse": {
+        "github_com_Jiruu246_rms_pkg_utils.APIResponse-github_com_Jiruu246_rms_internal_dto_Restaurant": {
             "type": "object",
             "properties": {
                 "data": {
-                    "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.RestaurantResponse"
+                    "$ref": "#/definitions/github_com_Jiruu246_rms_internal_dto.Restaurant"
                 },
                 "error": {
                     "$ref": "#/definitions/github_com_Jiruu246_rms_pkg_utils.APIError"

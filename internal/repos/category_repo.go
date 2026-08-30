@@ -247,7 +247,7 @@ func (r *categoryRepository) GetAuthorizationResource(ctx context.Context, id uu
 		Query().
 		Where(category.ID(id)).
 		QueryRestaurant().
-		Select(restaurant.FieldID, restaurant.FieldUserID).
+		Select(restaurant.FieldID, restaurant.FieldOwnerID).
 		Only(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
@@ -260,7 +260,7 @@ func (r *categoryRepository) GetAuthorizationResource(ctx context.Context, id uu
 		Type:         "category",
 		ID:           id,
 		RestaurantID: rest.ID,
-		OwnerUserID:  rest.UserID,
+		OwnerUserID:  rest.OwnerID,
 	}, nil
 }
 

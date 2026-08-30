@@ -10,6 +10,8 @@ import (
 	"github.com/google/uuid"
 )
 
+const errInvalidRestaurantIDFormat = "Invalid restaurant ID format"
+
 type RestaurantHandler struct {
 	service services.RestaurantService
 }
@@ -28,7 +30,7 @@ func NewRestaurantHandler(service services.RestaurantService) *RestaurantHandler
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			request	body		dto.CreateRestaurantRequest	true	"Restaurant details"
-//	@Success		201		{object}	utils.APIResponse[dto.RestaurantResponse]
+//	@Success		201		{object}	utils.APIResponse[dto.Restaurant]
 //	@Failure		400		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
 //	@Router			/restaurants [post]
@@ -63,7 +65,7 @@ func (h *RestaurantHandler) CreateRestaurant(c *gin.Context) {
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			id	path		string	true	"Restaurant ID"	format(uuid)
-//	@Success		200	{object}	utils.APIResponse[dto.RestaurantResponse]
+//	@Success		200	{object}	utils.APIResponse[dto.Restaurant]
 //	@Failure		400	{object}	utils.APIResponse[any]
 //	@Failure		404	{object}	utils.APIResponse[any]
 //	@Router			/restaurants/{id} [get]
@@ -73,7 +75,7 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		utils.WriteBadRequest(c.Writer, "Invalid restaurant ID format")
+		utils.WriteBadRequest(c.Writer, errInvalidRestaurantIDFormat)
 		return
 	}
 
@@ -92,7 +94,7 @@ func (h *RestaurantHandler) GetRestaurant(c *gin.Context) {
 //	@Tags			restaurants
 //	@Produce		json
 //	@Security		BearerAuth
-//	@Success		200	{object}	utils.APIResponse[[]dto.RestaurantResponse]
+//	@Success		200	{object}	utils.APIResponse[[]dto.Restaurant]
 //	@Failure		500	{object}	utils.APIResponse[any]
 //	@Router			/restaurants [get]
 func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
@@ -109,14 +111,18 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 
 // UpdateRestaurant handles PATCH /api/restaurants/{id}
 //
-//	@Summary		Update a restaurant
+//	@Summary		Update a restaurant's attributes
+//	@Description	Updates plain restaurant attributes only. Images are a
+//	@Description	separate subresource
+//	@Description	/restaurants/{id}/images/{slot} — so an image update never
+//	@Description	shares a failure boundary with this request.
 //	@Tags			restaurants
 //	@Accept			json
 //	@Produce		json
 //	@Security		BearerAuth
 //	@Param			id		path		string						true	"Restaurant ID"	format(uuid)
 //	@Param			request	body		dto.UpdateRestaurantRequest	true	"Fields to update"
-//	@Success		200		{object}	utils.APIResponse[dto.RestaurantResponse]
+//	@Success		200		{object}	utils.APIResponse[dto.Restaurant]
 //	@Failure		400		{object}	utils.APIResponse[any]
 //	@Failure		404		{object}	utils.APIResponse[any]
 //	@Failure		500		{object}	utils.APIResponse[any]
@@ -127,7 +133,7 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		utils.WriteBadRequest(c.Writer, "Invalid restaurant ID format")
+		utils.WriteBadRequest(c.Writer, errInvalidRestaurantIDFormat)
 		return
 	}
 
@@ -140,6 +146,145 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 	updated, err := h.service.Update(c.Request.Context(), authz.NewActorFromClaims(claims), id, &req)
 	if err != nil {
 		apperr.WriteHTTPError(c.Writer, err, "Failed to update restaurant")
+		return
+	}
+
+	utils.WriteSuccess(c.Writer, updated)
+}
+
+// CreateRestaurantImageUpload handles
+// POST /api/restaurants/{id}/images/{slot}/uploads
+//
+//	@Summary		Request an upload for a restaurant image slot
+//	@Description	Issues a presigned upload grant for the named image slot.
+//	@Description	The purpose (and its content-type/size constraints) is
+//	@Description	derived from the slot itself — the client never declares
+//	@Description	it. Upload the file directly to the returned URL, then
+//	@Description	call PUT /restaurants/{id}/images/{slot} with the
+//	@Description	returned upload_id to attach it.
+//	@Tags			restaurants
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string	true	"Restaurant ID"	format(uuid)
+//	@Param			slot	path		string	true	"Image slot"	Enums(logo, cover)
+//	@Success		201		{object}	utils.APIResponse[dto.CreateUploadResult]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/restaurants/{id}/images/{slot}/uploads [post]
+func (h *RestaurantHandler) CreateRestaurantImageUpload(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		utils.WriteBadRequest(c.Writer, errInvalidRestaurantIDFormat)
+		return
+	}
+
+	slot, ok := dto.ParseRestaurantImageSlot(c.Param("slot"))
+	if !ok {
+		utils.WriteBadRequest(c.Writer, "Invalid image slot")
+		return
+	}
+
+	result, err := h.service.CreateImageUpload(c.Request.Context(), authz.NewActorFromClaims(claims), id, slot)
+	if err != nil {
+		apperr.WriteHTTPError(c.Writer, err, "Failed to create restaurant image upload")
+		return
+	}
+
+	utils.WriteCreated(c.Writer, result)
+}
+
+// UpdateRestaurantImage handles PUT /api/restaurants/{id}/images/{slot}
+//
+//	@Summary		Assign a restaurant image slot
+//	@Description	Consumes the given upload (see
+//	@Description	POST /restaurants/{id}/images/{slot}/uploads) and assigns
+//	@Description	the resulting media asset to the named image slot.
+//	@Description	Whatever was previously assigned to this slot, if
+//	@Description	anything, is left in storage untouched by this call.
+//	@Tags			restaurants
+//	@Accept			json
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string								true	"Restaurant ID"	format(uuid)
+//	@Param			slot	path		string								true	"Image slot"	Enums(logo, cover)
+//	@Param			request	body		dto.UpdateRestaurantImageRequest	true	"Upload to assign"
+//	@Success		200		{object}	utils.APIResponse[dto.Restaurant]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
+//	@Failure		409		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/restaurants/{id}/images/{slot} [put]
+func (h *RestaurantHandler) UpdateRestaurantImage(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		utils.WriteBadRequest(c.Writer, errInvalidRestaurantIDFormat)
+		return
+	}
+
+	slot, ok := dto.ParseRestaurantImageSlot(c.Param("slot"))
+	if !ok {
+		utils.WriteBadRequest(c.Writer, "Invalid image slot")
+		return
+	}
+
+	var req dto.UpdateRestaurantImageRequest
+	if err := utils.ParseAndValidateRequest(c, &req); err != nil {
+		utils.WriteBadRequest(c.Writer, err.Error())
+		return
+	}
+
+	updated, err := h.service.UpdateImage(c.Request.Context(), authz.NewActorFromClaims(claims), id, slot, req.UploadID)
+	if err != nil {
+		apperr.WriteHTTPError(c.Writer, err, "Failed to update restaurant image")
+		return
+	}
+
+	utils.WriteSuccess(c.Writer, updated)
+}
+
+// DeleteRestaurantImage handles DELETE /api/restaurants/{id}/images/{slot}
+//
+//	@Summary		Clear a restaurant image slot
+//	@Description	Detaches whatever media asset is assigned to the named
+//	@Description	slot. Idempotent: clearing an already-empty slot succeeds.
+//	@Description	The detached asset, if any, is left in storage untouched
+//	@Description	by this call.
+//	@Tags			restaurants
+//	@Produce		json
+//	@Security		BearerAuth
+//	@Param			id		path		string	true	"Restaurant ID"	format(uuid)
+//	@Param			slot	path		string	true	"Image slot"	Enums(logo, cover)
+//	@Success		200		{object}	utils.APIResponse[dto.Restaurant]
+//	@Failure		400		{object}	utils.APIResponse[any]
+//	@Failure		404		{object}	utils.APIResponse[any]
+//	@Failure		500		{object}	utils.APIResponse[any]
+//	@Router			/restaurants/{id}/images/{slot} [delete]
+func (h *RestaurantHandler) DeleteRestaurantImage(c *gin.Context) {
+	claims := c.MustGet("claims").(utils.JWTClaims)
+
+	idStr := c.Param("id")
+	id, err := uuid.Parse(idStr)
+	if err != nil {
+		utils.WriteBadRequest(c.Writer, errInvalidRestaurantIDFormat)
+		return
+	}
+
+	slot, ok := dto.ParseRestaurantImageSlot(c.Param("slot"))
+	if !ok {
+		utils.WriteBadRequest(c.Writer, "Invalid image slot")
+		return
+	}
+
+	updated, err := h.service.ClearImage(c.Request.Context(), authz.NewActorFromClaims(claims), id, slot)
+	if err != nil {
+		apperr.WriteHTTPError(c.Writer, err, "Failed to clear restaurant image")
 		return
 	}
 
@@ -162,7 +307,7 @@ func (h *RestaurantHandler) DeleteRestaurant(c *gin.Context) {
 	idStr := c.Param("id")
 	id, err := uuid.Parse(idStr)
 	if err != nil {
-		utils.WriteBadRequest(c.Writer, "Invalid restaurant ID format")
+		utils.WriteBadRequest(c.Writer, errInvalidRestaurantIDFormat)
 		return
 	}
 

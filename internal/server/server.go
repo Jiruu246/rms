@@ -12,6 +12,7 @@ import (
 	"github.com/Jiruu246/rms/internal/handler"
 	"github.com/Jiruu246/rms/internal/repos"
 	"github.com/Jiruu246/rms/internal/services"
+	"github.com/Jiruu246/rms/pkg/storage"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -22,15 +23,16 @@ type Middlewares struct {
 	JWTMiddleware   func(secretKey []byte) gin.HandlerFunc
 }
 type Server struct {
-	cfg           *config.Config
-	client        *ent.Client
-	engine        *gin.Engine
-	srv           *http.Server
-	middlewares   Middlewares
-	cookieFactory *cookies.Factory
+	cfg             *config.Config
+	client          *ent.Client
+	engine          *gin.Engine
+	srv             *http.Server
+	middlewares     Middlewares
+	cookieFactory   *cookies.Factory
+	storageProvider storage.StorageProvider
 }
 
-func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Server {
+func New(cfg *config.Config, client *ent.Client, storageProvider storage.StorageProvider, middlewares Middlewares) *Server {
 	if cfg.Env == config.EnvProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
@@ -44,11 +46,12 @@ func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Serve
 	engine.Use(middlewares.RestrictiveCORS(cfg.AllowedOrigins))
 
 	s := &Server{
-		cfg:           cfg,
-		client:        client,
-		engine:        engine,
-		middlewares:   middlewares,
-		cookieFactory: cookieFactory,
+		cfg:             cfg,
+		client:          client,
+		engine:          engine,
+		middlewares:     middlewares,
+		cookieFactory:   cookieFactory,
+		storageProvider: storageProvider,
 	}
 
 	s.routes()
@@ -71,14 +74,17 @@ func (s *Server) routes() {
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
 	refreshTokenRepo := repos.NewEntRefreshTokenRepository(s.client)
-	restaurantRepo := repos.NewEntRestaurantRepository(s.client)
+	restaurantRepo := repos.NewEntRestaurantRepository(s.client, s.cfg.R2Config.PublicBaseURL)
 	menuitemRepo := repos.NewEntMenuItemRepository(s.client)
 	modifierRepo := repos.NewEntModifierRepository(s.client)
 	modifierOptionRepo := repos.NewEntModifierOptionRepository(s.client)
 	orderRepo := repos.NewEntOrderRepository(s.client)
+	mediaUploadRepo := repos.NewEntMediaUploadRepository(s.client)
+	mediaAssetRepo := repos.NewEntMediaAssetRepository(s.client)
 
 	// initialize services
-	restaurantService := services.NewRestaurantService(restaurantRepo)
+	mediaService := services.NewMediaService(mediaUploadRepo, mediaAssetRepo, s.storageProvider, s.cfg.R2Config.UploadGrantExpiry)
+	restaurantService := services.NewRestaurantService(restaurantRepo, mediaService)
 	categoryService := services.NewCategoryService(categoryRepo, restaurantService)
 	authService := services.NewAuthService(s.cfg.AuthConfig, userRepo, refreshTokenRepo)
 	userService := services.NewUserService(userRepo)
@@ -144,6 +150,9 @@ func (s *Server) routes() {
 			restaurants.GET("/:id", restaurantHandler.GetRestaurant)
 			restaurants.PATCH("/:id", restaurantHandler.UpdateRestaurant)
 			restaurants.DELETE("/:id", restaurantHandler.DeleteRestaurant)
+			restaurants.POST("/:id/images/:slot/uploads", restaurantHandler.CreateRestaurantImageUpload)
+			restaurants.PUT("/:id/images/:slot", restaurantHandler.UpdateRestaurantImage)
+			restaurants.DELETE("/:id/images/:slot", restaurantHandler.DeleteRestaurantImage)
 		}
 
 		menuItems := api.Group("/menu-items")

@@ -33,6 +33,7 @@ type Config struct {
 	AllowedOrigins   []string
 	CookieConfig     CookieConfig
 	AuthConfig       AuthConfig
+	R2Config         R2Config
 }
 
 const configDir = "configs"
@@ -118,6 +119,7 @@ func bindEnv(configurator *viper.Viper) {
 func buildConfig(configurator *viper.Viper, env Environment) *Config {
 	cookieConfig := NewCookieConfig(configurator)
 	authConfig := NewAuthConfig(configurator)
+	R2Config := NewR2Config(configurator)
 
 	return &Config{
 		Env:              env,
@@ -132,6 +134,7 @@ func buildConfig(configurator *viper.Viper, env Environment) *Config {
 		AllowedOrigins:   allowedOrigins(configurator),
 		CookieConfig:     cookieConfig,
 		AuthConfig:       authConfig,
+		R2Config:         R2Config,
 	}
 }
 

@@ -3,17 +3,11 @@ name: Integration Tests
 on:
   workflow_call:
     secrets:
-      APP_ENV:
-        required: true
       APP_POSTGRES_USER:
         required: true
       APP_POSTGRES_PASSWORD:
         required: true
       APP_JWT_SECRET:
-        required: true
-      APP_ACCESS_TOKEN_EXPIRATION:
-        required: true
-      APP_REFRESH_TOKEN_EXPIRATION:
         required: true
 
 permissions:
@@ -24,13 +18,11 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 15
     env:
-      APP_ENV: ${{ secrets.APP_ENV }}
+      APP_ENV: ${{ vars.APP_ENV }}
       APP_POSTGRES_USER: ${{ secrets.APP_POSTGRES_USER }}
       APP_POSTGRES_PASSWORD: ${{ secrets.APP_POSTGRES_PASSWORD }}
       APP_POSTGRES_PORT: "5432"
       APP_JWT_SECRET: ${{ secrets.APP_JWT_SECRET }}
-      APP_ACCESS_TOKEN_EXPIRATION: ${{ secrets.APP_ACCESS_TOKEN_EXPIRATION }} # TOOD: This should be set in a config file rather than an env variable
-      APP_REFRESH_TOKEN_EXPIRATION: ${{ secrets.APP_REFRESH_TOKEN_EXPIRATION }}
     services:
       postgres:
         image: postgres:16-alpine

@@ -11,6 +11,7 @@ Go version: 1.25.1
 
 ```
 cmd/                  # CLI entrypoints (server, migrate)
+configs/              # Layered YAML config
 internal/
   config/             # Config loading (viper + godotenv)
   cookies/            # Cookie helpers
@@ -32,6 +33,18 @@ pkg/
   utils/
 integration_tests/
 ```
+
+## Configuration (`internal/config` + `configs/`)
+
+`config.Load()` (`internal/config/config.go`) layers configuration from three sources, in increasing precedence:
+
+1. `configs/base.yaml` — defaults shared by every environment (port, log level, timeouts, cookie policy, token TTLs).
+2. `configs/<env>.yaml` — overrides for the environment picked by `APP_ENV`
+
+Secrets are never stored in `configs/*.yaml` — only env vars / `.env`. `APP_ENV` itself is read directly from the OS environment (not through viper) since it decides which YAML overlay to load in the first place.
+
+Both Dockerfiles (`Dockerfile.server`, `Dockerfile.migrator`) copy `configs/base.yaml` and `configs/prod.yaml` only (never `dev.yaml`) — these images are only ever deployed to production, so `dev.yaml` is deliberately excluded to guarantee a misconfigured `APP_ENV`
+
 
 ## Pagination system (`pkg/pagination` + per-entity adapters in `internal/repos/*_repo.go`)
 
@@ -104,7 +117,7 @@ Exposes: `ListCategories(ctx, client, req, filters)`, `NewCategoryQueryExecutor(
 
 Handlers are annotated with `swaggo/swag` comments; the OpenAPI 2.0 spec is generated into `internal/docs/` (`docs.go`, `swagger.json`, `swagger.yaml`) and served at `/swagger/index.html` via `gin-swagger`.
 
-The route is only registered when `cfg.Env != "production"` (see `Server.routes()` in `internal/server/server.go`) — the API spec is not exposed on production deployments.
+The route is only registered on non production instances (see `Server.routes()` in `internal/server/server.go`)
 
 - General API info (`@title`, `@BasePath`, `@securityDefinitions.apikey BearerAuth`, ...) lives above `func main()` in `cmd/server/main.go`.
 - Each handler method has its own `@Summary`/`@Tags`/`@Param`/`@Success`/`@Failure`/`@Router` block directly above the function — keep it next to the code it documents, not in a separate file.

@@ -404,12 +404,6 @@ between them.
    slot's column, overwriting whatever was there before
 ```
 
-Consuming an upload (step 2) does a real network call (`StatObject`) and
-commits its own transaction inside `MediaUploadRepository.Consume` — it
-cannot be wrapped in the same DB transaction as the restaurant row update
-without violating "never hold a DB transaction open across a remote storage
-call".
-
 **Whatever was previously assigned to a slot is never touched by
 `UpdateImage` or `ClearImage` — not deleted from storage, not even
 soft-deleted in the database.** Once step 3 repoints (or, for `ClearImage`,
@@ -431,12 +425,10 @@ Concretely:
   (content-type/size/purpose mismatch, or an already-consumed/expired
   conflict) — the function returns immediately; step 3 never runs, so the
   row is untouched.
-- **The row write fails after a new upload was consumed**: step 2 succeeded,
-  step 3 fails — the newly-consumed asset is compensated (soft-deleted), the
-  same synchronous-compensation shape used everywhere else in this
-  framework. This is unrelated to the old-asset orphaning above: it only
-  cleans up the *new* asset this request itself created but never managed to
-  attach anywhere.
+- **The row write fails after a new upload was consumed**: step 2 and step 3
+  share one transaction, so step 3 failing rolls step 2's asset-create back
+  too — the newly-consumed asset never actually commits, so there is no
+  orphan left to clean up afterward.
 
 ### Idempotency
 
@@ -546,13 +538,14 @@ a presigned grant for that slot, `PUT` assigns (replacing whatever was
 there, consuming the upload as part of the same request), `DELETE`
 detaches — see Flow 4.
 
-`DeleteMedia` has no HTTP route of its own and, as of this iteration, is no
-longer called from the Restaurant image flow at all — `UpdateImage` and
-`ClearImage` never retire the asset a slot previously held (see "Whatever
-was previously assigned..." in Flow 4). It is still used internally to
-compensate a freshly-consumed asset when the row write in the *same request*
-fails partway through. A direct client-facing route would still need to be
-added if some future feature needs to delete a `MediaAsset` outright.
+`DeleteMedia` has no HTTP route of its own and, as of this iteration, is not
+called from anywhere in the codebase — `UpdateImage` and `ClearImage` never
+retire the asset a slot previously held (see "Whatever was previously
+assigned..." in Flow 4), and the Restaurant image flow no longer needs a
+compensating delete now that `ConsumeUpload` and `SetImage` commit
+atomically (see Flow 4). It remains on `MediaService`'s interface for a
+future direct client-facing route or other caller that needs to delete a
+`MediaAsset` outright.
 
 ## Security properties
 
@@ -588,9 +581,8 @@ added if some future feature needs to delete a `MediaAsset` outright.
   is distinct from Flow 3's cleanup, which does delete storage — for a
   *rejected* object, not a finalized asset being deleted later.)
 - **`DeleteMedia` has no HTTP route of its own** — see "API surface today".
-  It is only invoked internally, to compensate a freshly-consumed asset when
-  a Restaurant image-slot write fails partway through the same request — not
-  exposed for a client to call directly yet.
+  It currently has no caller at all; a future direct client-facing route
+  would need one added.
 - **Replaced/cleared Restaurant images are not reconciled at all.**
   `UpdateImage`/`ClearImage` (Flow 4) never soft-delete, let alone actually
   delete from storage, whatever asset a slot previously held — they simply
@@ -598,13 +590,10 @@ added if some future feature needs to delete a `MediaAsset` outright.
   behind an orphaned, still-`active` `MediaAsset` row (and its R2 object),
   with neither a synchronous step nor a background sweep to reconcile it.
   Explicitly deferred to the next iteration.
-- **No async cleanup / sweep for orphaned assets generally.** Beyond the
-  image-slot case above, the synchronous compensation that *does* still
-  exist (soft-deleting a newly-consumed asset when the same request's row
-  write fails) is best-effort and scoped to that one request. There is no
-  background job that finds and retires orphans missed by that path (e.g. a
-  crash between consuming and writing the row) — deliberately out of scope
-  for this stage.
+- **No async cleanup / sweep for orphaned assets generally.** There is no
+  background job that finds and retires orphaned `MediaAsset` rows (e.g. from
+  the image-slot replace/clear case above) — deliberately out of scope for
+  this stage.
 - **Only Restaurant is integrated.** `MenuItem.image_url` (and any future
   resource) still stores/accepts a raw URL and does not go through this
   framework — migrating it would repeat Flow 4's schema-change + service

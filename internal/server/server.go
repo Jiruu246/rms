@@ -71,6 +71,7 @@ func (s *Server) routes() {
 	}
 
 	// initialize repositories
+	transactor := repos.NewEntTransactor(s.client)
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
 	refreshTokenRepo := repos.NewEntRefreshTokenRepository(s.client)
@@ -83,8 +84,8 @@ func (s *Server) routes() {
 	mediaAssetRepo := repos.NewEntMediaAssetRepository(s.client)
 
 	// initialize services
-	mediaService := services.NewMediaService(mediaUploadRepo, mediaAssetRepo, s.storageProvider, s.cfg.R2Config.UploadGrantExpiry)
-	restaurantService := services.NewRestaurantService(restaurantRepo, mediaService)
+	mediaService := services.NewMediaService(transactor, mediaUploadRepo, mediaAssetRepo, s.storageProvider, s.cfg.R2Config.UploadGrantExpiry)
+	restaurantService := services.NewRestaurantService(transactor, restaurantRepo, mediaService)
 	categoryService := services.NewCategoryService(categoryRepo, restaurantService)
 	authService := services.NewAuthService(s.cfg.AuthConfig, userRepo, refreshTokenRepo)
 	userService := services.NewUserService(userRepo)

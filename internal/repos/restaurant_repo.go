@@ -42,7 +42,8 @@ func NewEntRestaurantRepository(client *ent.Client, mediaPublicBaseURL string) R
 }
 
 func (r *restaurantRepository) Create(ctx context.Context, data *dto.CreateRestaurantData) (*dto.Restaurant, error) {
-	create, err := r.client.Restaurant.Create().
+	c := clientFromContext(ctx, r.client)
+	create, err := c.Restaurant.Create().
 		SetName(data.Request.Name).
 		SetDescription(data.Request.Description).
 		SetPhone(data.Request.Phone).
@@ -68,7 +69,8 @@ func (r *restaurantRepository) Create(ctx context.Context, data *dto.CreateResta
 // TODO This should not always join to the assets (e.g. for internal processing, we don't need the assets)
 // We can use query options to control this behavior see menu_item_repo.go for an example
 func (r *restaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.Restaurant, error) {
-	row, err := r.client.Restaurant.Query().
+	c := clientFromContext(ctx, r.client)
+	row, err := c.Restaurant.Query().
 		Where(restaurant.IDEQ(id)).
 		WithLogoAsset().
 		WithCoverImageAsset().
@@ -85,7 +87,8 @@ func (r *restaurantRepository) GetByID(ctx context.Context, id uuid.UUID) (*dto.
 }
 
 func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateRestaurantData) (*dto.Restaurant, error) {
-	update := r.client.Restaurant.UpdateOneID(data.ID)
+	c := clientFromContext(ctx, r.client)
+	update := c.Restaurant.UpdateOneID(data.ID)
 
 	if data.Request.Name != nil {
 		update.SetName(*data.Request.Name)
@@ -151,7 +154,8 @@ func (r *restaurantRepository) Update(ctx context.Context, data *dto.UpdateResta
 // callers decide separately whether/when that old asset is reconciled (see
 // RestaurantService.UpdateImage).
 func (r *restaurantRepository) SetImage(ctx context.Context, data *dto.SetRestaurantImageData) (*dto.Restaurant, error) {
-	update := r.client.Restaurant.UpdateOneID(data.RestaurantID)
+	c := clientFromContext(ctx, r.client)
+	update := c.Restaurant.UpdateOneID(data.RestaurantID)
 
 	switch data.Slot {
 	case dto.RestaurantImageSlotLogo:
@@ -175,7 +179,8 @@ func (r *restaurantRepository) SetImage(ctx context.Context, data *dto.SetRestau
 // an already-nil column to nil again is not an error, so a repeated clear on
 // an already-empty slot succeeds the same way.
 func (r *restaurantRepository) ClearImage(ctx context.Context, data *dto.ClearRestaurantImageData) (*dto.Restaurant, error) {
-	update := r.client.Restaurant.UpdateOneID(data.RestaurantID)
+	c := clientFromContext(ctx, r.client)
+	update := c.Restaurant.UpdateOneID(data.RestaurantID)
 
 	switch data.Slot {
 	case dto.RestaurantImageSlotLogo:
@@ -196,7 +201,8 @@ func (r *restaurantRepository) ClearImage(ctx context.Context, data *dto.ClearRe
 }
 
 func (r *restaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
-	err := r.client.Restaurant.DeleteOneID(id).Exec(ctx)
+	c := clientFromContext(ctx, r.client)
+	err := c.Restaurant.DeleteOneID(id).Exec(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
 			return apperr.NotFound("restaurant %s", id)
@@ -207,7 +213,8 @@ func (r *restaurantRepository) Delete(ctx context.Context, id uuid.UUID) error {
 }
 
 func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id uuid.UUID) (authz.Resource, error) {
-	row, err := r.client.Restaurant.Query().
+	c := clientFromContext(ctx, r.client)
+	row, err := c.Restaurant.Query().
 		Where(restaurant.IDEQ(id)).
 		Select(restaurant.FieldID, restaurant.FieldOwnerID).
 		Only(ctx)
@@ -228,7 +235,8 @@ func (r *restaurantRepository) GetAuthorizationResource(ctx context.Context, id 
 }
 
 func (r *restaurantRepository) GetAllForUser(ctx context.Context, userID uuid.UUID) ([]*dto.Restaurant, error) {
-	restaurants, err := r.client.Restaurant.Query().
+	c := clientFromContext(ctx, r.client)
+	restaurants, err := c.Restaurant.Query().
 		Where(restaurant.OwnerIDEQ(userID)).
 		WithLogoAsset().
 		WithCoverImageAsset().

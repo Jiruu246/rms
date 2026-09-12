@@ -83,9 +83,11 @@ type mediaService struct {
 	provider          storage.StorageProvider
 	uploadGrantExpiry time.Duration
 	authorizer        authz.Authorizer
+	transactor        repos.Transactor
 }
 
 func NewMediaService(
+	transactor repos.Transactor,
 	uploadRepo repos.MediaUploadRepository,
 	assetRepo repos.MediaAssetRepository,
 	provider storage.StorageProvider,
@@ -97,6 +99,7 @@ func NewMediaService(
 		provider:          provider,
 		uploadGrantExpiry: uploadGrantExpiry,
 		authorizer:        authz.NewPolicyAuthorizer(),
+		transactor:        transactor,
 	}
 }
 
@@ -185,9 +188,11 @@ func (s *mediaService) ConsumeUpload(ctx context.Context, actor authz.Actor, upl
 		return nil, err
 	}
 
-	asset, err := s.uploadRepo.Consume(ctx, actor.UserID, uploadID, repos.ConsumeMediaUploadParams{
-		ContentType: obj.Metadata.ContentType,
-		SizeBytes:   obj.Metadata.SizeBytes,
+	asset, err := repos.WithinTxResult(ctx, s.transactor, func(ctx context.Context) (*ent.MediaAsset, error) {
+		return s.uploadRepo.Consume(ctx, actor.UserID, uploadID, repos.ConsumeMediaUploadParams{
+			ContentType: obj.Metadata.ContentType,
+			SizeBytes:   obj.Metadata.SizeBytes,
+		})
 	})
 	if err != nil {
 		return nil, err

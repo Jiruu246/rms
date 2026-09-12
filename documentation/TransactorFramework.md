@@ -6,10 +6,6 @@ knowing about `internal/ent`. It exists to solve cross-repo/cross-service
 atomicity (e.g. "create an order, its items, and its modifier options, or
 none of it") without threading `*ent.Tx` through every interface signature.
 
-**Status: introduced, not yet integrated.** The pieces below exist and are
-demonstrated in isolation, but no repo or service uses them yet — see
-"Current state" below before building on this.
-
 ## Responsibility split
 
 ```
@@ -20,7 +16,7 @@ Repository   -> resolves the active client from ctx before every operation
                 (not yet wired — repos still hold a fixed client today)
 ```
 
-Concretely, once integrated:
+Concretely:
 
 - **Services** never see `*ent.Client`/`*ent.Tx`. They depend on
   `repos.Transactor` and wrap a block of repo/service calls in
@@ -63,55 +59,12 @@ Concretely, once integrated:
    sharing one Ent client / database connection. It cannot span separate
    services over the network or separate databases.
 
-## Current state
-
-- No repo (`categoryRepository`, `orderRepository`, etc.) has been migrated
-  to `clientFromContext` yet — they all still hold and use a fixed `client`
-  field directly.
-- `server.go` does not construct an `EntTransactor` or pass one to any
-  service.
-- `order_repo.go`'s `Create` still hand-rolls its own `client.Tx(ctx)` /
-  `tx.Commit()` / rollback-in-defer inline — it predates this framework and
-  is the natural first migration candidate, since it already spans
-  `Order`/`OrderItem`/`OrderItemModifierOption`.
-- The only demonstration is `ent_transactor_test.go`, against an in-memory
-  sqlite `ent.Client` (commit, rollback-on-error, rollback-on-panic, and a
-  simulated nested service-to-service call). It uses the pure-Go
-  `modernc.org/sqlite` driver (registered under the `"sqlite3"` name ent
-  expects), so it needs no cgo or C compiler and runs the same everywhere.
-
-## Migrating a repo (future work)
-
-1. In each method, replace `r.client` with
-   `c := clientFromContext(ctx, r.client)` and use `c` for the query.
-2. Fold ad hoc transaction handling (like `order_repo.go`'s `Create`) into
-   plain sequential calls resolved via `clientFromContext` — the surrounding
-   `WithinTx` at the service layer takes over what the repo used to do
-   itself.
-3. Construct `repos.NewEntTransactor(client)` in `server.go` and pass it into
-   any service whose methods need cross-repo or cross-service atomicity.
-4. That service takes `repos.Transactor` as a constructor dependency and
-   wraps the calls that must commit together in
-   `transactor.WithinTx(ctx, func(ctx context.Context) error { ... })`.
-5. Never substitute a fresh context anywhere inside a call chain that started
-   inside `WithinTx` — that silently drops out of the transaction.
-
-## Decisions deferred
-
-- **Which service gets this first** — no cross-repo atomic use case is wired
-  up yet. `order_repo.go`'s existing hand-rolled transaction is the obvious
-  candidate to migrate first, since the need is already proven there.
-- **Read-only multi-statement access** — services that need several reads
-  against a consistent snapshot, without a mutation, have no dedicated
-  helper yet; revisit if that need shows up.
-- **Integration-test coverage** — only the sqlite unit test exists;
-  `integration_tests/` doesn't yet exercise `EntTransactor` against real
-  Postgres.
-
 ## Sample usage
 
-These sketches show the target shape after migration — none of this exists
-in the codebase yet (see "Current state" above).
+These sketches show the target shape for `order_repo.go`/`OrderService`,
+which are not migrated yet — see "Current state" above for what actually
+exists today (`restaurant_repo.go`, `media_upload_repo.go`'s `Consume`,
+`MediaService`, and `RestaurantService`).
 
 **A migrated repo method.** `order_repo.go`'s `Create` today opens its own
 `client.Tx(ctx)`. Once migrated, it just resolves whatever client is active

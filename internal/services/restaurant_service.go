@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
@@ -37,19 +36,9 @@ type RestaurantService interface {
 	GetAll(ctx context.Context, actor authz.Actor) ([]*dto.Restaurant, error)
 	Update(ctx context.Context, actor authz.Actor, id uuid.UUID, req *dto.UpdateRestaurantRequest) (*dto.Restaurant, error)
 	Delete(ctx context.Context, actor authz.Actor, id uuid.UUID) error
-	// CreateImageUpload requests a presigned upload for one image slot: it
-	// authorizes the actor against this restaurant, resolves the slot to its
-	// purpose (same restaurantImageSlotPurposes mapping UpdateImage uses),
-	// and delegates the actual presigning to MediaService — restaurant code
-	// never talks to R2/S3 or generates presigned URLs itself.
 	CreateImageUpload(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot) (*dto.CreateUploadResult, error)
 	UpdateImage(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot, uploadID uuid.UUID) (*dto.Restaurant, error)
-	// ClearImage detaches whatever asset is assigned to slot, if any.
-	// Idempotent: clearing an already-empty slot succeeds.
 	ClearImage(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot) (*dto.Restaurant, error)
-	// AuthorizeOwnership lets other entity services (e.g. category) check the
-	// actor may act on a restaurant without duplicating the
-	// GetAuthorizationResource + Authorizer.Authorize dance themselves.
 	AuthorizeOwnership(ctx context.Context, actor authz.Actor, action authz.Action, restaurantID uuid.UUID) error
 }
 
@@ -57,13 +46,15 @@ type restaurantService struct {
 	repo         repos.RestaurantRepository
 	mediaService MediaService
 	authorizer   authz.Authorizer
+	transactor   repos.Transactor
 }
 
-func NewRestaurantService(repo repos.RestaurantRepository, mediaService MediaService) RestaurantService {
+func NewRestaurantService(transactor repos.Transactor, repo repos.RestaurantRepository, mediaService MediaService) RestaurantService {
 	return &restaurantService{
 		repo:         repo,
 		mediaService: mediaService,
 		authorizer:   authz.NewPolicyAuthorizer(),
+		transactor:   transactor,
 	}
 }
 
@@ -113,32 +104,25 @@ func (s *restaurantService) UpdateImage(ctx context.Context, actor authz.Actor, 
 		return nil, err
 	}
 
-	asset, err := s.mediaService.ConsumeUpload(ctx, actor, uploadID, purpose)
-	if err != nil {
-		return nil, err
-	}
+	return repos.WithinTxResult(ctx, s.transactor, func(ctx context.Context) (*dto.Restaurant, error) {
+		asset, err := s.mediaService.ConsumeUpload(ctx, actor, uploadID, purpose)
+		if err != nil {
+			return nil, err
+		}
 
-	// Whatever asset (if any) was previously in this slot is deliberately
-	// left completely alone from here on — not soft-deleted, not touched in
-	// storage. Once SetImage below repoints the column at the new asset,
-	// that old asset becomes an orphan: an active MediaAsset row (and its R2
-	// object) nothing references anymore. Reconciling orphaned assets is
-	// deferred to a later iteration — see
-	// documentation/MediaUploadFramework.md.
-	updated, err := s.repo.SetImage(ctx, &dto.SetRestaurantImageData{
-		RestaurantID: id,
-		Slot:         slot,
-		MediaAssetID: asset.ID,
+		// Whatever asset (if any) was previously in this slot is deliberately
+		// left completely alone from here on — not soft-deleted, not touched
+		// in storage. Once SetImage below repoints the column at the new
+		// asset, that old asset becomes an orphan: an active MediaAsset row
+		// (and its R2 object) nothing references anymore. Reconciling
+		// orphaned assets is deferred to a later iteration — see
+		// documentation/MediaUploadFramework.md.
+		return s.repo.SetImage(ctx, &dto.SetRestaurantImageData{
+			RestaurantID: id,
+			Slot:         slot,
+			MediaAssetID: asset.ID,
+		})
 	})
-	if err != nil {
-		// We can share the workspace with the media service so the database query is atomic
-		// TODO: after atomic transactions are implemented, we can remove this compensation logic
-
-		s.compensate(ctx, actor, asset.ID)
-		return nil, err
-	}
-
-	return updated, nil
 }
 
 func (s *restaurantService) ClearImage(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot) (*dto.Restaurant, error) {
@@ -172,11 +156,4 @@ func (s *restaurantService) AuthorizeOwnership(ctx context.Context, actor authz.
 		Resource: resource,
 	})
 	return err
-}
-
-// TODO: Remove after introduce transactional
-func (s *restaurantService) compensate(ctx context.Context, actor authz.Actor, assetID uuid.UUID) {
-	if err := s.mediaService.DeleteMedia(ctx, actor, assetID); err != nil {
-		log.Printf("restaurant service: failed to compensate orphaned media asset %s: %v", assetID, err)
-	}
 }

@@ -136,7 +136,7 @@ func TestMediaService_CreateUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		uploadID := uuid.New()
 		mockUploadRepo.On("Create", mock.Anything, mock.MatchedBy(func(p repos.CreateMediaUploadParams) bool {
@@ -159,7 +159,7 @@ func TestMediaService_CreateUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		result, err := service.CreateUpload(t.Context(), actor, mediaupload.Purpose("not_a_real_purpose"))
 
@@ -173,7 +173,7 @@ func TestMediaService_CreateUpload(t *testing.T) {
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
 		provider.grantErr = assert.AnError
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		result, err := service.CreateUpload(t.Context(), actor, mediaupload.PurposeMenuItemImage)
 
@@ -202,7 +202,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).
 			Return(nil, apperr.NotFound("media upload %s", uploadID))
@@ -225,7 +225,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 
@@ -247,7 +247,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 
@@ -268,7 +268,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider() // no object put for objectKey
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 
@@ -293,7 +293,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 			SizeBytes:   2048,
 			ContentType: "application/pdf", // not in menu_item_image's allowed set
 		})
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 		mockUploadRepo.On("Fail", mock.Anything, actor.UserID, uploadID).Return(nil)
@@ -322,7 +322,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 			SizeBytes:   11 << 20, // menu_item_image caps at 10 MiB
 			ContentType: "image/png",
 		})
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 		mockUploadRepo.On("Fail", mock.Anything, actor.UserID, uploadID).Return(nil)
@@ -352,7 +352,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 			ContentType: "application/pdf", // upload expects image/png
 		})
 		provider.deleteErr = assert.AnError
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 		mockUploadRepo.On("Fail", mock.Anything, actor.UserID, uploadID).Return(assert.AnError)
@@ -376,7 +376,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider()
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 
@@ -402,7 +402,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 			SizeBytes:   2048,
 			ContentType: "image/png",
 		})
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 
@@ -447,7 +447,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 			SizeBytes:   2048,
 			ContentType: "image/png",
 		})
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 		mockUploadRepo.On("Consume", mock.Anything, actor.UserID, uploadID, mock.Anything).
@@ -475,7 +475,7 @@ func TestMediaService_ConsumeUpload(t *testing.T) {
 		mockUploadRepo := new(MockMediaUploadRepository)
 		mockAssetRepo := new(MockMediaAssetRepository)
 		provider := newFakeStorageProvider() // no object put — proves StatObject is never called
-		service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		mockUploadRepo.On("GetByID", mock.Anything, actor.UserID, uploadID).Return(upload, nil)
 
@@ -492,7 +492,7 @@ func TestMediaService_DeleteMedia(t *testing.T) {
 	mockUploadRepo := new(MockMediaUploadRepository)
 	mockAssetRepo := new(MockMediaAssetRepository)
 	provider := newFakeStorageProvider()
-	service := NewMediaService(mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
+	service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 	mediaID := uuid.New()
 	actor := authz.Actor{UserID: uuid.New()}

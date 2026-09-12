@@ -72,17 +72,9 @@ func (r *mediaUploadRepository) GetByID(ctx context.Context, ownerID, id uuid.UU
 }
 
 func (r *mediaUploadRepository) Consume(ctx context.Context, ownerID, id uuid.UUID, params ConsumeMediaUploadParams) (*ent.MediaAsset, error) {
-	tx, err := r.client.Tx(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("failed to start transaction: %w", err)
-	}
-	defer func() {
-		if err != nil {
-			_ = tx.Rollback()
-		}
-	}()
+	c := clientFromContext(ctx, r.client)
 
-	upload, err := tx.MediaUpload.
+	upload, err := c.MediaUpload.
 		Query().
 		Where(mediaupload.ID(id), mediaupload.OwnerIDEQ(ownerID)).
 		Only(ctx)
@@ -94,42 +86,34 @@ func (r *mediaUploadRepository) Consume(ctx context.Context, ownerID, id uuid.UU
 	}
 
 	if upload.Status != mediaupload.StatusIssued || !upload.ExpiresAt.After(time.Now()) {
-		err = apperr.Conflict("media upload %s is not issued or has expired", id)
-		return nil, err
+		return nil, apperr.Conflict("media upload %s is not issued or has expired", id)
 	}
 
-	updated, err := tx.MediaUpload.
+	updated, err := c.MediaUpload.
 		UpdateOneID(id).
 		Where(mediaupload.StatusEQ(mediaupload.StatusIssued), mediaupload.ExpiresAtGT(time.Now())).
 		SetStatus(mediaupload.StatusConsumed).
 		Save(ctx)
 	if err != nil {
 		if ent.IsNotFound(err) {
-			err = apperr.Conflict("media upload %s is not issued or has expired", id)
-			return nil, err
+			return nil, apperr.Conflict("media upload %s is not issued or has expired", id)
 		}
 		return nil, fmt.Errorf("failed to consume media upload: %w", err)
 	}
 
-	assetCreate := tx.MediaAsset.
+	created, err := c.MediaAsset.
 		Create().
 		SetUploadedByUserID(ownerID).
 		SetUploadID(updated.ID).
 		SetStorageKey(updated.ObjectKey).
 		SetContentType(params.ContentType).
-		SetSizeBytes(params.SizeBytes)
-
-	created, err := assetCreate.Save(ctx)
+		SetSizeBytes(params.SizeBytes).
+		Save(ctx)
 	if err != nil {
 		if ent.IsConstraintError(err) {
-			err = apperr.Conflict("media upload %s has already been consumed", id)
-			return nil, err
+			return nil, apperr.Conflict("media upload %s has already been consumed", id)
 		}
 		return nil, fmt.Errorf("failed to create media asset: %w", err)
-	}
-
-	if err = tx.Commit(); err != nil {
-		return nil, fmt.Errorf("failed to commit transaction: %w", err)
 	}
 
 	return created, nil

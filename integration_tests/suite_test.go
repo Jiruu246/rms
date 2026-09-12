@@ -53,6 +53,7 @@ func (s *IntegrationTestSuite) SetupSuite() {
 			s.Require().NoError(err, "Failed to load .env.test")
 		}
 	}
+	// TODO: find a way to fix the directory issue so we can use Load() instead of LoadTestConfig()
 	cfg, err := config.LoadTestConfig()
 	s.Require().NoError(err, "Failed to load config")
 	s.cfg = cfg

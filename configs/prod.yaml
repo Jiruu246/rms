@@ -1,0 +1,7 @@
+log_level: warn
+
+access_token_expiration: 900
+refresh_token_expiration: 604800
+
+cookie_secure: true
+cookie_samesite: strict

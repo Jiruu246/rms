@@ -7,14 +7,6 @@ import (
 	"github.com/spf13/viper"
 )
 
-type Environment string
-
-// FIXMES: environment declares in here?
-const (
-	EnvDevelopment Environment = "development"
-	EnvProduction  Environment = "production"
-)
-
 type CookieConfig struct {
 	Secure   bool
 	HttpOnly bool

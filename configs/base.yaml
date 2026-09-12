@@ -1,0 +1,12 @@
+port: 8080
+log_level: info
+
+read_timeout: 15
+write_timeout: 15
+shutdown_timeout: 15
+
+cookie_secure: false
+cookie_samesite: lax
+
+access_token_expiration: 300
+refresh_token_expiration: 604800

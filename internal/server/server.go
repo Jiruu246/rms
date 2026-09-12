@@ -31,7 +31,7 @@ type Server struct {
 }
 
 func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Server {
-	if cfg.Env == "production" {
+	if cfg.Env == config.EnvProd {
 		gin.SetMode(gin.ReleaseMode)
 	}
 
@@ -63,7 +63,7 @@ func New(cfg *config.Config, client *ent.Client, middlewares Middlewares) *Serve
 }
 
 func (s *Server) routes() {
-	if s.cfg.Env != "production" {
+	if s.cfg.Env != config.EnvProd {
 		s.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 

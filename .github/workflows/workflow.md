@@ -78,12 +78,13 @@ On pull requests to `main`, CI verifies:
 
 ### Required Secrets
 
-- `APP_ENV`
 - `APP_POSTGRES_USER`
 - `APP_POSTGRES_PASSWORD`
 - `APP_JWT_SECRET`
-- `APP_ACCESS_TOKEN_EXPIRATION`
-- `APP_REFRESH_TOKEN_EXPIRATION`
+
+### Required Repository Variables
+
+- `APP_ENV`
 
 ### Job
 
@@ -184,4 +185,4 @@ If CI fails:
 
 - Re-check that generated Ent files are committed.
 - Re-check that `go.mod` and `go.sum` are tidy and committed.
-- Confirm required secrets are configured in GitHub repository settings for integration tests.
+- Confirm required secrets and repository variable are configured in GitHub repository settings for integration tests.

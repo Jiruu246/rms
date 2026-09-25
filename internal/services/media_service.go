@@ -19,8 +19,6 @@ import (
 	"github.com/Jiruu246/rms/pkg/storage"
 )
 
-const ActionCreateMediaUpload authz.Action = "media_upload:create"
-
 // uploadConstraints is the per-purpose policy a requested upload is checked
 // against. It is deliberately code, not config: the set of purposes is fixed
 // and small, and each one maps to a specific place in the product (a menu
@@ -82,7 +80,6 @@ type mediaService struct {
 	assetRepo         repos.MediaAssetRepository
 	provider          storage.StorageProvider
 	uploadGrantExpiry time.Duration
-	authorizer        authz.Authorizer
 	transactor        repos.Transactor
 }
 
@@ -98,29 +95,18 @@ func NewMediaService(
 		assetRepo:         assetRepo,
 		provider:          provider,
 		uploadGrantExpiry: uploadGrantExpiry,
-		authorizer:        authz.NewPolicyAuthorizer(),
 		transactor:        transactor,
 	}
 }
 
 func (s *mediaService) CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose) (*dto.CreateUploadResult, error) {
-	constraints, err := s.validatePurpose(purpose)
+	constraints, err := s.resolveConstraints(purpose)
 	if err != nil {
 		return nil, err
 	}
 
-	if _, err := s.authorizer.Authorize(ctx, authz.Request{
-		Actor:  actor,
-		Action: ActionCreateMediaUpload,
-		Resource: authz.Resource{
-			Type:        "media_upload",
-			OwnerUserID: actor.UserID,
-		},
-	}); err != nil {
-		return nil, err
-	}
-
-	key := storage.ObjectKey(fmt.Sprintf("media/%s/%s", actor.UserID, uuid.New()))
+	now := time.Now().UTC()
+	key := storage.ObjectKey(fmt.Sprintf("media/%04d/%02d/%s", now.Year(), now.Month(), uuid.New()))
 
 	grantReq := storage.UploadRequest{
 		Key:    key,
@@ -149,7 +135,7 @@ func (s *mediaService) CreateUpload(ctx context.Context, actor authz.Actor, purp
 	}, nil
 }
 
-func (s *mediaService) validatePurpose(purpose mediaupload.Purpose) (uploadConstraints, error) {
+func (s *mediaService) resolveConstraints(purpose mediaupload.Purpose) (uploadConstraints, error) {
 	if err := mediaupload.PurposeValidator(purpose); err != nil {
 		return uploadConstraints{}, apperr.Invalid("unknown upload purpose %q", purpose)
 	}

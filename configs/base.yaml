@@ -10,3 +10,6 @@ cookie_samesite: lax
 
 access_token_expiration: 300
 refresh_token_expiration: 604800
+
+r2_max_grant_expiry_seconds: 900
+r2_upload_grant_expiry_seconds: 900

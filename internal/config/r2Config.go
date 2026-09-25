@@ -30,8 +30,8 @@ type R2Config struct {
 }
 
 func NewR2Config(configurator *viper.Viper) R2Config {
-	configurator.SetDefault("R2_MAX_GRANT_EXPIRY", 15*60)    // seconds
-	configurator.SetDefault("R2_UPLOAD_GRANT_EXPIRY", 15*60) // seconds
+	configurator.SetDefault("R2_MAX_GRANT_EXPIRY_SECONDS", 15*60)
+	configurator.SetDefault("R2_UPLOAD_GRANT_EXPIRY_SECONDS", 15*60)
 
 	return R2Config{
 		AccountID:         configurator.GetString("R2_ACCOUNT_ID"),
@@ -39,8 +39,8 @@ func NewR2Config(configurator *viper.Viper) R2Config {
 		SecretAccessKey:   configurator.GetString("R2_SECRET_ACCESS_KEY"),
 		BucketName:        configurator.GetString("R2_BUCKET_NAME"),
 		PublicBaseURL:     configurator.GetString("R2_PUBLIC_BASE_URL"),
-		MaxGrantExpiry:    time.Duration(configurator.GetInt("R2_MAX_GRANT_EXPIRY")) * time.Second,
-		UploadGrantExpiry: time.Duration(configurator.GetInt("R2_UPLOAD_GRANT_EXPIRY")) * time.Second,
+		MaxGrantExpiry:    time.Duration(configurator.GetInt("R2_MAX_GRANT_EXPIRY_SECONDS")) * time.Second,
+		UploadGrantExpiry: time.Duration(configurator.GetInt("R2_UPLOAD_GRANT_EXPIRY_SECONDS")) * time.Second,
 	}
 }
 

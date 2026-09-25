@@ -76,6 +76,7 @@ func (r *mediaUploadRepository) Consume(ctx context.Context, ownerID, id uuid.UU
 
 	upload, err := c.MediaUpload.
 		Query().
+		// This is strictly limited to the owner of the upload request
 		Where(mediaupload.ID(id), mediaupload.OwnerIDEQ(ownerID)).
 		Only(ctx)
 	if err != nil {

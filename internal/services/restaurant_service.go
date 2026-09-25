@@ -105,6 +105,8 @@ func (s *restaurantService) UpdateImage(ctx context.Context, actor authz.Actor, 
 	}
 
 	return repos.WithinTxResult(ctx, s.transactor, func(ctx context.Context) (*dto.Restaurant, error) {
+		//TODO: design a clean up job to clean up orphaned media assets that are no longer referenced by any restaurant image slot.
+		// make it media service's responsibility to clean up orphaned media assets after a new assets replace
 		asset, err := s.mediaService.ConsumeUpload(ctx, actor, uploadID, purpose)
 		if err != nil {
 			return nil, err

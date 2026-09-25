@@ -43,7 +43,7 @@ integration_tests/
 
 Secrets are never stored in `configs/*.yaml` — only env vars / `.env`. `APP_ENV` itself is read directly from the OS environment (not through viper) since it decides which YAML overlay to load in the first place.
 
-Both Dockerfiles (`Dockerfile.server`, `Dockerfile.migrator`) copy `configs/base.yaml` and `configs/prod.yaml` only (never `dev.yaml`) — these images are only ever deployed to production, so `dev.yaml` is deliberately excluded to guarantee a misconfigured `APP_ENV`
+Both Dockerfiles (`Dockerfile.server`, `Dockerfile.migrator`) copy the entire `configs/` directory — these images are also used for dev, not just production, so all environment overlays are included.
 
 
 ## Pagination system (`pkg/pagination` + per-entity adapters in `internal/repos/*_repo.go`)

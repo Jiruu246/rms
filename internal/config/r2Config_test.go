@@ -15,8 +15,8 @@ func TestNewR2Config_UsesEnvSettings(t *testing.T) {
 	configurator.Set("R2_SECRET_ACCESS_KEY", "key-secret")
 	configurator.Set("R2_BUCKET_NAME", "media")
 	configurator.Set("R2_PUBLIC_BASE_URL", "https://media.example.com")
-	configurator.Set("R2_MAX_GRANT_EXPIRY", 60)
-	configurator.Set("R2_UPLOAD_GRANT_EXPIRY", 30)
+	configurator.Set("R2_MAX_GRANT_EXPIRY_SECONDS", 60)
+	configurator.Set("R2_UPLOAD_GRANT_EXPIRY_SECONDS", 30)
 
 	cfg := NewR2Config(configurator)
 

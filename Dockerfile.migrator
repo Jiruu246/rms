@@ -19,11 +19,9 @@ WORKDIR /home/appuser/
 
 COPY --from=builder /app/migrator .
 
-# This image is only ever deployed to production, so we deliberately copy
-# only base.yaml + prod.yaml (never dev.yaml) — that way a misconfigured
-# APP_ENV can't accidentally pull in dev overrides at runtime. If a
-# QA/staging tier is introduced, this needs to change
-COPY --from=builder /app/configs/base.yaml /app/configs/prod.yaml ./configs/
+# This image is also used for dev, so copy the whole configs directory
+# rather than cherry-picking specific environment overlays.
+COPY --from=builder /app/configs ./configs/
 
 # Use a non-root user
 RUN adduser -D appuser

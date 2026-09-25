@@ -24,6 +24,8 @@ services:
     image: rms-database-migrator:local
     container_name: database-migration
     command: ["apply"]
+    env_file:
+      - .env
     environment:
       APP_DATABASE_URL: postgres://${APP_POSTGRES_USER}:${APP_POSTGRES_PASSWORD}@postgres-database:5432/${APP_POSTGRES_DB}?sslmode=disable
     depends_on:

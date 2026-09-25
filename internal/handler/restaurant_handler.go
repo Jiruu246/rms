@@ -113,9 +113,7 @@ func (h *RestaurantHandler) GetRestaurants(c *gin.Context) {
 //
 //	@Summary		Update a restaurant's attributes
 //	@Description	Updates plain restaurant attributes only. Images are a
-//	@Description	separate subresource
-//	@Description	/restaurants/{id}/images/{slot} — so an image update never
-//	@Description	shares a failure boundary with this request.
+//	@Description	separate subresource.
 //	@Tags			restaurants
 //	@Accept			json
 //	@Produce		json
@@ -156,12 +154,7 @@ func (h *RestaurantHandler) UpdateRestaurant(c *gin.Context) {
 // POST /api/restaurants/{id}/images/{slot}/uploads
 //
 //	@Summary		Request an upload for a restaurant image slot
-//	@Description	Issues a presigned upload grant for the named image slot.
-//	@Description	The purpose (and its content-type/size constraints) is
-//	@Description	derived from the slot itself — the client never declares
-//	@Description	it. Upload the file directly to the returned URL, then
-//	@Description	call PUT /restaurants/{id}/images/{slot} with the
-//	@Description	returned upload_id to attach it.
+//	@Description	Request a presigned upload URL for the named image slot. After the upload is complete, call PUT /restaurants/{id}/images/{slot} with the returned upload_id to attach it.
 //	@Tags			restaurants
 //	@Produce		json
 //	@Security		BearerAuth

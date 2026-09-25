@@ -79,7 +79,7 @@ func main() {
 	// Execute command
 	switch command {
 	case "apply":
-		if err := migrateUp(ctx, client); err != nil {
+		if err := migrateUp(ctx, client, db); err != nil {
 			log.Fatalf("migration failed: %v", err)
 		}
 		fmt.Println("✅ Migration completed successfully")
@@ -113,11 +113,72 @@ func main() {
 }
 
 // migrateUp applies all pending migrations
-func migrateUp(ctx context.Context, client *ent.Client) error {
+func migrateUp(ctx context.Context, client *ent.Client, db *sql.DB) error {
+	// TODO: one-off fixup for the user_id -> owner_id rename. Remove
+	// this call and the backfillRestaurantOwnerID function once every
+	// environment (including any stale branch/staging databases) has run
+	// apply successfully past this point — see ticket [link] for the
+	// longer-term plan to stop this kind of fixup accumulating in apply.
+	if err := backfillRestaurantOwnerID(ctx, db); err != nil {
+		return fmt.Errorf("failed to backfill restaurants.owner_id: %w", err)
+	}
 	return client.Schema.Create(ctx,
 		migrate.WithDropColumn(true),
 		migrate.WithDropIndex(true),
 	)
+}
+
+// backfillRestaurantOwnerID copies the legacy restaurants.user_id column into
+// owner_id before ent's auto-migration drops user_id and adds owner_id as
+// NOT NULL — otherwise that ALTER TABLE fails on any pre-existing row
+// (restaurants.owner_id was renamed from user_id).
+// It is a no-op once user_id no longer exists, so it is safe to run on every
+// apply.
+func backfillRestaurantOwnerID(ctx context.Context, db *sql.DB) error {
+	var userIDExists bool
+	if err := db.QueryRowContext(ctx, `SELECT EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_name = 'restaurants' AND column_name = 'user_id'
+	)`).Scan(&userIDExists); err != nil {
+		return fmt.Errorf("failed to check for restaurants.user_id: %w", err)
+	}
+	if !userIDExists {
+		return nil
+	}
+
+	var ownerIDExists bool
+	if err := db.QueryRowContext(ctx, `SELECT EXISTS (
+		SELECT 1 FROM information_schema.columns
+		WHERE table_name = 'restaurants' AND column_name = 'owner_id'
+	)`).Scan(&ownerIDExists); err != nil {
+		return fmt.Errorf("failed to check for restaurants.owner_id: %w", err)
+	}
+
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("failed to begin backfill transaction: %w", err)
+	}
+	defer func() {
+		if err := tx.Rollback(); err != nil && err != sql.ErrTxDone {
+			log.Printf("failed to rollback backfill transaction: %v", err)
+		}
+	}()
+
+	if !ownerIDExists {
+		if _, err := tx.ExecContext(ctx, `ALTER TABLE restaurants ADD COLUMN owner_id uuid`); err != nil {
+			return fmt.Errorf("failed to add owner_id column: %w", err)
+		}
+	}
+
+	if _, err := tx.ExecContext(ctx, `UPDATE restaurants SET owner_id = user_id WHERE owner_id IS NULL`); err != nil {
+		return fmt.Errorf("failed to backfill owner_id from user_id: %w", err)
+	}
+
+	if _, err := tx.ExecContext(ctx, `ALTER TABLE restaurants ALTER COLUMN owner_id SET NOT NULL`); err != nil {
+		return fmt.Errorf("failed to enforce owner_id NOT NULL: %w", err)
+	}
+
+	return tx.Commit()
 }
 
 // resetDB drops all tables and recreates the schema

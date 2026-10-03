@@ -1,38 +1,44 @@
 package utils
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding"
 	"github.com/go-playground/validator/v10"
 )
 
-var validate *validator.Validate
-
 func init() {
-	validate = validator.New()
+	// Make gin's built-in validator read `validate:"..."` tags instead of its
+	// default `binding:"..."`, so request structs declare their rules once and
+	// ShouldBind* is the only place validation runs.
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok {
+		v.SetTagName("validate")
+	}
 }
 
-// TODO: Gin has its own binding and validation mechanism.
-// ParseAndValidateRequest parses JSON request body and validates it
+// ParseAndValidateRequest parses the JSON request body into req and validates
+// it against its `validate` struct tags.
 func ParseAndValidateRequest(c *gin.Context, req any) error {
-	// Bind JSON to struct
 	if err := c.ShouldBindJSON(req); err != nil {
+		var validationErrs validator.ValidationErrors
+		if errors.As(err, &validationErrs) {
+			return fmt.Errorf("validation failed: %s", formatValidationErrors(validationErrs))
+		}
 		return fmt.Errorf("invalid JSON format: %v", err)
 	}
 
-	// Validate struct
-	if err := validate.Struct(req); err != nil {
-		// Format validation errors nicely
-		var validationErrors []string
-		for _, err := range err.(validator.ValidationErrors) {
-			validationErrors = append(validationErrors, formatValidationError(err))
-		}
-		return fmt.Errorf("validation failed: %s", strings.Join(validationErrors, ", "))
-	}
-
 	return nil
+}
+
+func formatValidationErrors(errs validator.ValidationErrors) string {
+	messages := make([]string, 0, len(errs))
+	for _, err := range errs {
+		messages = append(messages, formatValidationError(err))
+	}
+	return strings.Join(messages, ", ")
 }
 
 // formatValidationError formats validation error into a user-friendly message

@@ -67,9 +67,25 @@ func (_c *RestaurantCreate) SetPhone(v string) *RestaurantCreate {
 	return _c
 }
 
+// SetNillablePhone sets the "phone" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillablePhone(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetPhone(*v)
+	}
+	return _c
+}
+
 // SetEmail sets the "email" field.
 func (_c *RestaurantCreate) SetEmail(v string) *RestaurantCreate {
 	_c.mutation.SetEmail(v)
+	return _c
+}
+
+// SetNillableEmail sets the "email" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableEmail(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetEmail(*v)
+	}
 	return _c
 }
 
@@ -79,9 +95,25 @@ func (_c *RestaurantCreate) SetAddress(v string) *RestaurantCreate {
 	return _c
 }
 
+// SetNillableAddress sets the "address" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableAddress(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetAddress(*v)
+	}
+	return _c
+}
+
 // SetCity sets the "city" field.
 func (_c *RestaurantCreate) SetCity(v string) *RestaurantCreate {
 	_c.mutation.SetCity(v)
+	return _c
+}
+
+// SetNillableCity sets the "city" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableCity(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetCity(*v)
+	}
 	return _c
 }
 
@@ -91,15 +123,39 @@ func (_c *RestaurantCreate) SetState(v string) *RestaurantCreate {
 	return _c
 }
 
+// SetNillableState sets the "state" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableState(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetState(*v)
+	}
+	return _c
+}
+
 // SetZipCode sets the "zip_code" field.
 func (_c *RestaurantCreate) SetZipCode(v string) *RestaurantCreate {
 	_c.mutation.SetZipCode(v)
 	return _c
 }
 
+// SetNillableZipCode sets the "zip_code" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableZipCode(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetZipCode(*v)
+	}
+	return _c
+}
+
 // SetCountry sets the "country" field.
 func (_c *RestaurantCreate) SetCountry(v string) *RestaurantCreate {
 	_c.mutation.SetCountry(v)
+	return _c
+}
+
+// SetNillableCountry sets the "country" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableCountry(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetCountry(*v)
+	}
 	return _c
 }
 
@@ -154,6 +210,14 @@ func (_c *RestaurantCreate) SetOperatingHours(v map[string]interface{}) *Restaur
 // SetCurrency sets the "currency" field.
 func (_c *RestaurantCreate) SetCurrency(v string) *RestaurantCreate {
 	_c.mutation.SetCurrency(v)
+	return _c
+}
+
+// SetNillableCurrency sets the "currency" field if the given value is not nil.
+func (_c *RestaurantCreate) SetNillableCurrency(v *string) *RestaurantCreate {
+	if v != nil {
+		_c.SetCurrency(*v)
+	}
 	return _c
 }
 
@@ -348,62 +412,6 @@ func (_c *RestaurantCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Restaurant.name": %w`, err)}
 		}
 	}
-	if _, ok := _c.mutation.Phone(); !ok {
-		return &ValidationError{Name: "phone", err: errors.New(`ent: missing required field "Restaurant.phone"`)}
-	}
-	if v, ok := _c.mutation.Phone(); ok {
-		if err := restaurant.PhoneValidator(v); err != nil {
-			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "Restaurant.phone": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.Email(); !ok {
-		return &ValidationError{Name: "email", err: errors.New(`ent: missing required field "Restaurant.email"`)}
-	}
-	if v, ok := _c.mutation.Email(); ok {
-		if err := restaurant.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Restaurant.email": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.Address(); !ok {
-		return &ValidationError{Name: "address", err: errors.New(`ent: missing required field "Restaurant.address"`)}
-	}
-	if v, ok := _c.mutation.Address(); ok {
-		if err := restaurant.AddressValidator(v); err != nil {
-			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Restaurant.address": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.City(); !ok {
-		return &ValidationError{Name: "city", err: errors.New(`ent: missing required field "Restaurant.city"`)}
-	}
-	if v, ok := _c.mutation.City(); ok {
-		if err := restaurant.CityValidator(v); err != nil {
-			return &ValidationError{Name: "city", err: fmt.Errorf(`ent: validator failed for field "Restaurant.city": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.State(); !ok {
-		return &ValidationError{Name: "state", err: errors.New(`ent: missing required field "Restaurant.state"`)}
-	}
-	if v, ok := _c.mutation.State(); ok {
-		if err := restaurant.StateValidator(v); err != nil {
-			return &ValidationError{Name: "state", err: fmt.Errorf(`ent: validator failed for field "Restaurant.state": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.ZipCode(); !ok {
-		return &ValidationError{Name: "zip_code", err: errors.New(`ent: missing required field "Restaurant.zip_code"`)}
-	}
-	if v, ok := _c.mutation.ZipCode(); ok {
-		if err := restaurant.ZipCodeValidator(v); err != nil {
-			return &ValidationError{Name: "zip_code", err: fmt.Errorf(`ent: validator failed for field "Restaurant.zip_code": %w`, err)}
-		}
-	}
-	if _, ok := _c.mutation.Country(); !ok {
-		return &ValidationError{Name: "country", err: errors.New(`ent: missing required field "Restaurant.country"`)}
-	}
-	if v, ok := _c.mutation.Country(); ok {
-		if err := restaurant.CountryValidator(v); err != nil {
-			return &ValidationError{Name: "country", err: fmt.Errorf(`ent: validator failed for field "Restaurant.country": %w`, err)}
-		}
-	}
 	if _, ok := _c.mutation.Status(); !ok {
 		return &ValidationError{Name: "status", err: errors.New(`ent: missing required field "Restaurant.status"`)}
 	}
@@ -411,9 +419,6 @@ func (_c *RestaurantCreate) check() error {
 		if err := restaurant.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Restaurant.status": %w`, err)}
 		}
-	}
-	if _, ok := _c.mutation.Currency(); !ok {
-		return &ValidationError{Name: "currency", err: errors.New(`ent: missing required field "Restaurant.currency"`)}
 	}
 	if _, ok := _c.mutation.OwnerID(); !ok {
 		return &ValidationError{Name: "owner_id", err: errors.New(`ent: missing required field "Restaurant.owner_id"`)}

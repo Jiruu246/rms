@@ -1593,7 +1593,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Updates plain restaurant attributes only. Images are a\nseparate subresource\n/restaurants/{id}/images/{slot} — so an image update never\nshares a failure boundary with this request.",
+                "description": "Updates plain restaurant attributes only. Images are a\nseparate subresource.",
                 "consumes": [
                     "application/json"
                 ],
@@ -1802,7 +1802,7 @@ const docTemplate = `{
                         "BearerAuth": []
                     }
                 ],
-                "description": "Issues a presigned upload grant for the named image slot.\nThe purpose (and its content-type/size constraints) is\nderived from the slot itself — the client never declares\nit. Upload the file directly to the returned URL, then\ncall PUT /restaurants/{id}/images/{slot} with the\nreturned upload_id to attach it.",
+                "description": "Request a presigned upload URL for the named image slot. After the upload is complete, call PUT /restaurants/{id}/images/{slot} with the returned upload_id to attach it.",
                 "produces": [
                     "application/json"
                 ],
@@ -2118,15 +2118,7 @@ const docTemplate = `{
         "github_com_Jiruu246_rms_internal_dto.CreateRestaurantRequest": {
             "type": "object",
             "required": [
-                "address",
-                "city",
-                "country",
-                "currency",
-                "email",
-                "name",
-                "phone",
-                "state",
-                "zip_code"
+                "name"
             ],
             "properties": {
                 "address": {

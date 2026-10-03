@@ -153,20 +153,6 @@ var (
 	UpdateDefaultUpdateTime func() time.Time
 	// NameValidator is a validator for the "name" field. It is called by the builders before save.
 	NameValidator func(string) error
-	// PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
-	PhoneValidator func(string) error
-	// EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	EmailValidator func(string) error
-	// AddressValidator is a validator for the "address" field. It is called by the builders before save.
-	AddressValidator func(string) error
-	// CityValidator is a validator for the "city" field. It is called by the builders before save.
-	CityValidator func(string) error
-	// StateValidator is a validator for the "state" field. It is called by the builders before save.
-	StateValidator func(string) error
-	// ZipCodeValidator is a validator for the "zip_code" field. It is called by the builders before save.
-	ZipCodeValidator func(string) error
-	// CountryValidator is a validator for the "country" field. It is called by the builders before save.
-	CountryValidator func(string) error
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )

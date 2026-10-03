@@ -5,18 +5,18 @@ import (
 )
 
 type CreateRestaurantRequest struct {
-	Name           string         `json:"name" validate:"required,min=1,max=255" binding:"required"`
+	Name           string         `json:"name" validate:"required,min=1,max=255"`
 	Description    string         `json:"description" validate:"max=1000"`
-	Phone          string         `json:"phone" validate:"required" binding:"required"`
-	Email          string         `json:"email" validate:"required,email" binding:"required"`
-	Address        string         `json:"address" validate:"required" binding:"required"`
-	City           string         `json:"city" validate:"required" binding:"required"`
-	State          string         `json:"state" validate:"required" binding:"required"`
-	ZipCode        string         `json:"zip_code" validate:"required" binding:"required"`
-	Country        string         `json:"country" validate:"required" binding:"required"`
+	Phone          string         `json:"phone"`
+	Email          string         `json:"email" validate:"omitempty,email"`
+	Address        string         `json:"address"`
+	City           string         `json:"city"`
+	State          string         `json:"state"`
+	ZipCode        string         `json:"zip_code"`
+	Country        string         `json:"country"`
 	Status         string         `json:"status" validate:"omitempty,oneof=active inactive closed"`
 	OperatingHours map[string]any `json:"operating_hours"`
-	Currency       string         `json:"currency" validate:"required" binding:"required"`
+	Currency       string         `json:"currency"`
 }
 
 type CreateRestaurantData struct {
@@ -61,7 +61,7 @@ func ParseRestaurantImageSlot(s string) (slot RestaurantImageSlot, ok bool) {
 }
 
 type UpdateRestaurantImageRequest struct {
-	UploadID uuid.UUID `json:"upload_id" validate:"required" binding:"required"`
+	UploadID uuid.UUID `json:"upload_id" validate:"required"`
 }
 
 type SetRestaurantImageData struct {

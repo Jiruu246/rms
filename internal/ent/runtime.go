@@ -401,34 +401,6 @@ func init() {
 	restaurantDescName := restaurantFields[1].Descriptor()
 	// restaurant.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	restaurant.NameValidator = restaurantDescName.Validators[0].(func(string) error)
-	// restaurantDescPhone is the schema descriptor for phone field.
-	restaurantDescPhone := restaurantFields[3].Descriptor()
-	// restaurant.PhoneValidator is a validator for the "phone" field. It is called by the builders before save.
-	restaurant.PhoneValidator = restaurantDescPhone.Validators[0].(func(string) error)
-	// restaurantDescEmail is the schema descriptor for email field.
-	restaurantDescEmail := restaurantFields[4].Descriptor()
-	// restaurant.EmailValidator is a validator for the "email" field. It is called by the builders before save.
-	restaurant.EmailValidator = restaurantDescEmail.Validators[0].(func(string) error)
-	// restaurantDescAddress is the schema descriptor for address field.
-	restaurantDescAddress := restaurantFields[5].Descriptor()
-	// restaurant.AddressValidator is a validator for the "address" field. It is called by the builders before save.
-	restaurant.AddressValidator = restaurantDescAddress.Validators[0].(func(string) error)
-	// restaurantDescCity is the schema descriptor for city field.
-	restaurantDescCity := restaurantFields[6].Descriptor()
-	// restaurant.CityValidator is a validator for the "city" field. It is called by the builders before save.
-	restaurant.CityValidator = restaurantDescCity.Validators[0].(func(string) error)
-	// restaurantDescState is the schema descriptor for state field.
-	restaurantDescState := restaurantFields[7].Descriptor()
-	// restaurant.StateValidator is a validator for the "state" field. It is called by the builders before save.
-	restaurant.StateValidator = restaurantDescState.Validators[0].(func(string) error)
-	// restaurantDescZipCode is the schema descriptor for zip_code field.
-	restaurantDescZipCode := restaurantFields[8].Descriptor()
-	// restaurant.ZipCodeValidator is a validator for the "zip_code" field. It is called by the builders before save.
-	restaurant.ZipCodeValidator = restaurantDescZipCode.Validators[0].(func(string) error)
-	// restaurantDescCountry is the schema descriptor for country field.
-	restaurantDescCountry := restaurantFields[9].Descriptor()
-	// restaurant.CountryValidator is a validator for the "country" field. It is called by the builders before save.
-	restaurant.CountryValidator = restaurantDescCountry.Validators[0].(func(string) error)
 	// restaurantDescID is the schema descriptor for id field.
 	restaurantDescID := restaurantFields[0].Descriptor()
 	// restaurant.DefaultID holds the default value on creation for the id field.

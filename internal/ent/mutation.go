@@ -8737,9 +8737,22 @@ func (m *RestaurantMutation) OldPhone(ctx context.Context) (v string, err error)
 	return oldValue.Phone, nil
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (m *RestaurantMutation) ClearPhone() {
+	m.phone = nil
+	m.clearedFields[restaurant.FieldPhone] = struct{}{}
+}
+
+// PhoneCleared returns if the "phone" field was cleared in this mutation.
+func (m *RestaurantMutation) PhoneCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldPhone]
+	return ok
+}
+
 // ResetPhone resets all changes to the "phone" field.
 func (m *RestaurantMutation) ResetPhone() {
 	m.phone = nil
+	delete(m.clearedFields, restaurant.FieldPhone)
 }
 
 // SetEmail sets the "email" field.
@@ -8773,9 +8786,22 @@ func (m *RestaurantMutation) OldEmail(ctx context.Context) (v string, err error)
 	return oldValue.Email, nil
 }
 
+// ClearEmail clears the value of the "email" field.
+func (m *RestaurantMutation) ClearEmail() {
+	m.email = nil
+	m.clearedFields[restaurant.FieldEmail] = struct{}{}
+}
+
+// EmailCleared returns if the "email" field was cleared in this mutation.
+func (m *RestaurantMutation) EmailCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldEmail]
+	return ok
+}
+
 // ResetEmail resets all changes to the "email" field.
 func (m *RestaurantMutation) ResetEmail() {
 	m.email = nil
+	delete(m.clearedFields, restaurant.FieldEmail)
 }
 
 // SetAddress sets the "address" field.
@@ -8809,9 +8835,22 @@ func (m *RestaurantMutation) OldAddress(ctx context.Context) (v string, err erro
 	return oldValue.Address, nil
 }
 
+// ClearAddress clears the value of the "address" field.
+func (m *RestaurantMutation) ClearAddress() {
+	m.address = nil
+	m.clearedFields[restaurant.FieldAddress] = struct{}{}
+}
+
+// AddressCleared returns if the "address" field was cleared in this mutation.
+func (m *RestaurantMutation) AddressCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldAddress]
+	return ok
+}
+
 // ResetAddress resets all changes to the "address" field.
 func (m *RestaurantMutation) ResetAddress() {
 	m.address = nil
+	delete(m.clearedFields, restaurant.FieldAddress)
 }
 
 // SetCity sets the "city" field.
@@ -8845,9 +8884,22 @@ func (m *RestaurantMutation) OldCity(ctx context.Context) (v string, err error) 
 	return oldValue.City, nil
 }
 
+// ClearCity clears the value of the "city" field.
+func (m *RestaurantMutation) ClearCity() {
+	m.city = nil
+	m.clearedFields[restaurant.FieldCity] = struct{}{}
+}
+
+// CityCleared returns if the "city" field was cleared in this mutation.
+func (m *RestaurantMutation) CityCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldCity]
+	return ok
+}
+
 // ResetCity resets all changes to the "city" field.
 func (m *RestaurantMutation) ResetCity() {
 	m.city = nil
+	delete(m.clearedFields, restaurant.FieldCity)
 }
 
 // SetState sets the "state" field.
@@ -8881,9 +8933,22 @@ func (m *RestaurantMutation) OldState(ctx context.Context) (v string, err error)
 	return oldValue.State, nil
 }
 
+// ClearState clears the value of the "state" field.
+func (m *RestaurantMutation) ClearState() {
+	m.state = nil
+	m.clearedFields[restaurant.FieldState] = struct{}{}
+}
+
+// StateCleared returns if the "state" field was cleared in this mutation.
+func (m *RestaurantMutation) StateCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldState]
+	return ok
+}
+
 // ResetState resets all changes to the "state" field.
 func (m *RestaurantMutation) ResetState() {
 	m.state = nil
+	delete(m.clearedFields, restaurant.FieldState)
 }
 
 // SetZipCode sets the "zip_code" field.
@@ -8917,9 +8982,22 @@ func (m *RestaurantMutation) OldZipCode(ctx context.Context) (v string, err erro
 	return oldValue.ZipCode, nil
 }
 
+// ClearZipCode clears the value of the "zip_code" field.
+func (m *RestaurantMutation) ClearZipCode() {
+	m.zip_code = nil
+	m.clearedFields[restaurant.FieldZipCode] = struct{}{}
+}
+
+// ZipCodeCleared returns if the "zip_code" field was cleared in this mutation.
+func (m *RestaurantMutation) ZipCodeCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldZipCode]
+	return ok
+}
+
 // ResetZipCode resets all changes to the "zip_code" field.
 func (m *RestaurantMutation) ResetZipCode() {
 	m.zip_code = nil
+	delete(m.clearedFields, restaurant.FieldZipCode)
 }
 
 // SetCountry sets the "country" field.
@@ -8953,9 +9031,22 @@ func (m *RestaurantMutation) OldCountry(ctx context.Context) (v string, err erro
 	return oldValue.Country, nil
 }
 
+// ClearCountry clears the value of the "country" field.
+func (m *RestaurantMutation) ClearCountry() {
+	m.country = nil
+	m.clearedFields[restaurant.FieldCountry] = struct{}{}
+}
+
+// CountryCleared returns if the "country" field was cleared in this mutation.
+func (m *RestaurantMutation) CountryCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldCountry]
+	return ok
+}
+
 // ResetCountry resets all changes to the "country" field.
 func (m *RestaurantMutation) ResetCountry() {
 	m.country = nil
+	delete(m.clearedFields, restaurant.FieldCountry)
 }
 
 // SetLogoMediaAssetID sets the "logo_media_asset_id" field.
@@ -9172,9 +9263,22 @@ func (m *RestaurantMutation) OldCurrency(ctx context.Context) (v string, err err
 	return oldValue.Currency, nil
 }
 
+// ClearCurrency clears the value of the "currency" field.
+func (m *RestaurantMutation) ClearCurrency() {
+	m.currency = nil
+	m.clearedFields[restaurant.FieldCurrency] = struct{}{}
+}
+
+// CurrencyCleared returns if the "currency" field was cleared in this mutation.
+func (m *RestaurantMutation) CurrencyCleared() bool {
+	_, ok := m.clearedFields[restaurant.FieldCurrency]
+	return ok
+}
+
 // ResetCurrency resets all changes to the "currency" field.
 func (m *RestaurantMutation) ResetCurrency() {
 	m.currency = nil
+	delete(m.clearedFields, restaurant.FieldCurrency)
 }
 
 // SetOwnerID sets the "owner_id" field.
@@ -9867,6 +9971,27 @@ func (m *RestaurantMutation) ClearedFields() []string {
 	if m.FieldCleared(restaurant.FieldDescription) {
 		fields = append(fields, restaurant.FieldDescription)
 	}
+	if m.FieldCleared(restaurant.FieldPhone) {
+		fields = append(fields, restaurant.FieldPhone)
+	}
+	if m.FieldCleared(restaurant.FieldEmail) {
+		fields = append(fields, restaurant.FieldEmail)
+	}
+	if m.FieldCleared(restaurant.FieldAddress) {
+		fields = append(fields, restaurant.FieldAddress)
+	}
+	if m.FieldCleared(restaurant.FieldCity) {
+		fields = append(fields, restaurant.FieldCity)
+	}
+	if m.FieldCleared(restaurant.FieldState) {
+		fields = append(fields, restaurant.FieldState)
+	}
+	if m.FieldCleared(restaurant.FieldZipCode) {
+		fields = append(fields, restaurant.FieldZipCode)
+	}
+	if m.FieldCleared(restaurant.FieldCountry) {
+		fields = append(fields, restaurant.FieldCountry)
+	}
 	if m.FieldCleared(restaurant.FieldLogoMediaAssetID) {
 		fields = append(fields, restaurant.FieldLogoMediaAssetID)
 	}
@@ -9875,6 +10000,9 @@ func (m *RestaurantMutation) ClearedFields() []string {
 	}
 	if m.FieldCleared(restaurant.FieldOperatingHours) {
 		fields = append(fields, restaurant.FieldOperatingHours)
+	}
+	if m.FieldCleared(restaurant.FieldCurrency) {
+		fields = append(fields, restaurant.FieldCurrency)
 	}
 	return fields
 }
@@ -9893,6 +10021,27 @@ func (m *RestaurantMutation) ClearField(name string) error {
 	case restaurant.FieldDescription:
 		m.ClearDescription()
 		return nil
+	case restaurant.FieldPhone:
+		m.ClearPhone()
+		return nil
+	case restaurant.FieldEmail:
+		m.ClearEmail()
+		return nil
+	case restaurant.FieldAddress:
+		m.ClearAddress()
+		return nil
+	case restaurant.FieldCity:
+		m.ClearCity()
+		return nil
+	case restaurant.FieldState:
+		m.ClearState()
+		return nil
+	case restaurant.FieldZipCode:
+		m.ClearZipCode()
+		return nil
+	case restaurant.FieldCountry:
+		m.ClearCountry()
+		return nil
 	case restaurant.FieldLogoMediaAssetID:
 		m.ClearLogoMediaAssetID()
 		return nil
@@ -9901,6 +10050,9 @@ func (m *RestaurantMutation) ClearField(name string) error {
 		return nil
 	case restaurant.FieldOperatingHours:
 		m.ClearOperatingHours()
+		return nil
+	case restaurant.FieldCurrency:
+		m.ClearCurrency()
 		return nil
 	}
 	return fmt.Errorf("unknown Restaurant nullable field %s", name)

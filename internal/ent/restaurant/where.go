@@ -361,6 +361,16 @@ func PhoneHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldPhone, v))
 }
 
+// PhoneIsNil applies the IsNil predicate on the "phone" field.
+func PhoneIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldPhone))
+}
+
+// PhoneNotNil applies the NotNil predicate on the "phone" field.
+func PhoneNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldPhone))
+}
+
 // PhoneEqualFold applies the EqualFold predicate on the "phone" field.
 func PhoneEqualFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEqualFold(FieldPhone, v))
@@ -424,6 +434,16 @@ func EmailHasPrefix(v string) predicate.Restaurant {
 // EmailHasSuffix applies the HasSuffix predicate on the "email" field.
 func EmailHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldEmail, v))
+}
+
+// EmailIsNil applies the IsNil predicate on the "email" field.
+func EmailIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldEmail))
+}
+
+// EmailNotNil applies the NotNil predicate on the "email" field.
+func EmailNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldEmail))
 }
 
 // EmailEqualFold applies the EqualFold predicate on the "email" field.
@@ -491,6 +511,16 @@ func AddressHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldAddress, v))
 }
 
+// AddressIsNil applies the IsNil predicate on the "address" field.
+func AddressIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldAddress))
+}
+
+// AddressNotNil applies the NotNil predicate on the "address" field.
+func AddressNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldAddress))
+}
+
 // AddressEqualFold applies the EqualFold predicate on the "address" field.
 func AddressEqualFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEqualFold(FieldAddress, v))
@@ -554,6 +584,16 @@ func CityHasPrefix(v string) predicate.Restaurant {
 // CityHasSuffix applies the HasSuffix predicate on the "city" field.
 func CityHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldCity, v))
+}
+
+// CityIsNil applies the IsNil predicate on the "city" field.
+func CityIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldCity))
+}
+
+// CityNotNil applies the NotNil predicate on the "city" field.
+func CityNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldCity))
 }
 
 // CityEqualFold applies the EqualFold predicate on the "city" field.
@@ -621,6 +661,16 @@ func StateHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldState, v))
 }
 
+// StateIsNil applies the IsNil predicate on the "state" field.
+func StateIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldState))
+}
+
+// StateNotNil applies the NotNil predicate on the "state" field.
+func StateNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldState))
+}
+
 // StateEqualFold applies the EqualFold predicate on the "state" field.
 func StateEqualFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEqualFold(FieldState, v))
@@ -686,6 +736,16 @@ func ZipCodeHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldZipCode, v))
 }
 
+// ZipCodeIsNil applies the IsNil predicate on the "zip_code" field.
+func ZipCodeIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldZipCode))
+}
+
+// ZipCodeNotNil applies the NotNil predicate on the "zip_code" field.
+func ZipCodeNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldZipCode))
+}
+
 // ZipCodeEqualFold applies the EqualFold predicate on the "zip_code" field.
 func ZipCodeEqualFold(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldEqualFold(FieldZipCode, v))
@@ -749,6 +809,16 @@ func CountryHasPrefix(v string) predicate.Restaurant {
 // CountryHasSuffix applies the HasSuffix predicate on the "country" field.
 func CountryHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldCountry, v))
+}
+
+// CountryIsNil applies the IsNil predicate on the "country" field.
+func CountryIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldCountry))
+}
+
+// CountryNotNil applies the NotNil predicate on the "country" field.
+func CountryNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldCountry))
 }
 
 // CountryEqualFold applies the EqualFold predicate on the "country" field.
@@ -904,6 +974,16 @@ func CurrencyHasPrefix(v string) predicate.Restaurant {
 // CurrencyHasSuffix applies the HasSuffix predicate on the "currency" field.
 func CurrencyHasSuffix(v string) predicate.Restaurant {
 	return predicate.Restaurant(sql.FieldHasSuffix(FieldCurrency, v))
+}
+
+// CurrencyIsNil applies the IsNil predicate on the "currency" field.
+func CurrencyIsNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldIsNull(FieldCurrency))
+}
+
+// CurrencyNotNil applies the NotNil predicate on the "currency" field.
+func CurrencyNotNil() predicate.Restaurant {
+	return predicate.Restaurant(sql.FieldNotNull(FieldCurrency))
 }
 
 // CurrencyEqualFold applies the EqualFold predicate on the "currency" field.

@@ -89,6 +89,12 @@ func (_u *RestaurantUpdate) SetNillablePhone(v *string) *RestaurantUpdate {
 	return _u
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (_u *RestaurantUpdate) ClearPhone() *RestaurantUpdate {
+	_u.mutation.ClearPhone()
+	return _u
+}
+
 // SetEmail sets the "email" field.
 func (_u *RestaurantUpdate) SetEmail(v string) *RestaurantUpdate {
 	_u.mutation.SetEmail(v)
@@ -100,6 +106,12 @@ func (_u *RestaurantUpdate) SetNillableEmail(v *string) *RestaurantUpdate {
 	if v != nil {
 		_u.SetEmail(*v)
 	}
+	return _u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (_u *RestaurantUpdate) ClearEmail() *RestaurantUpdate {
+	_u.mutation.ClearEmail()
 	return _u
 }
 
@@ -117,6 +129,12 @@ func (_u *RestaurantUpdate) SetNillableAddress(v *string) *RestaurantUpdate {
 	return _u
 }
 
+// ClearAddress clears the value of the "address" field.
+func (_u *RestaurantUpdate) ClearAddress() *RestaurantUpdate {
+	_u.mutation.ClearAddress()
+	return _u
+}
+
 // SetCity sets the "city" field.
 func (_u *RestaurantUpdate) SetCity(v string) *RestaurantUpdate {
 	_u.mutation.SetCity(v)
@@ -128,6 +146,12 @@ func (_u *RestaurantUpdate) SetNillableCity(v *string) *RestaurantUpdate {
 	if v != nil {
 		_u.SetCity(*v)
 	}
+	return _u
+}
+
+// ClearCity clears the value of the "city" field.
+func (_u *RestaurantUpdate) ClearCity() *RestaurantUpdate {
+	_u.mutation.ClearCity()
 	return _u
 }
 
@@ -145,6 +169,12 @@ func (_u *RestaurantUpdate) SetNillableState(v *string) *RestaurantUpdate {
 	return _u
 }
 
+// ClearState clears the value of the "state" field.
+func (_u *RestaurantUpdate) ClearState() *RestaurantUpdate {
+	_u.mutation.ClearState()
+	return _u
+}
+
 // SetZipCode sets the "zip_code" field.
 func (_u *RestaurantUpdate) SetZipCode(v string) *RestaurantUpdate {
 	_u.mutation.SetZipCode(v)
@@ -159,6 +189,12 @@ func (_u *RestaurantUpdate) SetNillableZipCode(v *string) *RestaurantUpdate {
 	return _u
 }
 
+// ClearZipCode clears the value of the "zip_code" field.
+func (_u *RestaurantUpdate) ClearZipCode() *RestaurantUpdate {
+	_u.mutation.ClearZipCode()
+	return _u
+}
+
 // SetCountry sets the "country" field.
 func (_u *RestaurantUpdate) SetCountry(v string) *RestaurantUpdate {
 	_u.mutation.SetCountry(v)
@@ -170,6 +206,12 @@ func (_u *RestaurantUpdate) SetNillableCountry(v *string) *RestaurantUpdate {
 	if v != nil {
 		_u.SetCountry(*v)
 	}
+	return _u
+}
+
+// ClearCountry clears the value of the "country" field.
+func (_u *RestaurantUpdate) ClearCountry() *RestaurantUpdate {
+	_u.mutation.ClearCountry()
 	return _u
 }
 
@@ -250,6 +292,12 @@ func (_u *RestaurantUpdate) SetNillableCurrency(v *string) *RestaurantUpdate {
 	if v != nil {
 		_u.SetCurrency(*v)
 	}
+	return _u
+}
+
+// ClearCurrency clears the value of the "currency" field.
+func (_u *RestaurantUpdate) ClearCurrency() *RestaurantUpdate {
+	_u.mutation.ClearCurrency()
 	return _u
 }
 
@@ -526,41 +574,6 @@ func (_u *RestaurantUpdate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Restaurant.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Phone(); ok {
-		if err := restaurant.PhoneValidator(v); err != nil {
-			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "Restaurant.phone": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.Email(); ok {
-		if err := restaurant.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Restaurant.email": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.Address(); ok {
-		if err := restaurant.AddressValidator(v); err != nil {
-			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Restaurant.address": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.City(); ok {
-		if err := restaurant.CityValidator(v); err != nil {
-			return &ValidationError{Name: "city", err: fmt.Errorf(`ent: validator failed for field "Restaurant.city": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.State(); ok {
-		if err := restaurant.StateValidator(v); err != nil {
-			return &ValidationError{Name: "state", err: fmt.Errorf(`ent: validator failed for field "Restaurant.state": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.ZipCode(); ok {
-		if err := restaurant.ZipCodeValidator(v); err != nil {
-			return &ValidationError{Name: "zip_code", err: fmt.Errorf(`ent: validator failed for field "Restaurant.zip_code": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.Country(); ok {
-		if err := restaurant.CountryValidator(v); err != nil {
-			return &ValidationError{Name: "country", err: fmt.Errorf(`ent: validator failed for field "Restaurant.country": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := restaurant.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Restaurant.status": %w`, err)}
@@ -599,23 +612,44 @@ func (_u *RestaurantUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	if value, ok := _u.mutation.Phone(); ok {
 		_spec.SetField(restaurant.FieldPhone, field.TypeString, value)
 	}
+	if _u.mutation.PhoneCleared() {
+		_spec.ClearField(restaurant.FieldPhone, field.TypeString)
+	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(restaurant.FieldEmail, field.TypeString, value)
+	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(restaurant.FieldEmail, field.TypeString)
 	}
 	if value, ok := _u.mutation.Address(); ok {
 		_spec.SetField(restaurant.FieldAddress, field.TypeString, value)
 	}
+	if _u.mutation.AddressCleared() {
+		_spec.ClearField(restaurant.FieldAddress, field.TypeString)
+	}
 	if value, ok := _u.mutation.City(); ok {
 		_spec.SetField(restaurant.FieldCity, field.TypeString, value)
+	}
+	if _u.mutation.CityCleared() {
+		_spec.ClearField(restaurant.FieldCity, field.TypeString)
 	}
 	if value, ok := _u.mutation.State(); ok {
 		_spec.SetField(restaurant.FieldState, field.TypeString, value)
 	}
+	if _u.mutation.StateCleared() {
+		_spec.ClearField(restaurant.FieldState, field.TypeString)
+	}
 	if value, ok := _u.mutation.ZipCode(); ok {
 		_spec.SetField(restaurant.FieldZipCode, field.TypeString, value)
 	}
+	if _u.mutation.ZipCodeCleared() {
+		_spec.ClearField(restaurant.FieldZipCode, field.TypeString)
+	}
 	if value, ok := _u.mutation.Country(); ok {
 		_spec.SetField(restaurant.FieldCountry, field.TypeString, value)
+	}
+	if _u.mutation.CountryCleared() {
+		_spec.ClearField(restaurant.FieldCountry, field.TypeString)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(restaurant.FieldStatus, field.TypeEnum, value)
@@ -628,6 +662,9 @@ func (_u *RestaurantUpdate) sqlSave(ctx context.Context) (_node int, err error) 
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(restaurant.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.CurrencyCleared() {
+		_spec.ClearField(restaurant.FieldCurrency, field.TypeString)
 	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -970,6 +1007,12 @@ func (_u *RestaurantUpdateOne) SetNillablePhone(v *string) *RestaurantUpdateOne 
 	return _u
 }
 
+// ClearPhone clears the value of the "phone" field.
+func (_u *RestaurantUpdateOne) ClearPhone() *RestaurantUpdateOne {
+	_u.mutation.ClearPhone()
+	return _u
+}
+
 // SetEmail sets the "email" field.
 func (_u *RestaurantUpdateOne) SetEmail(v string) *RestaurantUpdateOne {
 	_u.mutation.SetEmail(v)
@@ -981,6 +1024,12 @@ func (_u *RestaurantUpdateOne) SetNillableEmail(v *string) *RestaurantUpdateOne 
 	if v != nil {
 		_u.SetEmail(*v)
 	}
+	return _u
+}
+
+// ClearEmail clears the value of the "email" field.
+func (_u *RestaurantUpdateOne) ClearEmail() *RestaurantUpdateOne {
+	_u.mutation.ClearEmail()
 	return _u
 }
 
@@ -998,6 +1047,12 @@ func (_u *RestaurantUpdateOne) SetNillableAddress(v *string) *RestaurantUpdateOn
 	return _u
 }
 
+// ClearAddress clears the value of the "address" field.
+func (_u *RestaurantUpdateOne) ClearAddress() *RestaurantUpdateOne {
+	_u.mutation.ClearAddress()
+	return _u
+}
+
 // SetCity sets the "city" field.
 func (_u *RestaurantUpdateOne) SetCity(v string) *RestaurantUpdateOne {
 	_u.mutation.SetCity(v)
@@ -1009,6 +1064,12 @@ func (_u *RestaurantUpdateOne) SetNillableCity(v *string) *RestaurantUpdateOne {
 	if v != nil {
 		_u.SetCity(*v)
 	}
+	return _u
+}
+
+// ClearCity clears the value of the "city" field.
+func (_u *RestaurantUpdateOne) ClearCity() *RestaurantUpdateOne {
+	_u.mutation.ClearCity()
 	return _u
 }
 
@@ -1026,6 +1087,12 @@ func (_u *RestaurantUpdateOne) SetNillableState(v *string) *RestaurantUpdateOne 
 	return _u
 }
 
+// ClearState clears the value of the "state" field.
+func (_u *RestaurantUpdateOne) ClearState() *RestaurantUpdateOne {
+	_u.mutation.ClearState()
+	return _u
+}
+
 // SetZipCode sets the "zip_code" field.
 func (_u *RestaurantUpdateOne) SetZipCode(v string) *RestaurantUpdateOne {
 	_u.mutation.SetZipCode(v)
@@ -1040,6 +1107,12 @@ func (_u *RestaurantUpdateOne) SetNillableZipCode(v *string) *RestaurantUpdateOn
 	return _u
 }
 
+// ClearZipCode clears the value of the "zip_code" field.
+func (_u *RestaurantUpdateOne) ClearZipCode() *RestaurantUpdateOne {
+	_u.mutation.ClearZipCode()
+	return _u
+}
+
 // SetCountry sets the "country" field.
 func (_u *RestaurantUpdateOne) SetCountry(v string) *RestaurantUpdateOne {
 	_u.mutation.SetCountry(v)
@@ -1051,6 +1124,12 @@ func (_u *RestaurantUpdateOne) SetNillableCountry(v *string) *RestaurantUpdateOn
 	if v != nil {
 		_u.SetCountry(*v)
 	}
+	return _u
+}
+
+// ClearCountry clears the value of the "country" field.
+func (_u *RestaurantUpdateOne) ClearCountry() *RestaurantUpdateOne {
+	_u.mutation.ClearCountry()
 	return _u
 }
 
@@ -1131,6 +1210,12 @@ func (_u *RestaurantUpdateOne) SetNillableCurrency(v *string) *RestaurantUpdateO
 	if v != nil {
 		_u.SetCurrency(*v)
 	}
+	return _u
+}
+
+// ClearCurrency clears the value of the "currency" field.
+func (_u *RestaurantUpdateOne) ClearCurrency() *RestaurantUpdateOne {
+	_u.mutation.ClearCurrency()
 	return _u
 }
 
@@ -1420,41 +1505,6 @@ func (_u *RestaurantUpdateOne) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Restaurant.name": %w`, err)}
 		}
 	}
-	if v, ok := _u.mutation.Phone(); ok {
-		if err := restaurant.PhoneValidator(v); err != nil {
-			return &ValidationError{Name: "phone", err: fmt.Errorf(`ent: validator failed for field "Restaurant.phone": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.Email(); ok {
-		if err := restaurant.EmailValidator(v); err != nil {
-			return &ValidationError{Name: "email", err: fmt.Errorf(`ent: validator failed for field "Restaurant.email": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.Address(); ok {
-		if err := restaurant.AddressValidator(v); err != nil {
-			return &ValidationError{Name: "address", err: fmt.Errorf(`ent: validator failed for field "Restaurant.address": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.City(); ok {
-		if err := restaurant.CityValidator(v); err != nil {
-			return &ValidationError{Name: "city", err: fmt.Errorf(`ent: validator failed for field "Restaurant.city": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.State(); ok {
-		if err := restaurant.StateValidator(v); err != nil {
-			return &ValidationError{Name: "state", err: fmt.Errorf(`ent: validator failed for field "Restaurant.state": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.ZipCode(); ok {
-		if err := restaurant.ZipCodeValidator(v); err != nil {
-			return &ValidationError{Name: "zip_code", err: fmt.Errorf(`ent: validator failed for field "Restaurant.zip_code": %w`, err)}
-		}
-	}
-	if v, ok := _u.mutation.Country(); ok {
-		if err := restaurant.CountryValidator(v); err != nil {
-			return &ValidationError{Name: "country", err: fmt.Errorf(`ent: validator failed for field "Restaurant.country": %w`, err)}
-		}
-	}
 	if v, ok := _u.mutation.Status(); ok {
 		if err := restaurant.StatusValidator(v); err != nil {
 			return &ValidationError{Name: "status", err: fmt.Errorf(`ent: validator failed for field "Restaurant.status": %w`, err)}
@@ -1510,23 +1560,44 @@ func (_u *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant, 
 	if value, ok := _u.mutation.Phone(); ok {
 		_spec.SetField(restaurant.FieldPhone, field.TypeString, value)
 	}
+	if _u.mutation.PhoneCleared() {
+		_spec.ClearField(restaurant.FieldPhone, field.TypeString)
+	}
 	if value, ok := _u.mutation.Email(); ok {
 		_spec.SetField(restaurant.FieldEmail, field.TypeString, value)
+	}
+	if _u.mutation.EmailCleared() {
+		_spec.ClearField(restaurant.FieldEmail, field.TypeString)
 	}
 	if value, ok := _u.mutation.Address(); ok {
 		_spec.SetField(restaurant.FieldAddress, field.TypeString, value)
 	}
+	if _u.mutation.AddressCleared() {
+		_spec.ClearField(restaurant.FieldAddress, field.TypeString)
+	}
 	if value, ok := _u.mutation.City(); ok {
 		_spec.SetField(restaurant.FieldCity, field.TypeString, value)
+	}
+	if _u.mutation.CityCleared() {
+		_spec.ClearField(restaurant.FieldCity, field.TypeString)
 	}
 	if value, ok := _u.mutation.State(); ok {
 		_spec.SetField(restaurant.FieldState, field.TypeString, value)
 	}
+	if _u.mutation.StateCleared() {
+		_spec.ClearField(restaurant.FieldState, field.TypeString)
+	}
 	if value, ok := _u.mutation.ZipCode(); ok {
 		_spec.SetField(restaurant.FieldZipCode, field.TypeString, value)
 	}
+	if _u.mutation.ZipCodeCleared() {
+		_spec.ClearField(restaurant.FieldZipCode, field.TypeString)
+	}
 	if value, ok := _u.mutation.Country(); ok {
 		_spec.SetField(restaurant.FieldCountry, field.TypeString, value)
+	}
+	if _u.mutation.CountryCleared() {
+		_spec.ClearField(restaurant.FieldCountry, field.TypeString)
 	}
 	if value, ok := _u.mutation.Status(); ok {
 		_spec.SetField(restaurant.FieldStatus, field.TypeEnum, value)
@@ -1539,6 +1610,9 @@ func (_u *RestaurantUpdateOne) sqlSave(ctx context.Context) (_node *Restaurant, 
 	}
 	if value, ok := _u.mutation.Currency(); ok {
 		_spec.SetField(restaurant.FieldCurrency, field.TypeString, value)
+	}
+	if _u.mutation.CurrencyCleared() {
+		_spec.ClearField(restaurant.FieldCurrency, field.TypeString)
 	}
 	if _u.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

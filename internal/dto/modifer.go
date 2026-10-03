@@ -5,11 +5,11 @@ import (
 )
 
 type CreateModifierRequest struct {
-	Name         string    `json:"name" validate:"required,min=1,max=255" binding:"required"`
+	Name         string    `json:"name" validate:"required,min=1,max=255"`
 	Required     bool      `json:"required"`
 	MultiSelect  bool      `json:"multi_select"`
 	Max          int       `json:"max" validate:"min=0"`
-	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required" binding:"required"`
+	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required"`
 }
 
 type CreateModifierData struct {

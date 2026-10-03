@@ -10,19 +10,19 @@ import (
 )
 
 type ModifierOption struct {
-	ModifierID uuid.UUID `json:"modifier_id" validate:"required" binding:"required"`
-	Quantity   int       `json:"quantity" validate:"required,min=1" binding:"required"`
+	ModifierID uuid.UUID `json:"modifier_id" validate:"required"`
+	Quantity   int       `json:"quantity" validate:"required,min=1"`
 }
 
 type OrderItemSchema struct {
-	MenuItemID      int64            `json:"menu_item_id" validate:"required" binding:"required"`
-	Quantity        int              `json:"quantity" validate:"required,min=1" binding:"required"`
-	Notes           string           `json:"notes,omitempty" validate:"max=255" binding:"omitempty"`
-	ModifierOptions []ModifierOption `json:"modifiers,omitempty" validate:"dive" binding:"omitempty"`
+	MenuItemID      int64            `json:"menu_item_id" validate:"required"`
+	Quantity        int              `json:"quantity" validate:"required,min=1"`
+	Notes           string           `json:"notes,omitempty" validate:"max=255"`
+	ModifierOptions []ModifierOption `json:"modifiers,omitempty" validate:"dive"`
 }
 type CreateOrderSchema struct {
-	OrderType    dto.OrderType     `json:"order_type" validate:"required" binding:"required"`
-	RestaurantID uuid.UUID         `json:"restaurant_id" validate:"required" binding:"required"`
+	OrderType    dto.OrderType     `json:"order_type" validate:"required"`
+	RestaurantID uuid.UUID         `json:"restaurant_id" validate:"required"`
 	OrderItems   []OrderItemSchema `json:"order_items" validate:"dive"`
 }
 

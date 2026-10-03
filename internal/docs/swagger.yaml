@@ -143,15 +143,7 @@ definitions:
       zip_code:
         type: string
     required:
-    - address
-    - city
-    - country
-    - currency
-    - email
     - name
-    - phone
-    - state
-    - zip_code
     type: object
   github_com_Jiruu246_rms_internal_dto.CreateUploadResult:
     properties:
@@ -1765,9 +1757,7 @@ paths:
       - application/json
       description: |-
         Updates plain restaurant attributes only. Images are a
-        separate subresource
-        /restaurants/{id}/images/{slot} — so an image update never
-        shares a failure boundary with this request.
+        separate subresource.
       parameters:
       - description: Restaurant ID
         format: uuid
@@ -1911,12 +1901,8 @@ paths:
       - restaurants
   /restaurants/{id}/images/{slot}/uploads:
     post:
-      description: |-
-        Issues a presigned upload grant for the named image slot.
-        The purpose (and its content-type/size constraints) is
-        derived from the slot itself — the client never declares
-        it. Upload the file directly to the returned URL, then
-        call PUT /restaurants/{id}/images/{slot} with the
+      description: Request a presigned upload URL for the named image slot. After
+        the upload is complete, call PUT /restaurants/{id}/images/{slot} with the
         returned upload_id to attach it.
       parameters:
       - description: Restaurant ID

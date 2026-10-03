@@ -6,11 +6,11 @@ import (
 
 // TODO: put rquest struct into Handler layer
 type CreateMenuItemRequest struct {
-	Name         string    `json:"name" validate:"required" binding:"required"`
+	Name         string    `json:"name" validate:"required"`
 	Description  string    `json:"description"`
-	Price        float64   `json:"price" validate:"required" binding:"required"`
+	Price        float64   `json:"price" validate:"required"`
 	IsAvailable  bool      `json:"is_available"`
-	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required" binding:"required"`
+	RestaurantID uuid.UUID `json:"restaurant_id" validate:"required"`
 	CategoryID   uuid.UUID `json:"category_id"`
 }
 

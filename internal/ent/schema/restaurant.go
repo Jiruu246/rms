@@ -25,13 +25,13 @@ func (Restaurant) Fields() []ent.Field {
 			Immutable(),
 		field.String("name").NotEmpty(),
 		field.Text("description").Optional(),
-		field.String("phone").NotEmpty(),
-		field.String("email").NotEmpty(),
-		field.String("address").NotEmpty(),
-		field.String("city").NotEmpty(),
-		field.String("state").NotEmpty(),
-		field.String("zip_code").NotEmpty(),
-		field.String("country").NotEmpty(),
+		field.String("phone").Optional(),
+		field.String("email").Optional(),
+		field.String("address").Optional(),
+		field.String("city").Optional(),
+		field.String("state").Optional(),
+		field.String("zip_code").Optional(),
+		field.String("country").Optional(),
 		field.UUID("logo_media_asset_id", uuid.UUID{}).
 			Optional().
 			Nillable().
@@ -42,7 +42,7 @@ func (Restaurant) Fields() []ent.Field {
 			Comment("MediaAsset backing this restaurant's cover image"),
 		field.Enum("status").Values("active", "inactive", "closed").Default("active"),
 		field.JSON("operating_hours", map[string]any{}).Optional(),
-		field.String("currency"),
+		field.String("currency").Optional(),
 		field.UUID("owner_id", uuid.UUID{}),
 	}
 }

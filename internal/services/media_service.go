@@ -70,7 +70,7 @@ var purposeConstraints = map[mediaupload.Purpose]uploadConstraints{
 }
 
 type MediaService interface {
-	CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose) (*dto.CreateUploadResult, error)
+	CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose, now time.Time) (*dto.CreateUploadResult, error)
 	ConsumeUpload(ctx context.Context, actor authz.Actor, uploadID uuid.UUID, expectedPurpose mediaupload.Purpose) (*dto.MediaAsset, error)
 	DeleteMedia(ctx context.Context, actor authz.Actor, mediaID uuid.UUID) error
 }
@@ -99,14 +99,14 @@ func NewMediaService(
 	}
 }
 
-func (s *mediaService) CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose) (*dto.CreateUploadResult, error) {
+func (s *mediaService) CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose, createdTime time.Time) (*dto.CreateUploadResult, error) {
 	constraints, err := s.resolveConstraints(purpose)
 	if err != nil {
 		return nil, err
 	}
 
-	now := time.Now().UTC()
-	key := storage.ObjectKey(fmt.Sprintf("media/%04d/%02d/%s", now.Year(), now.Month(), uuid.New()))
+	createdTime = createdTime.UTC()
+	key := storage.ObjectKey(fmt.Sprintf("media/%04d/%02d/%s", createdTime.Year(), createdTime.Month(), uuid.New()))
 
 	grantReq := storage.UploadRequest{
 		Key:    key,

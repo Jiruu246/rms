@@ -3,6 +3,7 @@ package services
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/Jiruu246/rms/internal/authz"
 	"github.com/Jiruu246/rms/internal/dto"
@@ -91,7 +92,7 @@ func (s *restaurantService) CreateImageUpload(ctx context.Context, actor authz.A
 		return nil, err
 	}
 
-	return s.mediaService.CreateUpload(ctx, actor, purpose)
+	return s.mediaService.CreateUpload(ctx, actor, purpose, time.Now())
 }
 
 func (s *restaurantService) UpdateImage(ctx context.Context, actor authz.Actor, id uuid.UUID, slot dto.RestaurantImageSlot, uploadID uuid.UUID) (*dto.Restaurant, error) {

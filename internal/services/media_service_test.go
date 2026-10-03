@@ -2,6 +2,7 @@ package services
 
 import (
 	"context"
+	"strings"
 	"testing"
 	"time"
 
@@ -139,18 +140,27 @@ func TestMediaService_CreateUpload(t *testing.T) {
 		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
 		uploadID := uuid.New()
+		var storedKey string
 		mockUploadRepo.On("Create", mock.Anything, mock.MatchedBy(func(p repos.CreateMediaUploadParams) bool {
+			storedKey = p.ObjectKey
 			return p.OwnerID == actor.UserID &&
 				p.Purpose == mediaupload.PurposeMenuItemImage
 		})).Return(&ent.MediaUpload{ID: uploadID}, nil)
 
-		result, err := service.CreateUpload(t.Context(), actor, mediaupload.PurposeMenuItemImage)
+		now := time.Date(2026, time.March, 1, 8, 0, 0, 0, time.FixedZone("UTC+10", 10*60*60))
+		result, err := service.CreateUpload(t.Context(), actor, mediaupload.PurposeMenuItemImage, now)
 
 		assert.NoError(t, err)
 		assert.Equal(t, uploadID, result.UploadID)
 		assert.Equal(t, "PUT", result.Upload.Method)
-		assert.NotEmpty(t, result.Upload.ObjectKey)
-		assert.Contains(t, result.Upload.ObjectKey, "media/"+actor.UserID.String()+"/")
+		assert.Equal(t, storedKey, result.Upload.ObjectKey)
+
+		const dir = "media/2026/02/"
+		key := result.Upload.ObjectKey
+		assert.True(t, strings.HasPrefix(key, dir), "object key %q should start with %q", key, dir)
+		_, parseErr := uuid.Parse(strings.TrimPrefix(key, dir))
+		assert.NoError(t, parseErr, "object key %q should end with a UUID", key)
+
 		assert.False(t, result.ExpiresAt.IsZero())
 		mockUploadRepo.AssertExpectations(t)
 	})
@@ -161,7 +171,7 @@ func TestMediaService_CreateUpload(t *testing.T) {
 		provider := newFakeStorageProvider()
 		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
-		result, err := service.CreateUpload(t.Context(), actor, mediaupload.Purpose("not_a_real_purpose"))
+		result, err := service.CreateUpload(t.Context(), actor, mediaupload.Purpose("not_a_real_purpose"), time.Now())
 
 		assert.Nil(t, result)
 		assert.ErrorIs(t, err, apperr.ErrInvalid)
@@ -175,7 +185,7 @@ func TestMediaService_CreateUpload(t *testing.T) {
 		provider.grantErr = assert.AnError
 		service := NewMediaService(noopTransactor{}, mockUploadRepo, mockAssetRepo, provider, 15*time.Minute)
 
-		result, err := service.CreateUpload(t.Context(), actor, mediaupload.PurposeMenuItemImage)
+		result, err := service.CreateUpload(t.Context(), actor, mediaupload.PurposeMenuItemImage, time.Now())
 
 		assert.Nil(t, result)
 		assert.Error(t, err)

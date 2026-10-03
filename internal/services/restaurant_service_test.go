@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/Jiruu246/rms/internal/apperr"
 	"github.com/Jiruu246/rms/internal/authz"
@@ -81,8 +82,8 @@ type MockMediaService struct {
 	mock.Mock
 }
 
-func (m *MockMediaService) CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose) (*dto.CreateUploadResult, error) {
-	args := m.Called(ctx, actor, purpose)
+func (m *MockMediaService) CreateUpload(ctx context.Context, actor authz.Actor, purpose mediaupload.Purpose, now time.Time) (*dto.CreateUploadResult, error) {
+	args := m.Called(ctx, actor, purpose, now)
 	if args.Get(0) == nil {
 		return nil, args.Error(1)
 	}
@@ -751,7 +752,7 @@ func TestRestaurantService_CreateImageUpload_Succeeds(t *testing.T) {
 	mockMediaService := new(MockMediaService)
 
 	mockRepo.On("GetAuthorizationResource", mock.Anything, restaurantID).Return(resource, nil)
-	mockMediaService.On("CreateUpload", mock.Anything, owner, mediaupload.PurposeRestaurantLogo).
+	mockMediaService.On("CreateUpload", mock.Anything, owner, mediaupload.PurposeRestaurantLogo, mock.Anything).
 		Return(expected, nil)
 
 	service := NewRestaurantService(noopTransactor{}, mockRepo, mockMediaService)

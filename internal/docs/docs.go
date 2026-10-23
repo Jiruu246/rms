@@ -2155,14 +2155,6 @@ const docTemplate = `{
                 "state": {
                     "type": "string"
                 },
-                "status": {
-                    "type": "string",
-                    "enum": [
-                        "active",
-                        "inactive",
-                        "closed"
-                    ]
-                },
                 "zip_code": {
                     "type": "string"
                 }

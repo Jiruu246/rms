@@ -14,7 +14,6 @@ type CreateRestaurantRequest struct {
 	State          string         `json:"state"`
 	ZipCode        string         `json:"zip_code"`
 	Country        string         `json:"country"`
-	Status         string         `json:"status" validate:"omitempty,oneof=active inactive closed"`
 	OperatingHours map[string]any `json:"operating_hours"`
 	Currency       string         `json:"currency"`
 }

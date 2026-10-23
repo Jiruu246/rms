@@ -134,12 +134,6 @@ definitions:
         type: string
       state:
         type: string
-      status:
-        enum:
-        - active
-        - inactive
-        - closed
-        type: string
       zip_code:
         type: string
     required:

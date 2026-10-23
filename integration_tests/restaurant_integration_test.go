@@ -48,7 +48,6 @@ func (s *RestaurantTestSuite) TestCreateRestaurant() {
 				ZipCode:     "12345",
 				Country:     "Test Country",
 				Currency:    "USD",
-				Status:      "active",
 			},
 			expected: http.StatusCreated,
 			validate: func(w *httptest.ResponseRecorder) {

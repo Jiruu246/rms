@@ -67,6 +67,9 @@ func (s *Server) routes() {
 		s.engine.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	}
 
+	healthHandler := handler.NewHealthHandler()
+	s.engine.GET("/health", healthHandler.Health)
+
 	// initialize repositories
 	categoryRepo := repos.NewEntCategoryRepository(s.client)
 	userRepo := repos.NewEntUserRepository(s.client)
